@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+    tags: ["v*"]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
+
+jobs:
+  test:
+    name: Julia ${{ matrix.version }} – ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ["1.9", "1.10", "1.11", "1.12"]
+        os: [ubuntu-latest]
+        include:
+          - version: "1.12"
+            os: macOS-latest
+          - version: "1.12"
+            os: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: ${{ matrix.version }}
+      - uses: julia-actions/cache@v2
+      - name: Install test dependencies
+        run: julia --project=test -e 'import Pkg; Pkg.instantiate()'
+      - name: Run tests (no rendering)
+        run: julia --project=test test/runtests.jl
+        env:
+          # No display available in CI — rendering tests are skipped automatically
+          JULIA_NUM_THREADS: 2
+
+  docs:
+    name: Documentation
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: "1.12"
+      - uses: julia-actions/cache@v2
+      - name: Install docs dependencies
+        run: julia --project=docs -e 'import Pkg; Pkg.instantiate()'
+      - name: Generate example images
+        run: julia --project=docs docs/generate_examples.jl
+      - name: Build docs
+        run: julia --project=docs docs/make.jl
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}

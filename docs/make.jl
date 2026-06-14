@@ -23,3 +23,11 @@ makedocs(;
     remotes = nothing,
     doctest = false,
 )
+
+deploydocs(;
+    repo = "github.com/el-oso/LithoWaferPlots.jl",
+    target = "build",
+    branch = "gh-pages",
+    devbranch = "master",
+    push_preview = true,
+)
