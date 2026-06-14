@@ -8,7 +8,9 @@ makedocs(;
     authors = "el_oso",
     format = DocumenterVitepress.MarkdownVitepress(
         devbranch = "master",
+        devurl = "dev",
         repo = "github.com/el-oso/LithoWaferPlots.jl",
+        sidebar_drawer = true
     ),
     pages = [
         "Home" => "index.md",
@@ -25,10 +27,8 @@ makedocs(;
     doctest = false,
 )
 
-deploydocs(;
+DocumenterVitepress.deploydocs(;
     repo = "github.com/el-oso/LithoWaferPlots.jl",
-    target = "build",
-    branch = "gh-pages",
     devbranch = "master",
     push_preview = true,
 )
