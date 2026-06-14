@@ -47,14 +47,65 @@ the resulting image starts in under 0.5 s.
 
 ---
 
+## Benchmarking with PkgBenchmark
+
+The `benchmarks/` directory contains a [PkgBenchmark.jl](https://github.com/JuliaCI/PkgBenchmark.jl)
+suite with two groups:
+
+| Group | What it measures | Backend |
+|---|---|---|
+| `compute` | masking, colour scaling, divergence/vorticity, KPIs | any (CairoMakie) |
+| `render` | full plot construction for every recipe | CairoMakie (CPU) |
+
+### Running the suite
+
+```julia
+using PkgBenchmark, LithoWaferPlots
+
+results = benchmarkpkg(LithoWaferPlots)
+export_markdown(stdout, results)
+```
+
+### Comparing commits for regressions
+
+```julia
+baseline = benchmarkpkg(LithoWaferPlots, "main")
+current  = benchmarkpkg(LithoWaferPlots)
+export_markdown(stdout, judge(current, baseline))
+```
+
+A `judge` result marks each benchmark as `+` (regression), `-` (improvement),
+or `≡` (invariant, within noise tolerance).
+
+### Running a single group
+
+```julia
+results = benchmarkpkg(LithoWaferPlots; script = "benchmarks/benchmarks.jl",
+                        resultfile = "bench_results.json")
+# or filter at the REPL:
+run(SUITE["compute"])
+```
+
+### GPU rendering (GLMakie)
+
+The suite uses CairoMakie for portability. For GPU-accelerated numbers on
+a machine with a display, run the standalone script:
+
+```
+julia --project=benchmarks benchmarks/render_bench.jl
+```
+
+---
+
 ## Target
 
 All plot types must render **300 000 points in < 0.3 s** (median wall time, GLMakie GPU path).
 
-## Running benchmarks
+## Running benchmarks (legacy scripts)
 
 ```julia
-julia --project=.. benchmarks/render_bench.jl
+julia --project=benchmarks benchmarks/compute_bench.jl
+julia --project=benchmarks benchmarks/render_bench.jl   # requires GLMakie + display
 ```
 
 ## Key design decisions

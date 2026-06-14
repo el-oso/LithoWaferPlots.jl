@@ -18,8 +18,12 @@ julia --project=docs docs/generate_examples.jl
 # Build docs
 julia --project=docs docs/make.jl
 
-# Run benchmarks
-julia --project=. benchmarks/render_bench.jl
+# Run PkgBenchmark suite
+julia --project=benchmarks -e 'using PkgBenchmark, LithoWaferPlots; export_markdown(stdout, benchmarkpkg(LithoWaferPlots))'
+
+# Run legacy scripts (compute: headless-safe; render: requires GLMakie + display)
+julia --project=benchmarks benchmarks/compute_bench.jl
+julia --project=benchmarks benchmarks/render_bench.jl
 ```
 
 ## Architecture
