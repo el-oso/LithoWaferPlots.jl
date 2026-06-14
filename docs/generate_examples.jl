@@ -399,4 +399,43 @@ let
     println("aog compositing done")
 end
 
+# ── 15. Logo & watermark overlays ─────────────────────────────────────────────
+# Build a synthetic RGBA "logo" in-code (a brand-coloured ring with a notch and a
+# transparent centre) — demonstrates the matrix-input + alpha path with no binary asset.
+
+function brand_logo(n = 160)
+    img = fill(RGBAf(0, 0, 0, 0), n, n)
+    for i in 1:n, j in 1:n
+        x = (i - 0.5) / n - 0.5
+        y = (j - 0.5) / n - 0.5
+        r = sqrt(x^2 + y^2)
+        θ = atan(y, x)
+        # opaque ring (transparent hole in the middle → shows the plot through it)
+        if 0.3 <= r <= 0.46
+            img[i, j] = RGBAf(0.1, 0.45, 0.8, 0.95)
+        end
+        # a notch at the bottom (−90°) to echo a wafer
+        if r >= 0.28 && abs(θ + π / 2) < 0.22
+            img[i, j] = RGBAf(0, 0, 0, 0)
+        end
+        # filled centre dot
+        if r <= 0.12
+            img[i, j] = RGBAf(0.95, 0.55, 0.05, 1.0)
+        end
+    end
+    return img
+end
+
+let sdata = dense_scalar_data()
+    logo = brand_logo()
+    fig, ax, side = wafer_figure(; resolution = RESOLUTION)
+    p = waferheatmap!(ax, sdata; colormap = :viridis)
+    add_colorbar!(side, p; label = "Thickness (nm)")
+    # faded watermark across the wafer, opaque logo in the top-right corner
+    add_watermark!(ax, logo; opacity = 0.12, scale = 0.7)
+    add_logo!(ax, logo; position = :rt, scale = 0.16)
+    save(joinpath(OUT, "example_overlay.png"), fig; px_per_unit = 2)
+    println("logo/watermark done")
+end
+
 println("\nAll images written to $OUT")

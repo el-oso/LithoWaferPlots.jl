@@ -76,3 +76,29 @@ end
     p = waferstreamlines!(ax, d; n_seeds = 5, max_steps = 50)
     @test fig isa Figure
 end
+
+@testitem "Image overlays render without error" tags = [:rendering] begin
+    using CairoMakie
+    using CairoMakie: RGBAf
+
+    w = WaferSpec(300.0)
+    tbl = (x = randn(500) .* 100, y = randn(500) .* 100, value = rand(500))
+    d = WaferData(tbl, w)
+
+    # synthetic RGBA image with a transparent corner to exercise the alpha path
+    img = [RGBAf(i / 32, j / 32, 0.5, (i + j) / 64) for i in 1:32, j in 1:32]
+
+    # Axis target: general overlay + logo + watermark
+    fig, ax, side = wafer_figure()
+    waferheatmap!(ax, d)
+    @test add_image_overlay!(ax, img; position = :lt, scale = 0.2) isa Any
+    @test add_logo!(ax, img; position = :rt) isa Any
+    @test add_watermark!(ax, img; opacity = 0.2) isa Any
+
+    # Figure target + (fx, fy) tuple position
+    fig2, ax2, side2 = wafer_figure()
+    waferheatmap!(ax2, d)
+    add_logo!(fig2, img; position = (0.9, 0.1), scale = 0.1)
+    @test fig isa Figure
+    @test fig2 isa Figure
+end

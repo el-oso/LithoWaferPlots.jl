@@ -201,6 +201,39 @@ add_ring_legend!(ax; position = :rb)
 
 ---
 
+## Logo & watermark
+
+Brand a plot with a custom logo and/or a faded watermark. The image is anchored in a fixed
+position (corner or centre) and keeps its aspect ratio regardless of zoom or data range.
+Per-pixel alpha is honoured and a global `opacity` multiplier is applied on top, so
+transparent regions of the image let the plot show through.
+
+The image can be a **file path** (PNG with alpha, etc.) or an **`AbstractMatrix` of colors**.
+Target either the wafer `Axis` (overlay within the plot) or the whole `Figure` (e.g. a logo
+in a figure margin).
+
+```julia
+fig, ax, side = wafer_figure()
+p = waferheatmap!(ax, data; colormap = :viridis)
+add_colorbar!(side, p; label = "Thickness (nm)")
+
+# faded watermark across the wafer
+add_watermark!(ax, "company_logo.png"; opacity = 0.12, scale = 0.7)
+
+# opaque logo in the top-right corner
+add_logo!(ax, "company_logo.png"; position = :rt, scale = 0.16)
+
+# or full control over position / size / opacity, on the whole figure:
+add_image_overlay!(fig, logo_matrix; position = :rb, scale = 0.1, opacity = 1.0)
+```
+
+`position` accepts `:lt :ct :rt :lc :center :rc :lb :cb :rb` or an `(fx, fy)` tuple
+(image centre in `0..1` of the target).
+
+![Logo and watermark](assets/example_overlay.png)
+
+---
+
 ## Faceted wafer grid
 
 `wafer_facet` groups any Tables.jl-compatible source by a column and renders one wafer

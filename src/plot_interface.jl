@@ -63,6 +63,52 @@ function add_ring_legend!(args...; kwargs...)
 end
 
 """
+    add_image_overlay!(target, image; position=:rt, scale=0.15, margin=0.04, opacity=1.0, interpolate=true)
+
+Overlay `image` on `target` (an `Axis` or `Figure`) at a fixed, aspect-preserving position.
+The overlay stays put and keeps its aspect ratio regardless of zoom or data range.
+
+- `image`: path to an image file (PNG with alpha, …) or an `AbstractMatrix` of colors.
+- `position`: `:lt :ct :rt :lc :center :rc :lb :cb :rb`, or an `(fx, fy)` tuple (image centre
+  in `0..1` of the target).
+- `scale`: image height as a fraction of the target height (width follows the image aspect).
+- `margin`: edge padding as a fraction of the target's smaller dimension.
+- `opacity`: global alpha multiplier `0..1`, applied on top of the image's own alpha.
+
+Requires a Makie backend.
+"""
+function add_image_overlay!(args...; kwargs...)
+    ext = _makie_ext()
+    ext === nothing && _require_makie(:add_image_overlay!)
+    return ext.add_image_overlay!(args...; kwargs...)
+end
+
+"""
+    add_logo!(target, image; position=:rt, scale=0.12, margin=0.03, opacity=1.0, kwargs...)
+
+Place a logo image in a corner of `target` (an `Axis` or `Figure`). Convenience wrapper over
+`add_image_overlay!` with small, corner-anchored defaults. Requires a Makie backend.
+"""
+function add_logo!(args...; kwargs...)
+    ext = _makie_ext()
+    ext === nothing && _require_makie(:add_logo!)
+    return ext.add_logo!(args...; kwargs...)
+end
+
+"""
+    add_watermark!(target, image; position=:center, scale=0.5, opacity=0.15, kwargs...)
+
+Place a large, faded watermark image over `target` (an `Axis` or `Figure`). Convenience
+wrapper over `add_image_overlay!` with centred, semi-transparent defaults.
+Requires a Makie backend.
+"""
+function add_watermark!(args...; kwargs...)
+    ext = _makie_ext()
+    ext === nothing && _require_makie(:add_watermark!)
+    return ext.add_watermark!(args...; kwargs...)
+end
+
+"""
     wafer_cfd_figure(vdata::WaferVectorData; scalar=:divergence, vector=:streamlines, kwargs...)
 
 Create a combined CFD plot: scalar background (divergence or vorticity) with a streamline or

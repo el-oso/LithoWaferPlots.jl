@@ -62,6 +62,9 @@ add_colorbar!
 add_kpi_panel!
 add_exclusion_ring!
 add_ring_legend!
+add_image_overlay!
+add_logo!
+add_watermark!
 ```
 
 ## Scalar plots

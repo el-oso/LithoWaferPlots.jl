@@ -14,11 +14,13 @@ using Tables
 include("wafer_shape.jl")
 include("streamlines.jl")
 include("layout.jl")
+include("overlay.jl")
 include("recipes_scalar.jl")
 include("recipes_vector.jl")
 
 export wafer_figure, wafer_cfd_figure, wafer_facet, add_colorbar!, add_kpi_panel!
 export add_exclusion_ring!, add_ring_legend!
+export add_image_overlay!, add_logo!, add_watermark!
 export WaferScatter, waferscatter, waferscatter!
 export WaferHeatmap, waferheatmap, waferheatmap!
 export WaferContour, wafercontour, wafercontour!

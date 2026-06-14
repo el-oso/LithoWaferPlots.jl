@@ -43,6 +43,7 @@ export divergence, vorticity
 # plotting stubs (implementations in Makie extension)
 export wafer_figure, wafer_cfd_figure, wafer_facet, add_colorbar!, add_kpi_panel!
 export add_exclusion_ring!, add_ring_legend!
+export add_image_overlay!, add_logo!, add_watermark!
 export waferscatter, waferscatter!
 export waferheatmap, waferheatmap!
 export wafercontour, wafercontour!
