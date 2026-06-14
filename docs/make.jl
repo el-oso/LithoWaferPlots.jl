@@ -15,6 +15,7 @@ makedocs(;
         "Getting Started" => "getting_started.md",
         "Gallery" => "gallery.md",
         "Custom KPIs" => "custom_kpi.md",
+        "AlgebraOfGraphics" => "aog_compositing.md",
         "Performance" => "performance.md",
         "API Reference" => "api.md",
     ],
