@@ -58,16 +58,22 @@ add_kpi_panel!(side, data)
 display(fig)
 ```
 
+![Heatmap](assets/example_heatmap.png)
+
 ## Step 4 — Add field overlays
 
+Pass a `fields` vector when constructing `WaferData` to overlay rectangular
+exposure fields on any plot type.
+
 ```julia
-fields = [
-    WaferField(-25.0, 0.0, 26.0, 33.0, -1, 0),
-    WaferField(  0.0, 0.0, 26.0, 33.0,  0, 0),
-    WaferField( 25.0, 0.0, 26.0, 33.0,  1, 0),
-]
+fields = [WaferField(cx, cy, 26.0, 33.0, ci, ri)
+          for (ri, cy) in zip(-1:1, [-33.0, 0.0, 33.0])
+          for (ci, cx) in zip(-1:1, [-26.0, 0.0, 26.0])]
+
 data = WaferData(df, wafer; fields=fields)
 ```
+
+![Heatmap with field overlay](assets/example_heatmap_fields.png)
 
 ## Step 5 — Vector field plots
 
@@ -76,11 +82,21 @@ vdata = WaferVectorData(df, wafer)   # df has :x, :y, :vx, :vy columns
 
 # Arrows
 waferarrows!(ax, vdata; lengthscale=2.0)
+```
 
+![Arrow plot](assets/example_arrows.png)
+
+```julia
 # Streamlines
-waferstreamlines!(ax, vdata; n_seeds=15)
+waferstreamlines!(ax, vdata; n_seeds=12, max_steps=80)
+```
 
+![Streamlines](assets/example_streamlines.png)
+
+```julia
 # Derived scalar fields
 waferdivergence!(ax, vdata)
 wafervorticity!(ax, vdata)
 ```
+
+See the [Gallery](@ref) for divergence and vorticity examples.

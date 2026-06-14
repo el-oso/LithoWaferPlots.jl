@@ -41,10 +41,30 @@ The colorbar is attached to the first `Scatter` child plot (which carries the
 colormap and colorrange), avoiding ambiguity when field `Poly` patches are present.
 """
 function add_colorbar!(side, plot_obj; label::String="", kwargs...)
-    # Find the first Scatter child — that's where our colormap lives
-    scatter_child = findfirst(p -> p isa Scatter, plot_obj.plots)
-    cb_source = scatter_child !== nothing ? plot_obj.plots[scatter_child] : plot_obj
-    Colorbar(side[1, 1], cb_source; label, vertical=true, kwargs...)
+    # Scatter-based recipes (waferscatter, waferheatmap): the first Scatter
+    # child carries a single colormap + colorrange and can drive Colorbar directly.
+    scatter_idx = findfirst(p -> p isa Scatter, plot_obj.plots)
+    if scatter_idx !== nothing
+        Colorbar(side[1, 1], plot_obj.plots[scatter_idx]; label, vertical=true, kwargs...)
+        return nothing
+    end
+
+    # Contour recipe: Makie's Colorbar constructor recurses into Text children
+    # (contour labels) and hits a "multiple colormaps" error.  Build from
+    # explicit colormap + data extrema instead.  The first positional argument
+    # of any wafer recipe is the WaferData / WaferVectorData struct.
+    contour_idx = findfirst(p -> p isa Plot{Makie.contour}, plot_obj.plots)
+    if contour_idx !== nothing
+        input_data = plot_obj[1][]           # WaferData (first recipe arg)
+        vals = filter(isfinite, input_data.values)
+        lo, hi = isempty(vals) ? (0.0, 1.0) : extrema(vals)
+        cmap = plot_obj[:colormap][]
+        Colorbar(side[1, 1]; colormap=cmap, limits=(lo, hi), label, vertical=true, kwargs...)
+        return nothing
+    end
+
+    # Fallback for any other recipe.
+    Colorbar(side[1, 1], plot_obj; label, vertical=true, kwargs...)
     return nothing
 end
 
