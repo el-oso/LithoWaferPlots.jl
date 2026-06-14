@@ -24,13 +24,12 @@ function Makie.plot!(p::WaferScatter)
     mask = inside_wafer(data.x, data.y, data.wafer)
     x, y, vals = data.x[mask], data.y[mask], data.values[mask]
     cs = ColorScale(vals)
-    cols = normalize(cs, vals)
 
     scatter!(
         p, x, y;
-        color = cols,
+        color = vals,
         colormap = p[:colormap],
-        colorrange = (0.0f0, 1.0f0),
+        colorrange = (Float32(cs.vmin), Float32(cs.vmax)),
         markersize = p[:markersize]
     )
 
@@ -51,9 +50,12 @@ function Makie.plot!(p::WaferScatter)
 end
 
 # ── WaferHeatmap ────────────────────────────────────────────────────────────
-# Renders scattered data as coloured scatter points (fast GPU path).
-# For a smooth interpolated heatmap, call `wafer_heatmap_grid!` (interpolates
-# to a grid, then renders as image!).
+# Default: renders coloured scatter rects (fast GPU path, any point layout).
+# When imagemode=:image (or :auto with n > IMAGE_THRESHOLD), interpolates to a
+# regular grid and renders a single image! texture — faster for CairoMakie export
+# and memory-efficient for very large datasets.
+
+const IMAGE_THRESHOLD = 5_000
 
 @recipe(WaferHeatmap, data) do scene
     Attributes(
@@ -65,6 +67,8 @@ end
         field_strokecolor = :steelblue,
         field_strokewidth = 0.8f0,
         percentile_clip = 0.0,
+        imagemode = :auto,
+        grid_n = 256,
     )
 end
 
@@ -73,16 +77,21 @@ function Makie.plot!(p::WaferHeatmap)
     mask = inside_wafer(data.x, data.y, data.wafer)
     x, y, vals = data.x[mask], data.y[mask], data.values[mask]
     cs = ColorScale(vals; percentile_clip = p[:percentile_clip][])
-    cols = normalize(cs, vals)
+    mode = p[:imagemode][]
+    use_image = mode === :image || (mode === :auto && length(x) >= IMAGE_THRESHOLD)
 
-    scatter!(
-        p, x, y;
-        color = cols,
-        colormap = p[:colormap],
-        colorrange = (0.0f0, 1.0f0),
-        markersize = p[:markersize],
-        marker = :rect
-    )
+    if use_image
+        _heatmap_image!(p, data, x, y, vals, cs)
+    else
+        scatter!(
+            p, x, y;
+            color = vals,
+            colormap = p[:colormap],
+            colorrange = (Float32(cs.vmin), Float32(cs.vmax)),
+            markersize = p[:markersize],
+            marker = :rect
+        )
+    end
 
     draw_wafer_boundary!(
         p, data.wafer;
@@ -98,6 +107,36 @@ function Makie.plot!(p::WaferHeatmap)
     )
 
     return p
+end
+
+function _heatmap_image!(p, data, x, y, vals, cs)
+    grid_n = p[:grid_n][]
+    r = data.wafer.diameter_mm / 2.0
+    r_active2 = (r - data.wafer.edge_exclusion_mm)^2
+    xs = LinRange(-r, r, grid_n)
+    ys = LinRange(-r, r, grid_n)
+
+    cmap = Makie.to_colormap(p[:colormap][])
+    pts = permutedims(hcat(Float64.(data.x), Float64.(data.y)))
+    tree = KDTree(pts)
+
+    img = fill(RGBAf(0.0f0, 0.0f0, 0.0f0, 0.0f0), grid_n, grid_n)
+    for (j, yg) in enumerate(ys), (i, xg) in enumerate(xs)
+        xg^2 + yg^2 > r_active2 && continue
+        idxs, dists = knn(tree, Float64[xg, yg], 4, true)
+        v = if dists[1] < 1.0e-10
+            Float64(vals[idxs[1]])
+        else
+            w = dists .^ -2.0
+            sum(w .* Float64.(vals[idxs])) / sum(w)
+        end
+        cn = clamp(Float32((v - cs.vmin) / (cs.vmax - cs.vmin)), 0.0f0, 1.0f0)
+        img[i, j] = Makie.interpolated_getindex(cmap, cn)
+    end
+
+    # Makie 0.22+ requires interval notation (start..stop) for image! axes.
+    image!(p, (-r) .. r, (-r) .. r, img)
+    return nothing
 end
 
 # ── WaferContour ────────────────────────────────────────────────────────────

@@ -22,6 +22,20 @@ end
     @test fig isa Figure
 end
 
+@testitem "WaferHeatmap image mode renders without error" tags = [:rendering] begin
+    using CairoMakie
+
+    w = WaferSpec(300.0)
+    xs = [x for x in -140.0:3.0:140.0 for y in -140.0:3.0:140.0 if x^2 + y^2 <= 148.0^2]
+    ys = [y for x in -140.0:3.0:140.0 for y in -140.0:3.0:140.0 if x^2 + y^2 <= 148.0^2]
+    vs = sin.(xs ./ 40) .+ cos.(ys ./ 40)
+    d = WaferData(xs, ys, vs, w, WaferField[])
+    fig, ax, side = wafer_figure()
+    p = waferheatmap!(ax, d; imagemode = :image, grid_n = 64)
+    add_colorbar!(side, p; label = "Test")
+    @test fig isa Figure
+end
+
 @testitem "WaferContour renders without error" tags = [:rendering] begin
     using CairoMakie
 

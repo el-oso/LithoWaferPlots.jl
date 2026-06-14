@@ -43,21 +43,37 @@ The colorbar is attached to the first `Scatter` child plot (which carries the
 colormap and colorrange), avoiding ambiguity when field `Poly` patches are present.
 """
 function add_colorbar!(side, plot_obj; label::String = "", kwargs...)
-    # Scatter-based recipes (waferscatter, waferheatmap): the first Scatter
-    # child carries a single colormap + colorrange and can drive Colorbar directly.
+    # Scatter-based recipes (waferscatter, waferheatmap scatter mode): the first
+    # Scatter child carries colormap + colorrange (actual data values) directly.
     scatter_idx = findfirst(p -> p isa Scatter, plot_obj.plots)
     if scatter_idx !== nothing
         Colorbar(side[1, 1], plot_obj.plots[scatter_idx]; label, vertical = true, kwargs...)
         return nothing
     end
 
+    # WaferHeatmap image mode: single Image child; build Colorbar from the recipe's
+    # WaferData input so limits reflect percentile-clipped range.
+    image_idx = findfirst(p -> p isa Image, plot_obj.plots)
+    if image_idx !== nothing
+        input_data = plot_obj[1][]
+        mask = inside_wafer(input_data.x, input_data.y, input_data.wafer)
+        vals = filter(isfinite, input_data.values[mask])
+        pc = haskey(plot_obj.attributes, :percentile_clip) ? plot_obj[:percentile_clip][] : 0.0
+        cs = ColorScale(vals; percentile_clip = pc)
+        cmap = plot_obj[:colormap][]
+        Colorbar(
+            side[1, 1]; colormap = cmap, limits = (Float32(cs.vmin), Float32(cs.vmax)),
+            label, vertical = true, kwargs...
+        )
+        return nothing
+    end
+
     # Contour recipe: Makie's Colorbar constructor recurses into Text children
     # (contour labels) and hits a "multiple colormaps" error.  Build from
-    # explicit colormap + data extrema instead.  The first positional argument
-    # of any wafer recipe is the WaferData / WaferVectorData struct.
+    # explicit colormap + data extrema instead.
     contour_idx = findfirst(p -> p isa Plot{Makie.contour}, plot_obj.plots)
     if contour_idx !== nothing
-        input_data = plot_obj[1][]           # WaferData (first recipe arg)
+        input_data = plot_obj[1][]
         vals = filter(isfinite, input_data.values)
         lo, hi = isempty(vals) ? (0.0, 1.0) : extrema(vals)
         cmap = plot_obj[:colormap][]
