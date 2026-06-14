@@ -2,7 +2,11 @@ Manifest.toml
 test/Manifest.toml
 docs/Manifest.toml
 docs/build/
+docs/node_modules/
 docs/.vitepress/dist/
 docs/.vitepress/cache/
+docs/src/.vitepress/
+.artifacts/
 *.jl.cov
 *.jl.mem
+.DS_Store

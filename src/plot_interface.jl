@@ -61,6 +61,7 @@ end
 # ── scalar plot wrappers ──────────────────────────────────────────────────────
 
 """
+    waferscatter(data::WaferData; kwargs...) -> (Figure, Axis, plot)
     waferscatter!(ax, data::WaferData; kwargs...) -> plot
 
 Scatter plot of wafer data with auto colormap and wafer boundary overlay.
@@ -71,6 +72,12 @@ function waferscatter!(args...; kwargs...)
     return ext.waferscatter!(args...; kwargs...)
 end
 
+"""
+    waferscatter(data::WaferData; kwargs...) -> (Figure, Axis, plot)
+    waferscatter!(ax, data::WaferData; kwargs...) -> plot
+
+Scatter plot of wafer data with auto colormap and wafer boundary overlay.
+"""
 function waferscatter(args...; kwargs...)
     ext = _makie_ext()
     ext === nothing && _require_makie(:waferscatter)
@@ -78,6 +85,7 @@ function waferscatter(args...; kwargs...)
 end
 
 """
+    waferheatmap(data::WaferData; kwargs...) -> (Figure, Axis, plot)
     waferheatmap!(ax, data::WaferData; kwargs...) -> plot
 
 Heatmap-style plot using rectangular scatter markers.
@@ -89,6 +97,13 @@ function waferheatmap!(args...; kwargs...)
     return ext.waferheatmap!(args...; kwargs...)
 end
 
+"""
+    waferheatmap(data::WaferData; kwargs...) -> (Figure, Axis, plot)
+    waferheatmap!(ax, data::WaferData; kwargs...) -> plot
+
+Heatmap-style plot using rectangular scatter markers.
+Use `percentile_clip` to reduce outlier influence on the color scale.
+"""
 function waferheatmap(args...; kwargs...)
     ext = _makie_ext()
     ext === nothing && _require_makie(:waferheatmap)
@@ -96,6 +111,7 @@ function waferheatmap(args...; kwargs...)
 end
 
 """
+    wafercontour(data::WaferData; levels=10, grid_n=256, kwargs...) -> (Figure, Axis, plot)
     wafercontour!(ax, data::WaferData; levels=10, grid_n=256, kwargs...) -> plot
 
 Contour plot. Data is interpolated to a regular `grid_n×grid_n` grid first.
@@ -106,6 +122,12 @@ function wafercontour!(args...; kwargs...)
     return ext.wafercontour!(args...; kwargs...)
 end
 
+"""
+    wafercontour(data::WaferData; levels=10, grid_n=256, kwargs...) -> (Figure, Axis, plot)
+    wafercontour!(ax, data::WaferData; levels=10, grid_n=256, kwargs...) -> plot
+
+Contour plot. Data is interpolated to a regular `grid_n×grid_n` grid first.
+"""
 function wafercontour(args...; kwargs...)
     ext = _makie_ext()
     ext === nothing && _require_makie(:wafercontour)
@@ -115,6 +137,7 @@ end
 # ── vector plot wrappers ──────────────────────────────────────────────────────
 
 """
+    waferarrows(data::WaferVectorData; max_arrows=20_000, kwargs...) -> (Figure, Axis, plot)
     waferarrows!(ax, data::WaferVectorData; max_arrows=20_000, kwargs...) -> plot
 
 Arrow plot of vector field. Subsampled to `max_arrows` for readability.
@@ -125,6 +148,12 @@ function waferarrows!(args...; kwargs...)
     return ext.waferarrows!(args...; kwargs...)
 end
 
+"""
+    waferarrows(data::WaferVectorData; max_arrows=20_000, kwargs...) -> (Figure, Axis, plot)
+    waferarrows!(ax, data::WaferVectorData; max_arrows=20_000, kwargs...) -> plot
+
+Arrow plot of vector field. Subsampled to `max_arrows` for readability.
+"""
 function waferarrows(args...; kwargs...)
     ext = _makie_ext()
     ext === nothing && _require_makie(:waferarrows)
@@ -132,6 +161,7 @@ function waferarrows(args...; kwargs...)
 end
 
 """
+    waferstreamlines(data::WaferVectorData; n_seeds=20, max_steps=300, kwargs...) -> (Figure, Axis, plot)
     waferstreamlines!(ax, data::WaferVectorData; n_seeds=20, max_steps=300, kwargs...) -> plot
 
 Streamline plot via RK4 integration from a uniform seed grid.
@@ -142,6 +172,12 @@ function waferstreamlines!(args...; kwargs...)
     return ext.waferstreamlines!(args...; kwargs...)
 end
 
+"""
+    waferstreamlines(data::WaferVectorData; n_seeds=20, max_steps=300, kwargs...) -> (Figure, Axis, plot)
+    waferstreamlines!(ax, data::WaferVectorData; n_seeds=20, max_steps=300, kwargs...) -> plot
+
+Streamline plot via RK4 integration from a uniform seed grid.
+"""
 function waferstreamlines(args...; kwargs...)
     ext = _makie_ext()
     ext === nothing && _require_makie(:waferstreamlines)
@@ -149,6 +185,7 @@ function waferstreamlines(args...; kwargs...)
 end
 
 """
+    waferdivergence(data::WaferVectorData; grid_n=256, kwargs...) -> (Figure, Axis, plot)
     waferdivergence!(ax, data::WaferVectorData; grid_n=256, kwargs...) -> plot
 
 Divergence (∂vx/∂x + ∂vy/∂y) of the vector field, displayed as a scalar heatmap.
@@ -159,6 +196,12 @@ function waferdivergence!(args...; kwargs...)
     return ext.waferdivergence!(args...; kwargs...)
 end
 
+"""
+    waferdivergence(data::WaferVectorData; grid_n=256, kwargs...) -> (Figure, Axis, plot)
+    waferdivergence!(ax, data::WaferVectorData; grid_n=256, kwargs...) -> plot
+
+Divergence (∂vx/∂x + ∂vy/∂y) of the vector field, displayed as a scalar heatmap.
+"""
 function waferdivergence(args...; kwargs...)
     ext = _makie_ext()
     ext === nothing && _require_makie(:waferdivergence)
@@ -166,6 +209,7 @@ function waferdivergence(args...; kwargs...)
 end
 
 """
+    wafervorticity(data::WaferVectorData; grid_n=256, kwargs...) -> (Figure, Axis, plot)
     wafervorticity!(ax, data::WaferVectorData; grid_n=256, kwargs...) -> plot
 
 Vorticity (∂vy/∂x − ∂vx/∂y) of the vector field, displayed as a scalar heatmap.
@@ -176,6 +220,12 @@ function wafervorticity!(args...; kwargs...)
     return ext.wafervorticity!(args...; kwargs...)
 end
 
+"""
+    wafervorticity(data::WaferVectorData; grid_n=256, kwargs...) -> (Figure, Axis, plot)
+    wafervorticity!(ax, data::WaferVectorData; grid_n=256, kwargs...) -> plot
+
+Vorticity (∂vy/∂x − ∂vx/∂y) of the vector field, displayed as a scalar heatmap.
+"""
 function wafervorticity(args...; kwargs...)
     ext = _makie_ext()
     ext === nothing && _require_makie(:wafervorticity)

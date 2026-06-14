@@ -26,3 +26,17 @@ abstract type AbstractKPI end
     description(::Self) :: String
     format_value(::Self, v::Real) :: String
 end
+
+"""
+    name(kpi::AbstractKPI) -> String
+
+Return the short display label for this KPI (shown in the KPI panel).
+"""
+function name end
+
+"""
+    compute(kpi::AbstractKPI, values::AbstractVector{<:Real}) -> Real
+
+Compute the KPI scalar from a vector of finite measurement values.
+"""
+function compute end

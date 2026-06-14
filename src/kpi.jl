@@ -4,35 +4,35 @@ Built-in KPI implementations.
 All structs implement `AbstractKPI` and are verified at load time via `@verify`.
 """
 
-struct KPIMean <: AbstractKPI end
+"Arithmetic mean of the measurement values." struct KPIMean <: AbstractKPI end
 name(::KPIMean) = "Mean"
 compute(::KPIMean, v::AbstractVector{<:Real})::Float64 = Float64(mean(v))
 
-struct KPISigma <: AbstractKPI end
+"Sample standard deviation of the measurement values." struct KPISigma <: AbstractKPI end
 name(::KPISigma) = "Sigma"
 compute(::KPISigma, v::AbstractVector{<:Real})::Float64 = Float64(std(v))
 
-struct KPIMax <: AbstractKPI end
+"Maximum measurement value." struct KPIMax <: AbstractKPI end
 name(::KPIMax) = "Max"
 compute(::KPIMax, v::AbstractVector{<:Real})::Float64 = Float64(maximum(v))
 
-struct KPIMin <: AbstractKPI end
+"Minimum measurement value." struct KPIMin <: AbstractKPI end
 name(::KPIMin) = "Min"
 compute(::KPIMin, v::AbstractVector{<:Real})::Float64 = Float64(minimum(v))
 
-struct KPIMedian <: AbstractKPI end
+"Median of the measurement values." struct KPIMedian <: AbstractKPI end
 name(::KPIMedian) = "Median"
 compute(::KPIMedian, v::AbstractVector{<:Real})::Float64 = Float64(median(v))
 
-struct KPIMeanPlus3Sigma <: AbstractKPI end
+"Mean plus three standard deviations (upper process limit)." struct KPIMeanPlus3Sigma <: AbstractKPI end
 name(::KPIMeanPlus3Sigma) = "Mean+3σ"
 compute(::KPIMeanPlus3Sigma, v::AbstractVector{<:Real})::Float64 = Float64(mean(v)) + 3Float64(std(v))
 
-struct KPIMeanMinus3Sigma <: AbstractKPI end
+"Mean minus three standard deviations (lower process limit)." struct KPIMeanMinus3Sigma <: AbstractKPI end
 name(::KPIMeanMinus3Sigma) = "Mean-3σ"
 compute(::KPIMeanMinus3Sigma, v::AbstractVector{<:Real})::Float64 = Float64(mean(v)) - 3Float64(std(v))
 
-struct KPIP99 <: AbstractKPI end
+"99th percentile of the measurement values." struct KPIP99 <: AbstractKPI end
 name(::KPIP99) = "P99"
 compute(::KPIP99, v::AbstractVector{<:Real})::Float64 = Float64(quantile(v, 0.99))
 

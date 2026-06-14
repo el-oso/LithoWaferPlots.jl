@@ -3,18 +3,22 @@ using DocumenterVitepress
 using LithoWaferPlots
 
 makedocs(;
-    modules  = [LithoWaferPlots],
+    modules = [LithoWaferPlots],
     sitename = "LithoWaferPlots.jl",
-    authors  = "el_oso",
-    format   = DocumenterVitepress.MarkdownVitepress(
+    authors = "el_oso",
+    format = DocumenterVitepress.MarkdownVitepress(
+        devbranch = "master",
         repo = "github.com/el-oso/LithoWaferPlots.jl",
     ),
     pages = [
-        "Home"            => "index.md",
+        "Home" => "index.md",
         "Getting Started" => "getting_started.md",
-        "Custom KPIs"     => "custom_kpi.md",
-        "Performance"     => "performance.md",
-        "API Reference"   => "api.md",
+        "Custom KPIs" => "custom_kpi.md",
+        "Performance" => "performance.md",
+        "API Reference" => "api.md",
     ],
-    warnonly = [:missing_docs],
+    checkdocs = :exports,
+    warnonly  = [:missing_docs],
+    remotes   = nothing,
+    doctest   = false,
 )
