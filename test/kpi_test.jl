@@ -27,14 +27,14 @@ end
 @testitem "KPIMeanPlus3Sigma and KPIMeanMinus3Sigma" begin
     using LithoWaferPlots, Statistics
     v = [0.0, 2.0, 4.0]
-    @test compute(KPIMeanPlus3Sigma(), v)  ≈ 2.0 + 3*std(v)
-    @test compute(KPIMeanMinus3Sigma(), v) ≈ 2.0 - 3*std(v)
+    @test compute(KPIMeanPlus3Sigma(), v) ≈ 2.0 + 3 * std(v)
+    @test compute(KPIMeanMinus3Sigma(), v) ≈ 2.0 - 3 * std(v)
 end
 
 @testitem "KPIP99" begin
     using LithoWaferPlots
     v = collect(1.0:100.0)
-    @test compute(KPIP99(), v) ≈ 99.0 atol=1.0
+    @test compute(KPIP99(), v) ≈ 99.0 atol = 1.0
 end
 
 @testitem "format_value default" begin

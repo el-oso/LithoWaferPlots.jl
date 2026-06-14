@@ -9,17 +9,17 @@ nearest `notch_angle_deg` to form a V-notch indented by `notch_depth_mm`.
 Reference: notch geometry derived from cap1tan/wafermap (MIT) and
 Artwork Systems wafer map glossary (https://www.artwork.com/package/wmapconvert/).
 """
-function wafer_polygon(spec::WaferSpec; n::Int=256)
+function wafer_polygon(spec::WaferSpec; n::Int = 256)
     r = spec.diameter_mm / 2.0
     notch_r = r - spec.notch_depth_mm
     θ_notch = deg2rad(spec.notch_angle_deg)
 
     # half-angle subtended by the notch opening on the circle (≈2° each side)
     δ = deg2rad(2.0)
-    θ_left  = θ_notch - δ
+    θ_left = θ_notch - δ
     θ_right = θ_notch + δ
 
-    pts = Tuple{Float64,Float64}[]
+    pts = Tuple{Float64, Float64}[]
     sizehint!(pts, n + 3)
 
     step = 2π / n
@@ -61,8 +61,10 @@ Return the axis-aligned bounding box of a `WaferField` in mm.
 function field_bounds(f::WaferField)
     hw = f.width_mm / 2.0
     hh = f.height_mm / 2.0
-    return (f.x_center_mm - hw, f.x_center_mm + hw,
-            f.y_center_mm - hh, f.y_center_mm + hh)
+    return (
+        f.x_center_mm - hw, f.x_center_mm + hw,
+        f.y_center_mm - hh, f.y_center_mm + hh,
+    )
 end
 
 """

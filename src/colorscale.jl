@@ -15,7 +15,7 @@ end
 Build a `ColorScale` from data. If `percentile_clip > 0`, the min/max are taken at
 the given percentile (e.g. 0.02 → 2nd–98th percentile) to reduce outlier influence.
 """
-function ColorScale(values::AbstractVector{<:Real}; percentile_clip::Float64=0.0)
+function ColorScale(values::AbstractVector{<:Real}; percentile_clip::Float64 = 0.0)
     if percentile_clip > 0.0
         lo = quantile(values, percentile_clip)
         hi = quantile(values, 1.0 - percentile_clip)

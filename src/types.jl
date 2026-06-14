@@ -68,7 +68,7 @@ wafer centre (SEMI M20 convention). `fields` may be empty.
 Construct via `WaferData(table, wafer)` (mm coords) or
 `WaferData(table, grid, wafer)` (die indices).
 """
-struct WaferData{T<:Real}
+struct WaferData{T <: Real}
     x::Vector{Float64}
     y::Vector{Float64}
     values::Vector{T}

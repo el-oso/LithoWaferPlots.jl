@@ -61,4 +61,4 @@ const DEFAULT_KPIS = AbstractKPI[
 Default formatter: 6 significant figures. Override in your `AbstractKPI` subtype
 via the optional `format_value` method.
 """
-format_value(::AbstractKPI, v::Real) = string(round(v; sigdigits=6))
+format_value(::AbstractKPI, v::Real) = string(round(v; sigdigits = 6))

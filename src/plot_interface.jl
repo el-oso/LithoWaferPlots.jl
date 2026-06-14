@@ -12,10 +12,10 @@ _makie_ext() = Base.get_extension(LithoWaferPlots, :LithoWaferPlotsMakieExt)
 function _require_makie(fn::Symbol)
     error(
         "LithoWaferPlots plotting function `$fn` requires a Makie backend.\n" *
-        "Load one before calling it, e.g.:\n\n" *
-        "    using CairoMakie    # for file/notebook rendering\n" *
-        "    using GLMakie       # for interactive desktop windows\n" *
-        "    using WGLMakie      # for browser/Pluto notebooks\n"
+            "Load one before calling it, e.g.:\n\n" *
+            "    using CairoMakie    # for file/notebook rendering\n" *
+            "    using GLMakie       # for interactive desktop windows\n" *
+            "    using WGLMakie      # for browser/Pluto notebooks\n"
     )
 end
 

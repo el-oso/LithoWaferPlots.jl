@@ -10,7 +10,7 @@ const SKIP_RENDERING = !haskey(ENV, "DISPLAY") && !haskey(ENV, "WAYLAND_DISPLAY"
 
 runtests(
     ti -> !(SKIP_RENDERING && :rendering in ti.tags),
-    joinpath(@__DIR__);
+    LithoWaferPlots;
     testitem_timeout = 120,
     nworkers = 0,
 )

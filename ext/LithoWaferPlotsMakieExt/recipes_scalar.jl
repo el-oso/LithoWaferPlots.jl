@@ -9,13 +9,13 @@ Performance target: 300 000 points rendered in < 0.3s (GLMakie GPU path).
 
 @recipe(WaferScatter, data) do scene
     Attributes(
-        colormap    = :viridis,
-        markersize  = 3f0,
-        boundary_color     = :black,
+        colormap = :viridis,
+        markersize = 3.0f0,
+        boundary_color = :black,
         boundary_linewidth = 1.5f0,
-        field_color        = (:steelblue, 0.15),
-        field_strokecolor  = :steelblue,
-        field_strokewidth  = 0.8f0,
+        field_color = (:steelblue, 0.15),
+        field_strokecolor = :steelblue,
+        field_strokewidth = 0.8f0,
     )
 end
 
@@ -23,23 +23,29 @@ function Makie.plot!(p::WaferScatter)
     data = p[:data][]
     mask = inside_wafer(data.x, data.y, data.wafer)
     x, y, vals = data.x[mask], data.y[mask], data.values[mask]
-    cs   = ColorScale(vals)
+    cs = ColorScale(vals)
     cols = normalize(cs, vals)
 
-    scatter!(p, x, y;
-        color      = cols,
-        colormap   = p[:colormap],
-        colorrange = (0f0, 1f0),
-        markersize = p[:markersize])
+    scatter!(
+        p, x, y;
+        color = cols,
+        colormap = p[:colormap],
+        colorrange = (0.0f0, 1.0f0),
+        markersize = p[:markersize]
+    )
 
-    draw_wafer_boundary!(p, data.wafer;
-        color     = p[:boundary_color][],
-        linewidth = p[:boundary_linewidth][])
+    draw_wafer_boundary!(
+        p, data.wafer;
+        color = p[:boundary_color][],
+        linewidth = p[:boundary_linewidth][]
+    )
 
-    draw_fields!(p, data.fields;
-        color        = p[:field_color][],
-        strokecolor  = p[:field_strokecolor][],
-        strokewidth  = p[:field_strokewidth][])
+    draw_fields!(
+        p, data.fields;
+        color = p[:field_color][],
+        strokecolor = p[:field_strokecolor][],
+        strokewidth = p[:field_strokewidth][]
+    )
 
     return p
 end
@@ -51,14 +57,14 @@ end
 
 @recipe(WaferHeatmap, data) do scene
     Attributes(
-        colormap    = :inferno,
-        markersize  = 4f0,
-        boundary_color     = :black,
+        colormap = :inferno,
+        markersize = 4.0f0,
+        boundary_color = :black,
         boundary_linewidth = 1.5f0,
-        field_color        = (:steelblue, 0.12),
-        field_strokecolor  = :steelblue,
-        field_strokewidth  = 0.8f0,
-        percentile_clip    = 0.0,
+        field_color = (:steelblue, 0.12),
+        field_strokecolor = :steelblue,
+        field_strokewidth = 0.8f0,
+        percentile_clip = 0.0,
     )
 end
 
@@ -66,24 +72,30 @@ function Makie.plot!(p::WaferHeatmap)
     data = p[:data][]
     mask = inside_wafer(data.x, data.y, data.wafer)
     x, y, vals = data.x[mask], data.y[mask], data.values[mask]
-    cs   = ColorScale(vals; percentile_clip=p[:percentile_clip][])
+    cs = ColorScale(vals; percentile_clip = p[:percentile_clip][])
     cols = normalize(cs, vals)
 
-    scatter!(p, x, y;
-        color      = cols,
-        colormap   = p[:colormap],
-        colorrange = (0f0, 1f0),
+    scatter!(
+        p, x, y;
+        color = cols,
+        colormap = p[:colormap],
+        colorrange = (0.0f0, 1.0f0),
         markersize = p[:markersize],
-        marker     = :rect)
+        marker = :rect
+    )
 
-    draw_wafer_boundary!(p, data.wafer;
-        color     = p[:boundary_color][],
-        linewidth = p[:boundary_linewidth][])
+    draw_wafer_boundary!(
+        p, data.wafer;
+        color = p[:boundary_color][],
+        linewidth = p[:boundary_linewidth][]
+    )
 
-    draw_fields!(p, data.fields;
-        color        = p[:field_color][],
-        strokecolor  = p[:field_strokecolor][],
-        strokewidth  = p[:field_strokewidth][])
+    draw_fields!(
+        p, data.fields;
+        color = p[:field_color][],
+        strokecolor = p[:field_strokecolor][],
+        strokewidth = p[:field_strokewidth][]
+    )
 
     return p
 end
@@ -93,26 +105,26 @@ end
 
 @recipe(WaferContour, data) do scene
     Attributes(
-        colormap    = :viridis,
-        levels      = 10,
-        grid_n      = 256,
-        boundary_color     = :black,
+        colormap = :viridis,
+        levels = 10,
+        grid_n = 256,
+        boundary_color = :black,
         boundary_linewidth = 1.5f0,
-        field_color        = (:steelblue, 0.12),
-        field_strokecolor  = :steelblue,
-        field_strokewidth  = 0.8f0,
+        field_color = (:steelblue, 0.12),
+        field_strokecolor = :steelblue,
+        field_strokewidth = 0.8f0,
     )
 end
 
 function Makie.plot!(p::WaferContour)
-    data   = p[:data][]
+    data = p[:data][]
     grid_n = p[:grid_n][]
-    r      = data.wafer.diameter_mm / 2.0
+    r = data.wafer.diameter_mm / 2.0
 
     # interpolate to regular grid
     xs = LinRange(-r, r, grid_n)
     ys = LinRange(-r, r, grid_n)
-    pts  = permutedims(hcat(data.x, data.y))
+    pts = permutedims(hcat(data.x, data.y))
     tree = KDTree(pts)
     r_active2 = (r - data.wafer.edge_exclusion_mm)^2
 
@@ -120,7 +132,7 @@ function Makie.plot!(p::WaferContour)
     for (j, y) in enumerate(ys), (i, x) in enumerate(xs)
         if x^2 + y^2 <= r_active2
             idxs, dists = knn(tree, Float64[x, y], 4, true)
-            if dists[1] < 1e-10
+            if dists[1] < 1.0e-10
                 Z[i, j] = Float32(data.values[idxs[1]])
             else
                 w = dists .^ -2.0
@@ -132,18 +144,24 @@ function Makie.plot!(p::WaferContour)
         end
     end
 
-    contour!(p, xs, ys, Z;
+    contour!(
+        p, xs, ys, Z;
         colormap = p[:colormap],
-        levels   = p[:levels])
+        levels = p[:levels]
+    )
 
-    draw_wafer_boundary!(p, data.wafer;
-        color     = p[:boundary_color][],
-        linewidth = p[:boundary_linewidth][])
+    draw_wafer_boundary!(
+        p, data.wafer;
+        color = p[:boundary_color][],
+        linewidth = p[:boundary_linewidth][]
+    )
 
-    draw_fields!(p, data.fields;
-        color        = p[:field_color][],
-        strokecolor  = p[:field_strokecolor][],
-        strokewidth  = p[:field_strokewidth][])
+    draw_fields!(
+        p, data.fields;
+        color = p[:field_color][],
+        strokecolor = p[:field_strokecolor][],
+        strokewidth = p[:field_strokewidth][]
+    )
 
     return p
 end

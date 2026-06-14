@@ -20,11 +20,11 @@ Optional methods:
 abstract type AbstractKPI end
 
 @contract AbstractKPI begin
-    name(::Self) :: String
-    compute(::Self, values::AbstractVector{<:Real}) :: Real
+    name(::Self)::String
+    compute(::Self, values::AbstractVector{<:Real})::Real
     :optional
-    description(::Self) :: String
-    format_value(::Self, v::Real) :: String
+    description(::Self)::String
+    format_value(::Self, v::Real)::String
 end
 
 """

@@ -37,7 +37,7 @@ export WaferSpec, DieGrid, WaferField, WaferDie, WaferData, WaferVectorData
 export wafer_polygon, inside_wafer, field_bounds, die_bounds
 export AbstractKPI, DEFAULT_KPIS, name, compute, format_value
 export KPIMean, KPISigma, KPIMax, KPIMin, KPIMedian,
-       KPIMeanPlus3Sigma, KPIMeanMinus3Sigma, KPIP99
+    KPIMeanPlus3Sigma, KPIMeanMinus3Sigma, KPIP99
 export ColorScale, normalize
 export divergence, vorticity
 # plotting stubs (implementations in Makie extension)

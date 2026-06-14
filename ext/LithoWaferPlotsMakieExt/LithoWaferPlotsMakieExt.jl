@@ -3,10 +3,10 @@ module LithoWaferPlotsMakieExt
 using Makie
 using LithoWaferPlots
 using LithoWaferPlots: WaferSpec, WaferData, WaferVectorData, WaferField,
-                       wafer_polygon, inside_wafer, field_bounds,
-                       ColorScale, normalize, DEFAULT_KPIS, AbstractKPI,
-                       name, compute, format_value,
-                       divergence, vorticity
+    wafer_polygon, inside_wafer, field_bounds,
+    ColorScale, normalize, DEFAULT_KPIS, AbstractKPI,
+    name, compute, format_value,
+    divergence, vorticity
 using NearestNeighbors: KDTree, knn
 using Random: randperm
 

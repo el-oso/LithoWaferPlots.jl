@@ -1,7 +1,9 @@
 @testitem "All built-in KPIs implement AbstractKPI" begin
     using LithoWaferPlots, TypeContracts
-    for T in [KPIMean, KPISigma, KPIMax, KPIMin, KPIMedian,
-              KPIMeanPlus3Sigma, KPIMeanMinus3Sigma, KPIP99]
+    for T in [
+            KPIMean, KPISigma, KPIMax, KPIMin, KPIMedian,
+            KPIMeanPlus3Sigma, KPIMeanMinus3Sigma, KPIP99,
+        ]
         @test implements(T, AbstractKPI)
     end
 end

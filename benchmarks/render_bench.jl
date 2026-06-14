@@ -12,7 +12,7 @@ using GLMakie
 using BenchmarkTools
 using Statistics
 
-GLMakie.activate!(; visible=false)
+GLMakie.activate!(; visible = false)
 
 const N = 300_000
 const WAFER = WaferSpec(300.0)
@@ -29,10 +29,10 @@ end
 function make_vector_data(n)
     θ = rand(n) .* 2π
     r = sqrt.(rand(n)) .* 120.0
-    x  = r .* cos.(θ)
-    y  = r .* sin.(θ)
+    x = r .* cos.(θ)
+    y = r .* sin.(θ)
     vx = -y ./ 80
-    vy =  x ./ 80
+    vy = x ./ 80
     return WaferVectorData(x, y, vx, vy, WAFER, WaferField[])
 end
 
@@ -45,8 +45,8 @@ function bench_plot(label, fn)
     # warm-up
     fn()
     GC.gc()
-    b = @benchmark $fn() samples=5 evals=1
-    med = median(b).time / 1e9
+    b = @benchmark $fn() samples = 5 evals = 1
+    med = median(b).time / 1.0e9
     status = med < 0.3 ? "✓ PASS" : "✗ FAIL"
     @printf "%-30s  median = %.3fs  %s\n" label med status
     return med
@@ -54,7 +54,7 @@ end
 
 println("=== Benchmark results ===\n")
 
-results = Dict{String,Float64}()
+results = Dict{String, Float64}()
 
 results["WaferScatter"] = bench_plot("WaferScatter (300K pts)") do
     fig, ax, _ = wafer_figure()
@@ -79,7 +79,7 @@ end
 
 results["WaferStreamlines"] = bench_plot("WaferStreamlines (300K pts)") do
     fig, ax, _ = wafer_figure()
-    waferstreamlines!(ax, vector_data; n_seeds=15)
+    waferstreamlines!(ax, vector_data; n_seeds = 15)
     display(fig)
     nothing
 end
