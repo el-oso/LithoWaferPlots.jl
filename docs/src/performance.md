@@ -57,34 +57,50 @@ suite with two groups:
 | `compute` | masking, colour scaling, divergence/vorticity, KPIs | any (CairoMakie) |
 | `render` | full plot construction for every recipe | CairoMakie (CPU) |
 
-### Running the suite
+## Latest benchmark results
+
+The report below is **regenerated on every documentation build** by `docs/make.jl`,
+which runs the suite through PkgBenchmark. Absolute timings reflect the machine that built
+these docs — a shared CI runner unless built locally — so treat them as indicative rather
+than authoritative. For tracking regressions across commits, use `judge` (below).
+
+```@eval
+using Markdown, LithoWaferPlots
+Markdown.parse(
+    read(
+        joinpath(pkgdir(LithoWaferPlots), "docs", "generated", "benchmark_report.md"),
+        String,
+    )
+)
+```
+
+## Running the suite yourself
 
 ```julia
 using PkgBenchmark, LithoWaferPlots
 
-results = benchmarkpkg(LithoWaferPlots)
+results = benchmarkpkg(
+    LithoWaferPlots;
+    script = joinpath(pkgdir(LithoWaferPlots), "benchmarks", "benchmarks.jl"),
+)
 export_markdown(stdout, results)
 ```
+
+Because the suite lives in `benchmarks/` (not the PkgBenchmark default `benchmark/`),
+always pass the `script` keyword as shown above.
 
 ### Comparing commits for regressions
 
 ```julia
-baseline = benchmarkpkg(LithoWaferPlots, "main")
-current  = benchmarkpkg(LithoWaferPlots)
+script   = joinpath(pkgdir(LithoWaferPlots), "benchmarks", "benchmarks.jl")
+baseline = benchmarkpkg(LithoWaferPlots, "main"; script)
+current  = benchmarkpkg(LithoWaferPlots; script)
 export_markdown(stdout, judge(current, baseline))
 ```
 
 A `judge` result marks each benchmark as `+` (regression), `-` (improvement),
-or `≡` (invariant, within noise tolerance).
-
-### Running a single group
-
-```julia
-results = benchmarkpkg(LithoWaferPlots; script = "benchmarks/benchmarks.jl",
-                        resultfile = "bench_results.json")
-# or filter at the REPL:
-run(SUITE["compute"])
-```
+or `≡` (invariant, within noise tolerance). Comparing against a named commit requires a
+clean working tree.
 
 ### GPU rendering (GLMakie)
 

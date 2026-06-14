@@ -72,53 +72,79 @@ SUITE["compute"]["kpi_panel"] = @benchmarkable(
 )
 
 # ── render group (CairoMakie, CPU) ────────────────────────────────────────────
+# Render benchmarks build full Makie figures, so each is capped (seconds/samples/evals)
+# to keep the documentation build — which runs this suite — within a few minutes.
 
 SUITE["render"] = BenchmarkGroup(["render"])
 
-SUITE["render"]["waferscatter"] = @benchmarkable begin
-    fig, ax, side = wafer_figure()
-    waferscatter!(ax, $SDATA)
-    fig
-end
+SUITE["render"]["waferscatter"] = @benchmarkable(
+    begin
+        fig, ax, side = wafer_figure()
+        waferscatter!(ax, $SDATA)
+        fig
+    end,
+    seconds = 2.0, samples = 30, evals = 1
+)
 
-SUITE["render"]["waferheatmap"] = @benchmarkable begin
-    fig, ax, side = wafer_figure()
-    waferheatmap!(ax, $SDATA)
-    fig
-end
+SUITE["render"]["waferheatmap"] = @benchmarkable(
+    begin
+        fig, ax, side = wafer_figure()
+        waferheatmap!(ax, $SDATA)
+        fig
+    end,
+    seconds = 2.0, samples = 30, evals = 1
+)
 
-SUITE["render"]["waferheatmap_image"] = @benchmarkable begin
-    fig, ax, side = wafer_figure()
-    waferheatmap!(ax, $SDATA; imagemode = :image)
-    fig
-end
+SUITE["render"]["waferheatmap_image"] = @benchmarkable(
+    begin
+        fig, ax, side = wafer_figure()
+        waferheatmap!(ax, $SDATA; imagemode = :image)
+        fig
+    end,
+    seconds = 2.0, samples = 30, evals = 1
+)
 
-SUITE["render"]["wafercontour"] = @benchmarkable begin
-    fig, ax, side = wafer_figure()
-    wafercontour!(ax, $SDATA)
-    fig
-end
+SUITE["render"]["wafercontour"] = @benchmarkable(
+    begin
+        fig, ax, side = wafer_figure()
+        wafercontour!(ax, $SDATA)
+        fig
+    end,
+    seconds = 2.0, samples = 30, evals = 1
+)
 
-SUITE["render"]["waferarrows"] = @benchmarkable begin
-    fig, ax, side = wafer_figure()
-    waferarrows!(ax, $VDATA)
-    fig
-end
+SUITE["render"]["waferarrows"] = @benchmarkable(
+    begin
+        fig, ax, side = wafer_figure()
+        waferarrows!(ax, $VDATA)
+        fig
+    end,
+    seconds = 2.0, samples = 30, evals = 1
+)
 
-SUITE["render"]["waferstreamlines"] = @benchmarkable begin
-    fig, ax, side = wafer_figure()
-    waferstreamlines!(ax, $VDATA; n_seeds = 15)
-    fig
-end
+SUITE["render"]["waferstreamlines"] = @benchmarkable(
+    begin
+        fig, ax, side = wafer_figure()
+        waferstreamlines!(ax, $VDATA; n_seeds = 15)
+        fig
+    end,
+    seconds = 2.0, samples = 30, evals = 1
+)
 
-SUITE["render"]["waferdivergence"] = @benchmarkable begin
-    fig, ax, side = wafer_figure()
-    waferdivergence!(ax, $VDATA)
-    fig
-end
+SUITE["render"]["waferdivergence"] = @benchmarkable(
+    begin
+        fig, ax, side = wafer_figure()
+        waferdivergence!(ax, $VDATA)
+        fig
+    end,
+    seconds = 2.0, samples = 30, evals = 1
+)
 
-SUITE["render"]["wafervorticity"] = @benchmarkable begin
-    fig, ax, side = wafer_figure()
-    wafervorticity!(ax, $VDATA)
-    fig
-end
+SUITE["render"]["wafervorticity"] = @benchmarkable(
+    begin
+        fig, ax, side = wafer_figure()
+        wafervorticity!(ax, $VDATA)
+        fig
+    end,
+    seconds = 2.0, samples = 30, evals = 1
+)

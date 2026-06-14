@@ -1,17 +1,19 @@
 [deps]
 AlgebraOfGraphics = "cbdf2221-f076-402e-a563-3d30da359d67"
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 DocumenterVitepress = "4710194d-e776-4893-9690-8d956a29c365"
 LithoWaferPlots = "81c163b9-06bd-4c7c-88ff-a139205f0cbd"
-
-[extras]
-TypeContracts = "c7a3f1e2-84b5-4d69-9e0a-1f2b3c4d5e6f"
+PkgBenchmark = "32113eaa-f34f-5b0d-bd6c-c81e245fc73d"
 
 [sources]
 LithoWaferPlots = {path = ".."}
-TypeContracts = {url = "https://github.com/el-oso/TypeContracts.jl", rev = "master"}
+TypeContracts = {rev = "master", url = "https://github.com/el-oso/TypeContracts.jl"}
 
 [compat]
 julia = "1.9"
+
+[extras]
+TypeContracts = "c7a3f1e2-84b5-4d69-9e0a-1f2b3c4d5e6f"

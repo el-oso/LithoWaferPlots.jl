@@ -6,6 +6,8 @@ docs/node_modules/
 docs/.vitepress/dist/
 docs/.vitepress/cache/
 docs/src/.vitepress/
+docs/generated/
+/benchmark/
 .artifacts/
 *.jl.cov
 *.jl.mem
