@@ -59,6 +59,8 @@ wafer_figure
 wafer_cfd_figure
 add_colorbar!
 add_kpi_panel!
+add_exclusion_ring!
+add_ring_legend!
 ```
 
 ## Scalar plots

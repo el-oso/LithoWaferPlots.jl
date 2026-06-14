@@ -135,6 +135,34 @@ add_colorbar!(side, p; label="Vorticity (a.u.)")
 
 ---
 
+## Exclusion ring annotation
+
+Draw dashed/dotted radial exclusion rings on any plot, specified as **mm to the edge**
+(the natural fab unit). Optionally dim the region outside the ring with a semi-transparent
+overlay that works with every recipe type including image-mode heatmaps and CFD plots.
+
+```julia
+fig, ax, side = wafer_figure()
+p = waferheatmap!(ax, data; colormap = :plasma)
+add_colorbar!(side, p; label = "Thickness (nm)")
+add_kpi_panel!(side, data)
+
+# inner ring — dashed white line only
+add_exclusion_ring!(ax, wafer; mm_to_edge = 2.0,
+    label = "2 mm EE", color = :white, linestyle = :dash)
+
+# outer ring — dotted + dim the annular region outside it
+add_exclusion_ring!(ax, wafer; mm_to_edge = 20.0,
+    label = "20 mm keep-out", color = :yellow, linestyle = :dot,
+    dim_outside = true, dim_alpha = 0.35)
+
+add_ring_legend!(ax; position = :rb)
+```
+
+![Exclusion rings](assets/example_exclusion_rings.png)
+
+---
+
 ## CFD Combined: Divergence + Streamlines
 
 The standard CFD summary view: ∇·**v** heatmap as background, streamlines overlaid in white.

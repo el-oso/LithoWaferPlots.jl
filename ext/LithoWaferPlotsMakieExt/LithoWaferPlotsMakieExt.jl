@@ -17,6 +17,7 @@ include("recipes_scalar.jl")
 include("recipes_vector.jl")
 
 export wafer_figure, wafer_cfd_figure, add_colorbar!, add_kpi_panel!
+export add_exclusion_ring!, add_ring_legend!
 export WaferScatter, waferscatter, waferscatter!
 export WaferHeatmap, waferheatmap, waferheatmap!
 export WaferContour, wafercontour, wafercontour!

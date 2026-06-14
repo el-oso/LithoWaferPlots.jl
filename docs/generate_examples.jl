@@ -206,7 +206,30 @@ let
     println("heatmap+fields done")
 end
 
-# ── 9. CFD combined: divergence + streamlines ─────────────────────────────────
+# ── 9. Heatmap + exclusion rings ──────────────────────────────────────────────
+
+let sdata = dense_scalar_data()
+    fig, ax, side = wafer_figure(; resolution = RESOLUTION)
+    p = waferheatmap!(ax, sdata; colormap = :plasma)
+    add_colorbar!(side, p; label = "Thickness (nm)")
+    add_kpi_panel!(side, sdata)
+    # inner ring: dashed line only
+    add_exclusion_ring!(
+        ax, WAFER; mm_to_edge = 2.0,
+        label = "2 mm EE", color = :white, linestyle = :dash
+    )
+    # outer ring: dotted line + dim overlay outside
+    add_exclusion_ring!(
+        ax, WAFER; mm_to_edge = 20.0,
+        label = "20 mm keep-out", color = :yellow, linestyle = :dot,
+        dim_outside = true, dim_alpha = 0.35
+    )
+    add_ring_legend!(ax; position = :rb)
+    save(joinpath(OUT, "example_exclusion_rings.png"), fig; px_per_unit = 2)
+    println("exclusion rings done")
+end
+
+# ── 10. CFD combined: divergence + streamlines ────────────────────────────────
 
 let vdata = divergence_data()
     fig, ax, side = wafer_cfd_figure(

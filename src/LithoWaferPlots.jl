@@ -42,6 +42,7 @@ export ColorScale, normalize
 export divergence, vorticity
 # plotting stubs (implementations in Makie extension)
 export wafer_figure, wafer_cfd_figure, add_colorbar!, add_kpi_panel!
+export add_exclusion_ring!, add_ring_legend!
 export waferscatter, waferscatter!
 export waferheatmap, waferheatmap!
 export wafercontour, wafercontour!

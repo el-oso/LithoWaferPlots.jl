@@ -22,6 +22,47 @@ end
 # ── layout functions ──────────────────────────────────────────────────────────
 
 """
+    add_exclusion_ring!(ax, wafer::WaferSpec; mm_to_edge, label="", kwargs...)
+
+Draw a dashed circle at `mm_to_edge` mm from the wafer edge. Composes with any recipe
+already on `ax` — call after the primary plot.
+
+Keywords:
+- `mm_to_edge::Real`: distance from the wafer edge in mm (required)
+- `label::String`: legend entry; empty string = no legend entry
+- `color`: ring colour (default `:red`)
+- `linewidth`: line width (default `1.0f0`)
+- `linestyle`: `:dash` (default), `:dot`, `:dashdot`, etc.
+- `dim_outside::Bool`: overlay a semi-transparent fill between the ring and the
+  wafer boundary (default `false`)
+- `dim_color`: dim overlay colour (default `:black`)
+- `dim_alpha::Real`: dim overlay opacity 0–1 (default `0.35`)
+
+Call multiple times for several rings. Follow with `add_ring_legend!(ax)` to show labels.
+
+Requires a Makie backend.
+"""
+function add_exclusion_ring!(args...; kwargs...)
+    ext = _makie_ext()
+    ext === nothing && _require_makie(:add_exclusion_ring!)
+    return ext.add_exclusion_ring!(args...; kwargs...)
+end
+
+"""
+    add_ring_legend!(ax; position=:rt, framevisible=false, kwargs...)
+
+Show a legend on `ax` collecting all labeled elements (e.g., exclusion rings).
+Thin wrapper around Makie's `axislegend`.
+
+Requires a Makie backend.
+"""
+function add_ring_legend!(args...; kwargs...)
+    ext = _makie_ext()
+    ext === nothing && _require_makie(:add_ring_legend!)
+    return ext.add_ring_legend!(args...; kwargs...)
+end
+
+"""
     wafer_cfd_figure(vdata::WaferVectorData; scalar=:divergence, vector=:streamlines, kwargs...)
 
 Create a combined CFD plot: scalar background (divergence or vorticity) with a streamline or

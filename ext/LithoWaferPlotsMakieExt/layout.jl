@@ -149,6 +149,61 @@ function wafer_cfd_figure(
 end
 
 """
+    add_exclusion_ring!(ax, wafer::WaferSpec; mm_to_edge, label="", kwargs...)
+
+Draw a dashed circle at `mm_to_edge` mm from the wafer edge on `ax`.
+
+Keywords:
+- `mm_to_edge`: distance from the wafer edge in mm (required)
+- `label`: legend entry text; empty string = no legend entry
+- `color`: ring line colour (default `:red`)
+- `linewidth`: ring line width (default `1.0f0`)
+- `linestyle`: `:dash` (default), `:dot`, `:dashdot`, etc.
+- `dim_outside`: when `true`, draw a semi-transparent overlay on the region
+  between the ring and the wafer boundary (default `false`)
+- `dim_color`: overlay fill colour (default `:black`)
+- `dim_alpha`: overlay opacity, 0–1 (default `0.35`)
+- `n`: circle polygon resolution (default `256`)
+
+Call multiple times with different `mm_to_edge` values to draw several rings.
+Call `add_ring_legend!(ax)` afterwards to show a legend.
+"""
+function add_exclusion_ring!(
+        ax, wafer::WaferSpec;
+        mm_to_edge::Real,
+        label::String = "",
+        color = :red,
+        linewidth = 1.0f0,
+        linestyle = :dash,
+        dim_outside::Bool = false,
+        dim_color = :black,
+        dim_alpha::Real = 0.35,
+        n::Int = 256,
+    )
+    r_ring = wafer.diameter_mm / 2.0 - mm_to_edge
+    r_ring > 0 || error("mm_to_edge ($mm_to_edge mm) is larger than the wafer radius")
+    r_wafer = wafer.diameter_mm / 2.0
+
+    if dim_outside
+        _draw_dim_annulus!(ax, r_ring, r_wafer; color = dim_color, alpha = dim_alpha, n)
+    end
+
+    _draw_ring!(ax, r_ring; label, color, linewidth, linestyle, n)
+    return nothing
+end
+
+"""
+    add_ring_legend!(ax; position=:rt, framevisible=false, kwargs...)
+
+Show a legend on `ax` for all labeled elements (e.g., exclusion rings drawn with
+a non-empty `label`). Thin wrapper around `axislegend`.
+"""
+function add_ring_legend!(ax; position = :rt, framevisible = false, kwargs...)
+    axislegend(ax; position, framevisible, kwargs...)
+    return nothing
+end
+
+"""
     add_kpi_panel!(side, data::WaferData; kpis=DEFAULT_KPIS)
 
 Compute KPIs and render a label grid in the bottom slot of the side panel.
