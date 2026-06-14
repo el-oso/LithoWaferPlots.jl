@@ -1,0 +1,12 @@
+# Test environment for LithoWaferPlots.jl
+# Used when running tests via: julia --project=test test/runtests.jl
+[deps]
+GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
+LithoWaferPlots = "81c163b9-06bd-4c7c-88ff-a139205f0cbd"
+ReTestItems = "817f1d60-ba6b-4fd5-9520-3cf149f6a823"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+TypeContracts = "c7a3f1e2-84b5-4d69-9e0a-1f2b3c4d5e6f"
+
+[compat]
+julia = "1.9"

@@ -1,0 +1,8 @@
+Manifest.toml
+test/Manifest.toml
+docs/Manifest.toml
+docs/build/
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+*.jl.cov
+*.jl.mem
