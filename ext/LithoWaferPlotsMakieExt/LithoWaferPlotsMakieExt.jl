@@ -9,6 +9,7 @@ using LithoWaferPlots: WaferSpec, WaferData, WaferVectorData, WaferField,
     divergence, vorticity
 using NearestNeighbors: KDTree, knn
 using Random: randperm
+using Tables
 
 include("wafer_shape.jl")
 include("streamlines.jl")
@@ -16,7 +17,7 @@ include("layout.jl")
 include("recipes_scalar.jl")
 include("recipes_vector.jl")
 
-export wafer_figure, wafer_cfd_figure, add_colorbar!, add_kpi_panel!
+export wafer_figure, wafer_cfd_figure, wafer_facet, add_colorbar!, add_kpi_panel!
 export add_exclusion_ring!, add_ring_legend!
 export WaferScatter, waferscatter, waferscatter!
 export WaferHeatmap, waferheatmap, waferheatmap!

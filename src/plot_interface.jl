@@ -86,6 +86,28 @@ function wafer_cfd_figure(args...; kwargs...)
 end
 
 """
+    wafer_facet(table, wafer::WaferSpec; by, kwargs...) -> Figure
+
+Create a grid of wafer maps from grouped tabular data.
+
+Keywords:
+- `by::Symbol`: column whose unique values become facet panels (required)
+- `x::Symbol = :x`, `y::Symbol = :y`, `value::Symbol = :value`: data columns
+- `plot_type::Symbol = :heatmap`: `:scatter`, `:heatmap`, or `:contour`
+- `colormap`: colormap for all panels (default `:inferno`)
+- `colorrange`: `nothing` for per-panel auto-scaling, or `(lo, hi)` for a shared colorbar
+- `ncols::Int = 3`: columns in the grid
+- `resolution`: auto-sized from panel count if omitted
+
+Requires a Makie backend.
+"""
+function wafer_facet(args...; kwargs...)
+    ext = _makie_ext()
+    ext === nothing && _require_makie(:wafer_facet)
+    return ext.wafer_facet(args...; kwargs...)
+end
+
+"""
     wafer_figure(; resolution=(900,650), kwargs...) -> (Figure, Axis, GridLayout)
 
 Create a Figure with the standard wafer layout: main wafer Axis on the left,

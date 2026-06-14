@@ -201,6 +201,30 @@ add_ring_legend!(ax; position = :rb)
 
 ---
 
+## Faceted wafer grid
+
+`wafer_facet` groups any Tables.jl-compatible source by a column and renders one wafer
+panel per group. Pass `colorrange = (lo, hi)` for a shared colorscale (single colorbar
+below the grid); omit it for independent per-panel scaling.
+
+```julia
+# table has columns: x, y, value, lot
+fig = wafer_facet(
+    table, wafer;
+    by = :lot,
+    plot_type = :heatmap,
+    colormap = :plasma,
+    colorrange = (90.0, 112.0),
+    ncols = 2,
+)
+```
+
+Works with any `plot_type`: `:heatmap` (default), `:scatter`, or `:contour`.
+
+![Faceted wafer grid](assets/example_facet.png)
+
+---
+
 ## CFD Combined: Divergence + Streamlines
 
 The standard CFD summary view: ∇·**v** heatmap as background, streamlines overlaid in white.

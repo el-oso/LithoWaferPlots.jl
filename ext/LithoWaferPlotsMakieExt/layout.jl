@@ -204,6 +204,111 @@ function add_ring_legend!(ax; position = :rt, framevisible = false, kwargs...)
 end
 
 """
+    wafer_facet(table, wafer::WaferSpec; by, kwargs...) -> Figure
+
+Create a grid of wafer maps from grouped tabular data — one panel per unique value
+of the `by` column. Works with any Tables.jl-compatible source (DataFrame, NamedTuple
+of vectors, CSV row table, etc.).
+
+Keywords:
+- `by::Symbol`: column whose unique values become facet panels (required)
+- `x::Symbol = :x`: x-coordinate column
+- `y::Symbol = :y`: y-coordinate column
+- `value::Symbol = :value`: measurement column
+- `plot_type::Symbol = :heatmap`: `:scatter`, `:heatmap`, or `:contour`
+- `colormap`: colormap for all panels (default `:inferno`)
+- `colorrange`: `nothing` for per-panel auto-scaling, or `(lo, hi)` for a shared
+  scale with a shared colorbar below the grid
+- `ncols::Int = 3`: columns in the grid (rows filled automatically)
+- `resolution`: auto-sized from panel count if omitted
+- `figure_kwargs...`: forwarded to `Figure`
+
+Requires a Makie backend.
+"""
+function wafer_facet(
+        table, wafer::WaferSpec;
+        by::Symbol,
+        x::Symbol = :x,
+        y::Symbol = :y,
+        value::Symbol = :value,
+        plot_type::Symbol = :heatmap,
+        colormap = :inferno,
+        colorrange = nothing,
+        ncols::Int = 3,
+        resolution = nothing,
+        figure_kwargs...
+    )
+    cols = Tables.columns(table)
+    by_col = collect(Tables.getcolumn(cols, by))
+    x_col = collect(Float64.(Tables.getcolumn(cols, x)))
+    y_col = collect(Float64.(Tables.getcolumn(cols, y)))
+    v_col = collect(Tables.getcolumn(cols, value))
+
+    groups = unique(by_col)
+    ngroups = length(groups)
+    nrows = cld(ngroups, ncols)
+
+    panel_w = 270
+    panel_h = 290
+    sz = resolution === nothing ?
+        (panel_w * min(ngroups, ncols), panel_h * nrows + (colorrange !== nothing ? 60 : 0)) :
+        resolution
+    fig = Figure(; size = sz, figure_kwargs...)
+    gl = fig[1, 1] = GridLayout()
+
+    plot_fn! = if plot_type === :heatmap
+        (ax, wd; kw...) -> waferheatmap!(ax, wd; imagemode = :scatter, kw...)
+    elseif plot_type === :scatter
+        (ax, wd; kw...) -> waferscatter!(ax, wd; kw...)
+    elseif plot_type === :contour
+        (ax, wd; kw...) -> wafercontour!(ax, wd; kw...)
+    else
+        error("plot_type must be :heatmap, :scatter, or :contour, got :$plot_type")
+    end
+
+    for (k, g) in enumerate(groups)
+        row, col = fldmod1(k, ncols)
+        cell = gl[row, col] = GridLayout()
+        ax = Axis(
+            cell[2, 1];
+            aspect = DataAspect(),
+            xgridvisible = false, ygridvisible = false,
+            topspinevisible = false, rightspinevisible = false,
+            xticklabelsize = 8.0f0, yticklabelsize = 8.0f0,
+        )
+        Label(cell[1, 1]; text = string(g), fontsize = 11.0f0, tellwidth = false)
+
+        mask = isequal.(by_col, g)
+        sub = (x = x_col[mask], y = y_col[mask], value = v_col[mask])
+        wdata = WaferData(sub, wafer)
+
+        p = plot_fn!(ax, wdata; colormap)
+
+        if colorrange !== nothing
+            scatter_idx = findfirst(plt -> plt isa Scatter, p.plots)
+            if scatter_idx !== nothing
+                p.plots[scatter_idx].colorrange[] =
+                    (Float32(colorrange[1]), Float32(colorrange[2]))
+            end
+        end
+    end
+
+    if colorrange !== nothing
+        Colorbar(
+            gl[nrows + 1, 1:min(ngroups, ncols)];
+            colormap,
+            limits = (Float32(colorrange[1]), Float32(colorrange[2])),
+            vertical = false,
+            label = string(value),
+            height = 16,
+        )
+        rowsize!(gl, nrows + 1, Fixed(50))
+    end
+
+    return fig
+end
+
+"""
     add_kpi_panel!(side, data::WaferData; kpis=DEFAULT_KPIS)
 
 Compute KPIs and render a label grid in the bottom slot of the side panel.

@@ -304,4 +304,48 @@ let ydata = yield_data()
     println("yield done")
 end
 
+# ── 13. Faceted wafer maps ────────────────────────────────────────────────────
+# Four simulated lots (A–D) with different spatial patterns.
+# Shared colorscale (colorrange) produces a single colorbar below the 2×2 grid.
+
+function facet_table()
+    lots = ["Lot A", "Lot B", "Lot C", "Lot D"]
+    n = 3_000
+    xs = Float64[]
+    ys = Float64[]
+    vs = Float64[]
+    ids = String[]
+    patterns = [
+        (cx, cy) -> 100.0 + 8.0 * exp(-((cx - 50)^2 + (cy + 30)^2) / 4000) + 1.5 * randn(),
+        (cx, cy) -> 100.0 - 8.0 * exp(-((cx + 40)^2 + (cy - 60)^2) / 5000) + 1.5 * randn(),
+        (cx, cy) -> 100.0 + 5.0 * sin(cx / 35) * cos(cy / 35) + 1.5 * randn(),
+        (cx, cy) -> 100.0 + 6.0 * (cx^2 + cy^2) / (150^2) + 1.5 * randn(),
+    ]
+    for (lot, pat) in zip(lots, patterns)
+        θ = rand(n) .* 2π
+        r = sqrt.(rand(n)) .* 148.0
+        x = r .* cos.(θ)
+        y = r .* sin.(θ)
+        v = pat.(x, y)
+        append!(xs, x)
+        append!(ys, y)
+        append!(vs, v)
+        append!(ids, fill(lot, n))
+    end
+    return (x = xs, y = ys, value = vs, lot = ids)
+end
+
+let tbl = facet_table()
+    fig = wafer_facet(
+        tbl, WAFER;
+        by = :lot,
+        plot_type = :heatmap,
+        colormap = :plasma,
+        colorrange = (90.0, 112.0),
+        ncols = 2,
+    )
+    save(joinpath(OUT, "example_facet.png"), fig; px_per_unit = 2)
+    println("facet done")
+end
+
 println("\nAll images written to $OUT")

@@ -57,6 +57,7 @@ vorticity
 ```@docs
 wafer_figure
 wafer_cfd_figure
+wafer_facet
 add_colorbar!
 add_kpi_panel!
 add_exclusion_ring!
