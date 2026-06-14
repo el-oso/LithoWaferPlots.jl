@@ -87,6 +87,68 @@ function add_colorbar!(side, plot_obj; label::String = "", kwargs...)
 end
 
 """
+    wafer_cfd_figure(vdata::WaferVectorData; scalar=:divergence, vector=:streamlines, kwargs...)
+
+Create a combined CFD plot: scalar background field with a streamline or arrow overlay.
+Returns `(fig, ax, side)` so that `add_kpi_panel!` or extra plot calls can be appended.
+
+Keywords:
+- `scalar`: `:divergence` (default) or `:vorticity`
+- `vector`: `:streamlines` (default), `:arrows`, or `:none`
+- `colormap`: override the auto colormap (`:RdBu` for divergence, `Reverse(:RdBu)` for vorticity)
+- `scalar_label`: colorbar label; auto-set from `scalar` if omitted
+- `streamline_color`: line color for the streamline overlay (default `:white`)
+- `streamline_linewidth`: line width (default `1.5f0`)
+- `n_seeds`, `max_steps`: passed to `waferstreamlines!`
+- `arrowcolor`: arrow colour when `vector=:arrows`
+"""
+function wafer_cfd_figure(
+        vdata::WaferVectorData;
+        scalar::Symbol = :divergence,
+        vector::Symbol = :streamlines,
+        colormap = nothing,
+        scalar_label = nothing,
+        streamline_color = :white,
+        streamline_linewidth = 1.5f0,
+        n_seeds = 20,
+        max_steps = 300,
+        arrowcolor = :white,
+        resolution = (900, 650),
+        figure_kwargs...
+    )
+    fig, ax, side = wafer_figure(; resolution, figure_kwargs...)
+
+    auto_cmap = colormap === nothing ?
+        (scalar === :divergence ? :RdBu : Reverse(:RdBu)) : colormap
+    auto_label = scalar_label === nothing ?
+        (scalar === :divergence ? "Divergence (a.u.)" : "Vorticity (a.u.)") : scalar_label
+
+    p = if scalar === :divergence
+        waferdivergence!(ax, vdata; colormap = auto_cmap)
+    elseif scalar === :vorticity
+        wafervorticity!(ax, vdata; colormap = auto_cmap)
+    else
+        error("scalar must be :divergence or :vorticity, got :$scalar")
+    end
+
+    if vector === :streamlines
+        waferstreamlines!(
+            ax, vdata;
+            draw_boundary = false, draw_fields = false,
+            color = streamline_color, linewidth = streamline_linewidth,
+            n_seeds = n_seeds, max_steps = max_steps
+        )
+    elseif vector === :arrows
+        waferarrows!(ax, vdata; draw_boundary = false, draw_fields = false, arrowcolor = arrowcolor)
+    elseif vector !== :none
+        error("vector must be :streamlines, :arrows, or :none, got :$vector")
+    end
+
+    add_colorbar!(side, p; label = auto_label)
+    return fig, ax, side
+end
+
+"""
     add_kpi_panel!(side, data::WaferData; kpis=DEFAULT_KPIS)
 
 Compute KPIs and render a label grid in the bottom slot of the side panel.

@@ -206,4 +206,26 @@ let
     println("heatmap+fields done")
 end
 
+# ── 9. CFD combined: divergence + streamlines ─────────────────────────────────
+
+let vdata = divergence_data()
+    fig, ax, side = wafer_cfd_figure(
+        vdata; scalar = :divergence, vector = :streamlines,
+        streamline_color = :white, streamline_linewidth = 1.5f0, n_seeds = 25,
+    )
+    save(joinpath(OUT, "example_cfd_div_streamlines.png"), fig; px_per_unit = 2)
+    println("cfd divergence+streamlines done")
+end
+
+# ── 10. CFD combined: vorticity + streamlines ─────────────────────────────────
+
+let vdata = vorticity_data()
+    fig, ax, side = wafer_cfd_figure(
+        vdata; scalar = :vorticity, vector = :streamlines,
+        streamline_color = :white, streamline_linewidth = 1.5f0, n_seeds = 25,
+    )
+    save(joinpath(OUT, "example_cfd_vort_streamlines.png"), fig; px_per_unit = 2)
+    println("cfd vorticity+streamlines done")
+end
+
 println("\nAll images written to $OUT")

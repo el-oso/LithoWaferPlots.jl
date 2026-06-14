@@ -16,6 +16,8 @@ Performance target: 300 000 points rendered in < 0.3s (GLMakie GPU path).
         field_color = (:steelblue, 0.15),
         field_strokecolor = :steelblue,
         field_strokewidth = 0.8f0,
+        draw_boundary = true,
+        draw_fields = true,
     )
 end
 
@@ -33,13 +35,13 @@ function Makie.plot!(p::WaferScatter)
         markersize = p[:markersize]
     )
 
-    draw_wafer_boundary!(
+    p[:draw_boundary][] && draw_wafer_boundary!(
         p, data.wafer;
         color = p[:boundary_color][],
         linewidth = p[:boundary_linewidth][]
     )
 
-    draw_fields!(
+    p[:draw_fields][] && draw_fields!(
         p, data.fields;
         color = p[:field_color][],
         strokecolor = p[:field_strokecolor][],
@@ -69,6 +71,8 @@ const IMAGE_THRESHOLD = 5_000
         percentile_clip = 0.0,
         imagemode = :auto,
         grid_n = 256,
+        draw_boundary = true,
+        draw_fields = true,
     )
 end
 
@@ -93,13 +97,13 @@ function Makie.plot!(p::WaferHeatmap)
         )
     end
 
-    draw_wafer_boundary!(
+    p[:draw_boundary][] && draw_wafer_boundary!(
         p, data.wafer;
         color = p[:boundary_color][],
         linewidth = p[:boundary_linewidth][]
     )
 
-    draw_fields!(
+    p[:draw_fields][] && draw_fields!(
         p, data.fields;
         color = p[:field_color][],
         strokecolor = p[:field_strokecolor][],
@@ -152,6 +156,8 @@ end
         field_color = (:steelblue, 0.12),
         field_strokecolor = :steelblue,
         field_strokewidth = 0.8f0,
+        draw_boundary = true,
+        draw_fields = true,
     )
 end
 
@@ -189,13 +195,13 @@ function Makie.plot!(p::WaferContour)
         levels = p[:levels]
     )
 
-    draw_wafer_boundary!(
+    p[:draw_boundary][] && draw_wafer_boundary!(
         p, data.wafer;
         color = p[:boundary_color][],
         linewidth = p[:boundary_linewidth][]
     )
 
-    draw_fields!(
+    p[:draw_fields][] && draw_fields!(
         p, data.fields;
         color = p[:field_color][],
         strokecolor = p[:field_strokecolor][],

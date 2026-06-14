@@ -132,3 +132,53 @@ add_colorbar!(side, p; label="Vorticity (a.u.)")
 ```
 
 ![Vorticity](assets/example_vorticity.png)
+
+---
+
+## CFD Combined: Divergence + Streamlines
+
+The standard CFD summary view: ∇·**v** heatmap as background, streamlines overlaid in white.
+`wafer_cfd_figure` handles the layout and prevents the wafer boundary from being drawn twice.
+
+```julia
+fig, ax, side = wafer_cfd_figure(vdata;
+    scalar = :divergence,
+    vector = :streamlines,
+    streamline_color = :white,
+    n_seeds = 25,
+)
+```
+
+![Divergence + streamlines](assets/example_cfd_div_streamlines.png)
+
+---
+
+## CFD Combined: Vorticity + Streamlines
+
+Rotation intensity as background with streamlines showing the flow direction simultaneously.
+
+```julia
+fig, ax, side = wafer_cfd_figure(vdata;
+    scalar = :vorticity,
+    vector = :streamlines,
+    streamline_color = :white,
+    n_seeds = 25,
+)
+```
+
+![Vorticity + streamlines](assets/example_cfd_vort_streamlines.png)
+
+### Manual composition
+
+For full control use `draw_boundary=false` on the overlay recipe:
+
+```julia
+fig, ax, side = wafer_figure()
+p = waferdivergence!(ax, vdata; colormap = :RdBu)
+waferstreamlines!(ax, vdata; draw_boundary = false, draw_fields = false,
+                  color = :white, n_seeds = 30)
+add_colorbar!(side, p; label = "∇·v (a.u.)")
+```
+
+The same `draw_boundary` and `draw_fields` keywords are available on every recipe,
+so any combination (e.g. contour + scatter overlay) is possible without duplicate boundaries.

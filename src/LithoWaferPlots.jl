@@ -41,7 +41,7 @@ export KPIMean, KPISigma, KPIMax, KPIMin, KPIMedian,
 export ColorScale, normalize
 export divergence, vorticity
 # plotting stubs (implementations in Makie extension)
-export wafer_figure, add_colorbar!, add_kpi_panel!
+export wafer_figure, wafer_cfd_figure, add_colorbar!, add_kpi_panel!
 export waferscatter, waferscatter!
 export waferheatmap, waferheatmap!
 export wafercontour, wafercontour!

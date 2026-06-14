@@ -15,6 +15,8 @@ WaferDivergence, WaferVorticity.
         field_color = (:steelblue, 0.12),
         field_strokecolor = :steelblue,
         field_strokewidth = 0.8f0,
+        draw_boundary = true,
+        draw_fields = true,
     )
 end
 
@@ -34,13 +36,13 @@ function Makie.plot!(p::WaferArrows)
     # Pass color only — avoid attribute-name collisions with arrows2d! internals
     arrows2d!(p, x, y, vx .* scale, vy .* scale; color = p[:arrowcolor])
 
-    draw_wafer_boundary!(
+    p[:draw_boundary][] && draw_wafer_boundary!(
         p, d.wafer;
         color = p[:boundary_color][],
         linewidth = p[:boundary_linewidth][]
     )
 
-    draw_fields!(
+    p[:draw_fields][] && draw_fields!(
         p, d.fields;
         color = p[:field_color][],
         strokecolor = p[:field_strokecolor][],
@@ -64,6 +66,8 @@ end
         field_color = (:steelblue, 0.12),
         field_strokecolor = :steelblue,
         field_strokewidth = 0.8f0,
+        draw_boundary = true,
+        draw_fields = true,
     )
 end
 
@@ -86,13 +90,13 @@ function Makie.plot!(p::WaferStreamlines)
         lines!(p, pts; color = p[:color], linewidth = p[:linewidth])
     end
 
-    draw_wafer_boundary!(
+    p[:draw_boundary][] && draw_wafer_boundary!(
         p, d.wafer;
         color = p[:boundary_color][],
         linewidth = p[:boundary_linewidth][]
     )
 
-    draw_fields!(
+    p[:draw_fields][] && draw_fields!(
         p, d.fields;
         color = p[:field_color][],
         strokecolor = p[:field_strokecolor][],
@@ -114,6 +118,8 @@ end
         field_color = (:steelblue, 0.12),
         field_strokecolor = :steelblue,
         field_strokewidth = 0.8f0,
+        draw_boundary = true,
+        draw_fields = true,
     )
 end
 
@@ -121,24 +127,23 @@ function Makie.plot!(p::WaferDivergence)
     d = p[:data][]
     wdat = divergence(d; grid_n = p[:grid_n][])
     cs = ColorScale(wdat.values)
-    cols = normalize(cs, wdat.values)
 
     scatter!(
         p, wdat.x, wdat.y;
-        color = cols,
+        color = Float32.(wdat.values),
         colormap = p[:colormap],
-        colorrange = (0.0f0, 1.0f0),
+        colorrange = (Float32(cs.vmin), Float32(cs.vmax)),
         markersize = p[:markersize],
         marker = :rect
     )
 
-    draw_wafer_boundary!(
+    p[:draw_boundary][] && draw_wafer_boundary!(
         p, d.wafer;
         color = p[:boundary_color][],
         linewidth = p[:boundary_linewidth][]
     )
 
-    draw_fields!(
+    p[:draw_fields][] && draw_fields!(
         p, d.fields;
         color = p[:field_color][],
         strokecolor = p[:field_strokecolor][],
@@ -160,6 +165,8 @@ end
         field_color = (:steelblue, 0.12),
         field_strokecolor = :steelblue,
         field_strokewidth = 0.8f0,
+        draw_boundary = true,
+        draw_fields = true,
     )
 end
 
@@ -167,24 +174,23 @@ function Makie.plot!(p::WaferVorticity)
     d = p[:data][]
     wdat = vorticity(d; grid_n = p[:grid_n][])
     cs = ColorScale(wdat.values)
-    cols = normalize(cs, wdat.values)
 
     scatter!(
         p, wdat.x, wdat.y;
-        color = cols,
+        color = Float32.(wdat.values),
         colormap = p[:colormap],
-        colorrange = (0.0f0, 1.0f0),
+        colorrange = (Float32(cs.vmin), Float32(cs.vmax)),
         markersize = p[:markersize],
         marker = :rect
     )
 
-    draw_wafer_boundary!(
+    p[:draw_boundary][] && draw_wafer_boundary!(
         p, d.wafer;
         color = p[:boundary_color][],
         linewidth = p[:boundary_linewidth][]
     )
 
-    draw_fields!(
+    p[:draw_fields][] && draw_fields!(
         p, d.fields;
         color = p[:field_color][],
         strokecolor = p[:field_strokecolor][],

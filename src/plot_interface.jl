@@ -22,6 +22,29 @@ end
 # ── layout functions ──────────────────────────────────────────────────────────
 
 """
+    wafer_cfd_figure(vdata::WaferVectorData; scalar=:divergence, vector=:streamlines, kwargs...)
+
+Create a combined CFD plot: scalar background (divergence or vorticity) with a streamline or
+arrow overlay in one call. Returns `(fig, ax, side)`.
+
+Keywords:
+- `scalar`: `:divergence` (default) or `:vorticity`
+- `vector`: `:streamlines` (default), `:arrows`, or `:none`
+- `colormap`: override auto colormap (`:RdBu` for divergence, `Reverse(:RdBu)` for vorticity)
+- `scalar_label`: colorbar label (auto if omitted)
+- `streamline_color`: color of streamlines (default `:white`)
+- `n_seeds`, `max_steps`: streamline trace parameters
+- `arrowcolor`: arrow color when `vector=:arrows`
+
+Requires a Makie backend: `using CairoMakie` or `using GLMakie`.
+"""
+function wafer_cfd_figure(args...; kwargs...)
+    ext = _makie_ext()
+    ext === nothing && _require_makie(:wafer_cfd_figure)
+    return ext.wafer_cfd_figure(args...; kwargs...)
+end
+
+"""
     wafer_figure(; resolution=(900,650), kwargs...) -> (Figure, Axis, GridLayout)
 
 Create a Figure with the standard wafer layout: main wafer Axis on the left,
