@@ -387,12 +387,12 @@ let
     # right: AlgebraOfGraphics radial profile coloured by zone
     zone_ord = sorter("Center", "Middle", "Edge")
     aog_plt = data(df) *
-              mapping(
-                  :r => "Radius (mm)",
-                  :thickness => "Thickness (nm)";
-                  color = :zone => zone_ord => "Zone",
-              ) *
-              visual(Scatter; markersize = 3, alpha = 0.3f0)
+        mapping(
+        :r => "Radius (mm)",
+        :thickness => "Thickness (nm)";
+        color = :zone => zone_ord => "Zone",
+    ) *
+        visual(Scatter; markersize = 3, alpha = 0.3f0)
     draw!(fig[1, 2], aog_plt; axis = (title = "Radial profile by zone",))
 
     save(joinpath(OUT, "example_aog.png"), fig; px_per_unit = 2)
