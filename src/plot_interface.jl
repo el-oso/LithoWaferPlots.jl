@@ -247,10 +247,11 @@ function waferarrows(args...; kwargs...)
 end
 
 """
-    waferstreamlines(data::WaferVectorData; n_seeds=20, max_steps=300, kwargs...) -> (Figure, Axis, plot)
-    waferstreamlines!(ax, data::WaferVectorData; n_seeds=20, max_steps=300, kwargs...) -> plot
+    waferstreamlines(data::WaferVectorData; n_seeds=20, max_steps=300, grid_n=200, kwargs...) -> (Figure, Axis, plot)
+    waferstreamlines!(ax, data::WaferVectorData; n_seeds=20, max_steps=300, grid_n=200, kwargs...) -> plot
 
-Streamline plot via RK4 integration from a uniform seed grid.
+Streamline plot via RK4 integration from a uniform seed grid. The velocity field is
+interpolated once to a `grid_n × grid_n` grid and sampled bilinearly during tracing.
 """
 function waferstreamlines!(args...; kwargs...)
     ext = _makie_ext()
@@ -259,10 +260,11 @@ function waferstreamlines!(args...; kwargs...)
 end
 
 """
-    waferstreamlines(data::WaferVectorData; n_seeds=20, max_steps=300, kwargs...) -> (Figure, Axis, plot)
-    waferstreamlines!(ax, data::WaferVectorData; n_seeds=20, max_steps=300, kwargs...) -> plot
+    waferstreamlines(data::WaferVectorData; n_seeds=20, max_steps=300, grid_n=200, kwargs...) -> (Figure, Axis, plot)
+    waferstreamlines!(ax, data::WaferVectorData; n_seeds=20, max_steps=300, grid_n=200, kwargs...) -> plot
 
-Streamline plot via RK4 integration from a uniform seed grid.
+Streamline plot via RK4 integration from a uniform seed grid. The velocity field is
+interpolated once to a `grid_n × grid_n` grid and sampled bilinearly during tracing.
 """
 function waferstreamlines(args...; kwargs...)
     ext = _makie_ext()
@@ -271,10 +273,11 @@ function waferstreamlines(args...; kwargs...)
 end
 
 """
-    waferdivergence(data::WaferVectorData; grid_n=256, kwargs...) -> (Figure, Axis, plot)
-    waferdivergence!(ax, data::WaferVectorData; grid_n=256, kwargs...) -> plot
+    waferdivergence(data::WaferVectorData; grid_n=256, k=4, kwargs...) -> (Figure, Axis, plot)
+    waferdivergence!(ax, data::WaferVectorData; grid_n=256, k=4, kwargs...) -> plot
 
 Divergence (∂vx/∂x + ∂vy/∂y) of the vector field, displayed as a scalar heatmap.
+`k` is the IDW neighbour count (lower = faster, less smooth).
 """
 function waferdivergence!(args...; kwargs...)
     ext = _makie_ext()
@@ -283,10 +286,11 @@ function waferdivergence!(args...; kwargs...)
 end
 
 """
-    waferdivergence(data::WaferVectorData; grid_n=256, kwargs...) -> (Figure, Axis, plot)
-    waferdivergence!(ax, data::WaferVectorData; grid_n=256, kwargs...) -> plot
+    waferdivergence(data::WaferVectorData; grid_n=256, k=4, kwargs...) -> (Figure, Axis, plot)
+    waferdivergence!(ax, data::WaferVectorData; grid_n=256, k=4, kwargs...) -> plot
 
 Divergence (∂vx/∂x + ∂vy/∂y) of the vector field, displayed as a scalar heatmap.
+`k` is the IDW neighbour count (lower = faster, less smooth).
 """
 function waferdivergence(args...; kwargs...)
     ext = _makie_ext()
@@ -295,10 +299,11 @@ function waferdivergence(args...; kwargs...)
 end
 
 """
-    wafervorticity(data::WaferVectorData; grid_n=256, kwargs...) -> (Figure, Axis, plot)
-    wafervorticity!(ax, data::WaferVectorData; grid_n=256, kwargs...) -> plot
+    wafervorticity(data::WaferVectorData; grid_n=256, k=4, kwargs...) -> (Figure, Axis, plot)
+    wafervorticity!(ax, data::WaferVectorData; grid_n=256, k=4, kwargs...) -> plot
 
 Vorticity (∂vy/∂x − ∂vx/∂y) of the vector field, displayed as a scalar heatmap.
+`k` is the IDW neighbour count (lower = faster, less smooth).
 """
 function wafervorticity!(args...; kwargs...)
     ext = _makie_ext()
@@ -307,10 +312,11 @@ function wafervorticity!(args...; kwargs...)
 end
 
 """
-    wafervorticity(data::WaferVectorData; grid_n=256, kwargs...) -> (Figure, Axis, plot)
-    wafervorticity!(ax, data::WaferVectorData; grid_n=256, kwargs...) -> plot
+    wafervorticity(data::WaferVectorData; grid_n=256, k=4, kwargs...) -> (Figure, Axis, plot)
+    wafervorticity!(ax, data::WaferVectorData; grid_n=256, k=4, kwargs...) -> plot
 
 Vorticity (∂vy/∂x − ∂vx/∂y) of the vector field, displayed as a scalar heatmap.
+`k` is the IDW neighbour count (lower = faster, less smooth).
 """
 function wafervorticity(args...; kwargs...)
     ext = _makie_ext()

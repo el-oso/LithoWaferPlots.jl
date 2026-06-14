@@ -95,7 +95,7 @@ waferarrows!(ax, vdata; lengthscale=8.0, arrowcolor=:steelblue)
 
 ## Streamlines
 
-RK4-traced stream lines from a uniform seed grid. Controls: `n_seeds`, `max_steps`, and `step_size`.
+RK4-traced stream lines from a uniform seed grid. The velocity field is interpolated once to a `grid_n × grid_n` grid and sampled bilinearly during integration, so tracing is fast even for large datasets. Controls: `n_seeds`, `max_steps`, `step_size`, and `grid_n`.
 
 ```julia
 fig, ax, side = wafer_figure()

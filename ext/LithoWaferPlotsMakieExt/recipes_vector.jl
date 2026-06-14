@@ -99,6 +99,7 @@ end
         n_seeds = 20,
         max_steps = 300,
         step_size = nothing,
+        grid_n = 200,
         boundary_color = :black,
         boundary_linewidth = 1.5f0,
         field_color = (:steelblue, 0.12),
@@ -115,7 +116,8 @@ function Makie.plot!(p::WaferStreamlines)
         d;
         n_seeds = p[:n_seeds][],
         max_steps = p[:max_steps][],
-        step_size = p[:step_size][]
+        step_size = p[:step_size][],
+        grid_n = p[:grid_n][]
     )
 
     # render all segments as a single lines! call with NaN separators
@@ -151,6 +153,7 @@ end
         colormap = :RdBu,
         markersize = 4.0f0,
         grid_n = 256,
+        k = 4,
         boundary_color = :black,
         boundary_linewidth = 1.5f0,
         field_color = (:steelblue, 0.12),
@@ -163,7 +166,7 @@ end
 
 function Makie.plot!(p::WaferDivergence)
     d = p[:data][]
-    wdat = divergence(d; grid_n = p[:grid_n][])
+    wdat = divergence(d; grid_n = p[:grid_n][], k = p[:k][])
     cs = ColorScale(wdat.values)
 
     scatter!(
@@ -198,6 +201,7 @@ end
         colormap = Reverse(:RdBu),
         markersize = 4.0f0,
         grid_n = 256,
+        k = 4,
         boundary_color = :black,
         boundary_linewidth = 1.5f0,
         field_color = (:steelblue, 0.12),
@@ -210,7 +214,7 @@ end
 
 function Makie.plot!(p::WaferVorticity)
     d = p[:data][]
-    wdat = vorticity(d; grid_n = p[:grid_n][])
+    wdat = vorticity(d; grid_n = p[:grid_n][], k = p[:k][])
     cs = ColorScale(wdat.values)
 
     scatter!(

@@ -38,13 +38,18 @@ function _idw_interpolate(
 end
 
 """
-    _vector_to_grid(data::WaferVectorData; grid_n::Int=256)
+    _vector_to_grid(data::WaferVectorData; grid_n=256, k=4, active_only=true)
 
 Interpolate scattered vector data to a regular `grid_n × grid_n` grid.
 Returns `(xs, ys, VX, VY)` where `xs`/`ys` are 1D coordinate vectors and
 `VX`/`VY` are `grid_n × grid_n` matrices.
+
+`k` is the number of nearest neighbours used for inverse-distance weighting.
+When `active_only` is `true` (default) cells outside the edge-exclusion radius are
+`NaN`; pass `active_only=false` to interpolate out to the full wafer radius (used by
+streamline tracing so boundary cells have valid corners for bilinear sampling).
 """
-function _vector_to_grid(data::WaferVectorData; grid_n::Int = 256)
+function _vector_to_grid(data::WaferVectorData; grid_n::Int = 256, k::Int = 4, active_only::Bool = true)
     r = data.wafer.diameter_mm / 2.0
     xs = LinRange(-r, r, grid_n)
     ys = LinRange(-r, r, grid_n)
@@ -55,14 +60,13 @@ function _vector_to_grid(data::WaferVectorData; grid_n::Int = 256)
     VX = Matrix{Float64}(undef, grid_n, grid_n)
     VY = Matrix{Float64}(undef, grid_n, grid_n)
 
-    k = 8
     idxs = Vector{Int}(undef, k)
     dists = Vector{Float64}(undef, k)
     q = Vector{Float64}(undef, 2)
 
-    r_active2 = (r - data.wafer.edge_exclusion_mm)^2
+    mask_r2 = active_only ? (r - data.wafer.edge_exclusion_mm)^2 : r^2
     for (j, y) in enumerate(ys), (i, x) in enumerate(xs)
-        if x^2 + y^2 <= r_active2
+        if x^2 + y^2 <= mask_r2
             VX[i, j], VY[i, j] =
                 _idw_interpolate(tree, data.vx, data.vy, x, y, idxs, dists, q; k)
         else
@@ -73,13 +77,14 @@ function _vector_to_grid(data::WaferVectorData; grid_n::Int = 256)
 end
 
 """
-    divergence(data::WaferVectorData; grid_n::Int=256) -> WaferData{Float64}
+    divergence(data::WaferVectorData; grid_n::Int=256, k::Int=4) -> WaferData{Float64}
 
 Compute ∂vx/∂x + ∂vy/∂y from scattered vector field data.
 Returns a `WaferData` suitable for display as a scalar heatmap.
+`k` sets the inverse-distance-weighting neighbour count (lower = faster, less smooth).
 """
-function divergence(data::WaferVectorData; grid_n::Int = 256)
-    xs, ys, VX, VY = _vector_to_grid(data; grid_n)
+function divergence(data::WaferVectorData; grid_n::Int = 256, k::Int = 4)
+    xs, ys, VX, VY = _vector_to_grid(data; grid_n, k)
     dx = Float64(xs[2] - xs[1])
     dy = Float64(ys[2] - ys[1])
 
@@ -102,13 +107,14 @@ function divergence(data::WaferVectorData; grid_n::Int = 256)
 end
 
 """
-    vorticity(data::WaferVectorData; grid_n::Int=256) -> WaferData{Float64}
+    vorticity(data::WaferVectorData; grid_n::Int=256, k::Int=4) -> WaferData{Float64}
 
 Compute ∂vy/∂x - ∂vx/∂y (z-component of curl) from scattered vector field data.
 Returns a `WaferData` suitable for display as a scalar heatmap.
+`k` sets the inverse-distance-weighting neighbour count (lower = faster, less smooth).
 """
-function vorticity(data::WaferVectorData; grid_n::Int = 256)
-    xs, ys, VX, VY = _vector_to_grid(data; grid_n)
+function vorticity(data::WaferVectorData; grid_n::Int = 256, k::Int = 4)
+    xs, ys, VX, VY = _vector_to_grid(data; grid_n, k)
     dx = Float64(xs[2] - xs[1])
     dy = Float64(ys[2] - ys[1])
 

@@ -134,12 +134,15 @@ julia --project=benchmarks benchmarks/render_bench.jl   # requires GLMakie + dis
 | `image!` for gridded heatmap | Single texture upload |
 | Arrows as one batched `lines!` (shaft + V head), subsampled to `max_arrows` (default 4 000) | One draw call instead of a tessellated mesh per arrow — ~10× less memory |
 | Streamlines as single `lines!` with `NaN` separators | One draw call for all lines |
-| IDW interpolation with `knn!` + reused buffers | No per-point allocations in contour / divergence / vorticity / streamlines |
+| Streamlines trace on a precomputed velocity grid (`grid_n`, bilinear sampling) | One interpolation pass instead of a `knn` search at every RK4 sub-step — ~5× faster |
+| IDW interpolation with `knn!` + reused buffers, `k = 4` neighbours | No per-point allocations in contour / divergence / vorticity / streamlines; fewer neighbours per query |
 
 ## Tips for large datasets
 
 - Use `GLMakie` (not `CairoMakie`, which is CPU-only).
 - For heatmaps, pre-interpolate to a regular grid and use `image!` directly.
 - For arrow plots, increase `max_arrows` only if GPU memory allows.
-- Reduce `grid_n` in `WaferContour` / `WaferDivergence` / `WaferVorticity` for speed.
+- Reduce `grid_n` (and the IDW `k`) in `WaferContour` / `WaferDivergence` / `WaferVorticity`
+  for speed; raise them for smoother fields. `WaferStreamlines` also takes `grid_n` for its
+  sampling grid.
 - Pass `Float32` values (not `Float64`) to halve GPU memory bandwidth.
