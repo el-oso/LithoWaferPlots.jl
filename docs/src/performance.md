@@ -132,8 +132,9 @@ julia --project=benchmarks benchmarks/render_bench.jl   # requires GLMakie + dis
 | Pre-allocated `Float32` colour arrays | No per-point allocation in Julia |
 | `scatter!` with `:rect` marker for heatmap | Faster than `heatmap!` on scattered points |
 | `image!` for gridded heatmap | Single texture upload |
-| Arrow subsampling to ≤ 20K | Arrow plot readability + speed |
+| Arrows as one batched `lines!` (shaft + V head), subsampled to `max_arrows` (default 4 000) | One draw call instead of a tessellated mesh per arrow — ~10× less memory |
 | Streamlines as single `lines!` with `NaN` separators | One draw call for all lines |
+| IDW interpolation with `knn!` + reused buffers | No per-point allocations in contour / divergence / vorticity / streamlines |
 
 ## Tips for large datasets
 

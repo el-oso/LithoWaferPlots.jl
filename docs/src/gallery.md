@@ -82,7 +82,7 @@ add_colorbar!(side, p; label="Overlay (a.u.)")
 
 ## Arrows
 
-Arrow plot of a vector field. Subsampled to `max_arrows` (default 20 000) for legibility. Scale arrows with `lengthscale`.
+Arrow plot of a vector field. Subsampled to `max_arrows` (default 4 000) for legibility, and drawn as a single batched `lines!` call (shaft plus a V arrowhead) for low memory use. Scale arrows with `lengthscale`; tune the head with `head_frac` and `head_angle`.
 
 ```julia
 fig, ax, side = wafer_figure()

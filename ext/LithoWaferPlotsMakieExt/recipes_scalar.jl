@@ -124,15 +124,28 @@ function _heatmap_image!(p, data, x, y, vals, cs)
     pts = permutedims(hcat(Float64.(data.x), Float64.(data.y)))
     tree = KDTree(pts)
 
+    k = 4
+    idxs = Vector{Int}(undef, k)
+    dists = Vector{Float64}(undef, k)
+    q = Vector{Float64}(undef, 2)
+
     img = fill(RGBAf(0.0f0, 0.0f0, 0.0f0, 0.0f0), grid_n, grid_n)
     for (j, yg) in enumerate(ys), (i, xg) in enumerate(xs)
         xg^2 + yg^2 > r_active2 && continue
-        idxs, dists = knn(tree, Float64[xg, yg], 4, true)
-        v = if dists[1] < 1.0e-10
+        q[1] = xg
+        q[2] = yg
+        knn!(idxs, dists, tree, q, k, true)
+        v = @inbounds if dists[1] < 1.0e-10
             Float64(vals[idxs[1]])
         else
-            w = dists .^ -2.0
-            sum(w .* Float64.(vals[idxs])) / sum(w)
+            W = 0.0
+            acc = 0.0
+            for n in 1:k
+                wgt = inv(dists[n] * dists[n])
+                W += wgt
+                acc += wgt * Float64(vals[idxs[n]])
+            end
+            acc / W
         end
         cn = clamp(Float32((v - cs.vmin) / (cs.vmax - cs.vmin)), 0.0f0, 1.0f0)
         img[i, j] = Makie.interpolated_getindex(cmap, cn)
@@ -173,16 +186,29 @@ function Makie.plot!(p::WaferContour)
     tree = KDTree(pts)
     r_active2 = (r - data.wafer.edge_exclusion_mm)^2
 
+    k = 4
+    idxs = Vector{Int}(undef, k)
+    dists = Vector{Float64}(undef, k)
+    q = Vector{Float64}(undef, 2)
+
+    vals_src = data.values
     Z = Matrix{Float32}(undef, grid_n, grid_n)
     for (j, y) in enumerate(ys), (i, x) in enumerate(xs)
         if x^2 + y^2 <= r_active2
-            idxs, dists = knn(tree, Float64[x, y], 4, true)
-            if dists[1] < 1.0e-10
-                Z[i, j] = Float32(data.values[idxs[1]])
+            q[1] = x
+            q[2] = y
+            knn!(idxs, dists, tree, q, k, true)
+            @inbounds if dists[1] < 1.0e-10
+                Z[i, j] = Float32(vals_src[idxs[1]])
             else
-                w = dists .^ -2.0
-                W = sum(w)
-                Z[i, j] = Float32(sum(w .* data.values[idxs]) / W)
+                W = 0.0
+                acc = 0.0
+                for n in 1:k
+                    wgt = inv(dists[n] * dists[n])
+                    W += wgt
+                    acc += wgt * Float64(vals_src[idxs[n]])
+                end
+                Z[i, j] = Float32(acc / W)
             end
         else
             Z[i, j] = NaN32

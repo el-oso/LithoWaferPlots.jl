@@ -223,8 +223,8 @@ end
 # ── vector plot wrappers ──────────────────────────────────────────────────────
 
 """
-    waferarrows(data::WaferVectorData; max_arrows=20_000, kwargs...) -> (Figure, Axis, plot)
-    waferarrows!(ax, data::WaferVectorData; max_arrows=20_000, kwargs...) -> plot
+    waferarrows(data::WaferVectorData; max_arrows=4_000, kwargs...) -> (Figure, Axis, plot)
+    waferarrows!(ax, data::WaferVectorData; max_arrows=4_000, kwargs...) -> plot
 
 Arrow plot of vector field. Subsampled to `max_arrows` for readability.
 """
@@ -235,8 +235,8 @@ function waferarrows!(args...; kwargs...)
 end
 
 """
-    waferarrows(data::WaferVectorData; max_arrows=20_000, kwargs...) -> (Figure, Axis, plot)
-    waferarrows!(ax, data::WaferVectorData; max_arrows=20_000, kwargs...) -> plot
+    waferarrows(data::WaferVectorData; max_arrows=4_000, kwargs...) -> (Figure, Axis, plot)
+    waferarrows!(ax, data::WaferVectorData; max_arrows=4_000, kwargs...) -> plot
 
 Arrow plot of vector field. Subsampled to `max_arrows` for readability.
 """

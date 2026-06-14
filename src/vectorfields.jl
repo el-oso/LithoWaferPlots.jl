@@ -7,20 +7,34 @@ then apply central finite differences to compute the scalar field.
 """
 
 """
-    _idw_interpolate(tree, src_vx, src_vy, gx, gy; k=8, power=2.0)
+    _idw_interpolate(tree, src_vx, src_vy, gx, gy, idxs, dists, q; k=8, power=2.0)
 
 Inverse-distance-weighted interpolation of (vx, vy) at grid point (gx, gy).
+`idxs` (length `k`, `Vector{Int}`), `dists` (length `k`, `Vector{Float64}`) and
+`q` (length 2, `Vector{Float64}`) are caller-supplied scratch buffers reused across
+calls to avoid per-point allocations.
 """
-function _idw_interpolate(tree, src_vx, src_vy, gx::Real, gy::Real; k::Int = 8, power::Float64 = 2.0)
-    idxs, dists = knn(tree, [Float64(gx), Float64(gy)], k, true)
-    if dists[1] < 1.0e-10
-        return src_vx[idxs[1]], src_vy[idxs[1]]
+function _idw_interpolate(
+        tree, src_vx, src_vy, gx::Real, gy::Real,
+        idxs::Vector{Int}, dists::Vector{Float64}, q::Vector{Float64};
+        k::Int = 8, power::Float64 = 2.0
+    )
+    q[1] = Float64(gx)
+    q[2] = Float64(gy)
+    knn!(idxs, dists, tree, q, k, true)
+    @inbounds begin
+        dists[1] < 1.0e-10 && return src_vx[idxs[1]], src_vy[idxs[1]]
+        W = 0.0
+        ax = 0.0
+        ay = 0.0
+        for n in 1:k
+            wgt = power == 2.0 ? inv(dists[n] * dists[n]) : dists[n]^(-power)
+            W += wgt
+            ax += wgt * src_vx[idxs[n]]
+            ay += wgt * src_vy[idxs[n]]
+        end
+        return ax / W, ay / W
     end
-    w = dists .^ (-power)
-    W = sum(w)
-    vx = sum(w .* src_vx[idxs]) / W
-    vy = sum(w .* src_vy[idxs]) / W
-    return vx, vy
 end
 
 """
@@ -41,10 +55,16 @@ function _vector_to_grid(data::WaferVectorData; grid_n::Int = 256)
     VX = Matrix{Float64}(undef, grid_n, grid_n)
     VY = Matrix{Float64}(undef, grid_n, grid_n)
 
+    k = 8
+    idxs = Vector{Int}(undef, k)
+    dists = Vector{Float64}(undef, k)
+    q = Vector{Float64}(undef, 2)
+
     r_active2 = (r - data.wafer.edge_exclusion_mm)^2
     for (j, y) in enumerate(ys), (i, x) in enumerate(xs)
         if x^2 + y^2 <= r_active2
-            VX[i, j], VY[i, j] = _idw_interpolate(tree, data.vx, data.vy, x, y)
+            VX[i, j], VY[i, j] =
+                _idw_interpolate(tree, data.vx, data.vy, x, y, idxs, dists, q; k)
         else
             VX[i, j] = VY[i, j] = NaN
         end

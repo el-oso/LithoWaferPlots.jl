@@ -19,7 +19,7 @@ Notch at 270° = bottom (6 o'clock position).
 module LithoWaferPlots
 
 using Statistics: mean, std, median, quantile
-using NearestNeighbors: KDTree, knn
+using NearestNeighbors: KDTree, knn, knn!
 using Random: randperm
 using Tables
 using TypeContracts

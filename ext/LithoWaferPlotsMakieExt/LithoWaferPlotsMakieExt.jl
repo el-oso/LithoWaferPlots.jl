@@ -7,7 +7,7 @@ using LithoWaferPlots: WaferSpec, WaferData, WaferVectorData, WaferField,
     ColorScale, normalize, DEFAULT_KPIS, AbstractKPI,
     name, compute, format_value,
     divergence, vorticity
-using NearestNeighbors: KDTree, knn
+using NearestNeighbors: KDTree, knn, knn!
 using Random: randperm
 using Tables
 

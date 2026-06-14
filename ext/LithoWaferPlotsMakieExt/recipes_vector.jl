@@ -8,8 +8,11 @@ WaferDivergence, WaferVorticity.
 @recipe(WaferArrows, data) do scene
     Attributes(
         arrowcolor = :black,
+        linewidth = 1.0f0,
         lengthscale = 1.0,
-        max_arrows = 20_000,
+        max_arrows = 4_000,
+        head_frac = 0.3,
+        head_angle = 0.45,
         boundary_color = :black,
         boundary_linewidth = 1.5f0,
         field_color = (:steelblue, 0.12),
@@ -20,21 +23,56 @@ WaferDivergence, WaferVorticity.
     )
 end
 
+# Build a single NaN-separated polyline encoding every arrow as a shaft plus a
+# two-segment V arrowhead. Rendering all arrows in one `lines!` call keeps the GPU
+# allocation tiny compared with `arrows2d!`, which tessellates a mesh per arrow.
+function _arrow_segments(x, y, vx, vy, scale::Float64, head_frac::Float64, head_angle::Float64)
+    pts = Point2f[]
+    sizehint!(pts, length(x) * 9)
+    ca = cos(head_angle)
+    sa = sin(head_angle)
+    nan = Point2f(NaN32, NaN32)
+    @inbounds for i in eachindex(x)
+        dx = Float64(vx[i]) * scale
+        dy = Float64(vy[i]) * scale
+        bx = Float64(x[i])
+        by = Float64(y[i])
+        tx = bx + dx
+        ty = by + dy
+        base = Point2f(bx, by)
+        tip = Point2f(tx, ty)
+        push!(pts, base, tip, nan)               # shaft
+        L = hypot(dx, dy)
+        L == 0.0 && continue
+        ux = dx / L
+        uy = dy / L
+        hl = head_frac * L
+        # barbs: backward direction (-u) rotated by ±head_angle
+        h1x = tx + hl * (-ux * ca + uy * sa)
+        h1y = ty + hl * (-ux * sa - uy * ca)
+        h2x = tx + hl * (-ux * ca - uy * sa)
+        h2y = ty + hl * (ux * sa - uy * ca)
+        push!(pts, tip, Point2f(h1x, h1y), nan)  # barb 1
+        push!(pts, tip, Point2f(h2x, h2y), nan)  # barb 2
+    end
+    return pts
+end
+
 function Makie.plot!(p::WaferArrows)
     d = p[:data][]
     n = length(d.x)
     max_n = p[:max_arrows][]
 
     if n > max_n
-        idx = sort(randperm(n)[1:max_n])
+        idx = randperm(n)[1:max_n]   # order irrelevant for arrows — no sort needed
         x, y, vx, vy = d.x[idx], d.y[idx], d.vx[idx], d.vy[idx]
     else
         x, y, vx, vy = d.x, d.y, d.vx, d.vy
     end
 
     scale = Float64(p[:lengthscale][])
-    # Pass color only — avoid attribute-name collisions with arrows2d! internals
-    arrows2d!(p, x, y, vx .* scale, vy .* scale; color = p[:arrowcolor])
+    pts = _arrow_segments(x, y, vx, vy, scale, Float64(p[:head_frac][]), Float64(p[:head_angle][]))
+    isempty(pts) || lines!(p, pts; color = p[:arrowcolor], linewidth = p[:linewidth])
 
     p[:draw_boundary][] && draw_wafer_boundary!(
         p, d.wafer;
