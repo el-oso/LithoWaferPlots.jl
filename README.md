@@ -65,8 +65,15 @@ data = WaferData(df, grid, wafer)          # df has :col, :row, :value columns
 Pass a `fields` vector to draw exposure-field or die-boundary rectangles on any plot:
 
 ```julia
-fields = vec([WaferField((ci - 0.5)*26.0, (ri - 5)*33.0, 26.0, 33.0, ci, ri)
-              for ri in 1:9, ci in -5:6])   # 108 fields covering the wafer
+fw, fh, r = 26.0, 33.0, wafer.diameter_mm / 2.0
+all_fields = vec([WaferField((ci - 0.5)*fw, (ri - 5)*fh, fw, fh, ci, ri)
+                  for ri in 1:9, ci in -5:6])
+# drop fields that lie entirely outside the wafer disk
+fields = filter(all_fields) do f
+    nx = clamp(0.0, f.x_center_mm - fw/2, f.x_center_mm + fw/2)
+    ny = clamp(0.0, f.y_center_mm - fh/2, f.y_center_mm + fh/2)
+    nx^2 + ny^2 <= r^2
+end
 
 data = WaferData(table, wafer; fields=fields)
 p = waferheatmap!(ax, data; field_strokecolor=:black, field_strokewidth=1.5f0)

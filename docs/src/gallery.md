@@ -39,9 +39,18 @@ For a large regular-grid dataset (> 5 000 points), the recipe uses `imagemode=:i
 Pass a `fields` vector to `WaferData` to overlay exposure-field or die boundaries on any plot type. Fields may extend beyond the wafer edge.
 
 ```julia
-# 108 fields (12 columns × 9 rows) covering the full 300 mm wafer
-fields = vec([WaferField((ci - 0.5)*26.0, (ri - 5)*33.0, 26.0, 33.0, ci, ri)
-              for ri in 1:9, ci in -5:6])
+fw, fh = 26.0, 33.0
+r = wafer.diameter_mm / 2.0
+
+# 12 columns × 9 rows grid; drop fields that lie completely outside the wafer disk
+all_fields = vec([WaferField((ci - 0.5)*fw, (ri - 5)*fh, fw, fh, ci, ri)
+                  for ri in 1:9, ci in -5:6])
+fields = filter(all_fields) do f
+    hw, hh = fw/2, fh/2
+    nx = clamp(0.0, f.x_center_mm - hw, f.x_center_mm + hw)
+    ny = clamp(0.0, f.y_center_mm - hh, f.y_center_mm + hh)
+    nx^2 + ny^2 <= r^2
+end
 
 data = WaferData(table, wafer; fields=fields)
 

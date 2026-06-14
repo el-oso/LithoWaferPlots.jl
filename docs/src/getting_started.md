@@ -66,9 +66,18 @@ Pass a `fields` vector when constructing `WaferData` to overlay rectangular
 exposure fields on any plot type.
 
 ```julia
-# 108 fields (12 cols × 9 rows) covering the full wafer; fields may extend beyond the edge
-fields = vec([WaferField((ci - 0.5)*26.0, (ri - 5)*33.0, 26.0, 33.0, ci, ri)
-              for ri in 1:9, ci in -5:6])
+fw, fh = 26.0, 33.0
+r = wafer.diameter_mm / 2.0
+
+# 12 × 9 grid; keep only fields that at least partially overlap the wafer
+all_fields = vec([WaferField((ci - 0.5)*fw, (ri - 5)*fh, fw, fh, ci, ri)
+                  for ri in 1:9, ci in -5:6])
+fields = filter(all_fields) do f
+    hw, hh = fw/2, fh/2
+    nx = clamp(0.0, f.x_center_mm - hw, f.x_center_mm + hw)
+    ny = clamp(0.0, f.y_center_mm - hh, f.y_center_mm + hh)
+    nx^2 + ny^2 <= r^2
+end
 
 data = WaferData(df, wafer; fields=fields)
 ```

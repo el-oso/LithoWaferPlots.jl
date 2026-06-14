@@ -94,13 +94,22 @@ end
 
 function example_fields()
     fw, fh = 26.0, 33.0
-    # 12 columns × 9 rows = 108 fields; centred on wafer, may extend beyond edge
-    return vec(
+    r = WAFER.diameter_mm / 2.0
+    all_fields = vec(
         [
             WaferField((ci - 0.5) * fw, (ri - 5) * fh, fw, fh, ci, ri)
                 for ri in 1:9, ci in -5:6
         ]
     )
+    # Keep only fields that at least partially overlap the wafer disk.
+    # The nearest point on a rectangle [cx±hw, cy±hh] to the origin is
+    # (clamp(0, x1, x2), clamp(0, y1, y2)); if that point is outside r, drop the field.
+    return filter(all_fields) do f
+        hw, hh = fw / 2.0, fh / 2.0
+        nx = clamp(0.0, f.x_center_mm - hw, f.x_center_mm + hw)
+        ny = clamp(0.0, f.y_center_mm - hh, f.y_center_mm + hh)
+        nx^2 + ny^2 <= r^2
+    end
 end
 
 # ── 1. WaferScatter ────────────────────────────────────────────────────────────
