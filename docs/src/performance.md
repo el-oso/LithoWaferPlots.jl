@@ -1,5 +1,52 @@
 # Performance
 
+## Time to first plot
+
+LithoWaferPlots ships a `PrecompileTools` workload that is executed once during
+`Pkg.precompile()`. Subsequent Julia sessions skip recompiling the recipe methods,
+cutting time-to-first-plot from **~5–12 s to ~0.1–0.5 s** (after `using` returns).
+
+Run precompilation explicitly after installation or after upgrading packages:
+
+```
+julia -e 'using Pkg; Pkg.precompile()'
+```
+
+### Pinning Makie for reproducible startup times
+
+Makie releases occasionally change which methods are precompiled, which can make startup
+times regress unexpectedly when you update. Pin the Makie version in your project to keep
+startup time stable:
+
+```
+julia --project=. -e 'using Pkg; Pkg.pin("Makie"); Pkg.pin("CairoMakie")'
+```
+
+Unpin when you deliberately want to upgrade:
+
+```
+julia --project=. -e 'using Pkg; Pkg.free("Makie"); Pkg.free("CairoMakie")'
+```
+
+### PackageCompiler sysimage (< 0.5 s total)
+
+For the lowest possible latency — including the `using` time — build a custom sysimage
+with [PackageCompiler.jl](https://julialang.github.io/PackageCompiler.jl/stable/):
+
+```julia
+using PackageCompiler
+create_sysimage(
+    [:LithoWaferPlots, :CairoMakie];
+    sysimage_path = "lwp.so",
+    precompile_execution_file = "my_precompile_script.jl",
+)
+```
+
+Launch Julia with `julia --sysimage lwp.so` to use it. The build takes ~10 minutes but
+the resulting image starts in under 0.5 s.
+
+---
+
 ## Target
 
 All plot types must render **300 000 points in < 0.3 s** (median wall time, GLMakie GPU path).
