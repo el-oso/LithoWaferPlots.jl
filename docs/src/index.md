@@ -8,15 +8,15 @@ Open-source semiconductor wafer map visualization for Julia.
 
 ```julia
 using LithoWaferPlots
-using GLMakie
+using CairoMakie          # or GLMakie / WGLMakie
 
-wafer = WaferSpec(300.0)   # 300mm wafer, notch at bottom
+wafer = WaferSpec(300.0)  # 300mm wafer, notch at bottom (270°)
 
 # x, y in mm from wafer centre; value is your measurement
 data = WaferData(my_table, wafer)
 
 fig, ax, side = wafer_figure()
-p = waferheatmap!(ax, data)
+p = waferheatmap!(ax, data; colormap=:plasma)
 add_colorbar!(side, p; label="Thickness (nm)")
 add_kpi_panel!(side, data)
 display(fig)
@@ -24,13 +24,13 @@ display(fig)
 
 ## Features
 
-- **Heatmap, scatter, contour** plots on circular wafer geometry
-- **Vector field** plots: arrows, streamlines, divergence, vorticity
-- **Field and die overlays** via `WaferField`
-- **KPI panel** with built-in and user-defined metrics
-- **300 000 points in < 0.3 s** (GLMakie GPU path)
-- **Any tabular input** — DataFrames, NamedTuples, CSV rows via Tables.jl
-- **Both mm and die-index coordinates**
+- **Seven plot types** — scatter, heatmap, contour, arrows, streamlines, divergence, vorticity
+- **Field and die overlays** — rectangular exposure-field boundaries on any plot
+- **KPI panel** — built-in metrics (mean, sigma, min/max, P99, ±3σ) with a simple extension contract
+- **Any tabular input** — DataFrames, NamedTuples, CSV rows, or plain arrays via Tables.jl
+- **mm and die-index coordinates** — automatic column/row → mm conversion via `DieGrid`
+- **Fast rendering** — `image!` GPU texture path for dense heatmaps (>5 000 points); target 300 000 pts < 0.3 s on GLMakie
+- **Backend-agnostic** — CairoMakie, GLMakie, and WGLMakie all supported; Makie is a weak dependency
 
 ## Sources
 
