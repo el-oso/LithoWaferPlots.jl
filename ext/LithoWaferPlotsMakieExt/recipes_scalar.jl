@@ -21,10 +21,12 @@ end
 
 function Makie.plot!(p::WaferScatter)
     data = p[:data][]
-    cs   = ColorScale(data.values)
-    cols = normalize(cs, data.values)
+    mask = inside_wafer(data.x, data.y, data.wafer)
+    x, y, vals = data.x[mask], data.y[mask], data.values[mask]
+    cs   = ColorScale(vals)
+    cols = normalize(cs, vals)
 
-    scatter!(p, data.x, data.y;
+    scatter!(p, x, y;
         color      = cols,
         colormap   = p[:colormap],
         colorrange = (0f0, 1f0),
@@ -62,10 +64,12 @@ end
 
 function Makie.plot!(p::WaferHeatmap)
     data = p[:data][]
-    cs   = ColorScale(data.values; percentile_clip=p[:percentile_clip][])
-    cols = normalize(cs, data.values)
+    mask = inside_wafer(data.x, data.y, data.wafer)
+    x, y, vals = data.x[mask], data.y[mask], data.values[mask]
+    cs   = ColorScale(vals; percentile_clip=p[:percentile_clip][])
+    cols = normalize(cs, vals)
 
-    scatter!(p, data.x, data.y;
+    scatter!(p, x, y;
         color      = cols,
         colormap   = p[:colormap],
         colorrange = (0f0, 1f0),

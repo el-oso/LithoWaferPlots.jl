@@ -20,6 +20,7 @@ module LithoWaferPlots
 
 using Statistics: mean, std, median, quantile
 using NearestNeighbors: KDTree, knn
+using Random: randperm
 using Tables
 using TypeContracts
 
@@ -30,6 +31,7 @@ include("contracts.jl")
 include("kpi.jl")
 include("colorscale.jl")
 include("vectorfields.jl")
+include("plot_interface.jl")
 
 export WaferSpec, DieGrid, WaferField, WaferDie, WaferData, WaferVectorData
 export wafer_polygon, inside_wafer, field_bounds, die_bounds
@@ -38,5 +40,14 @@ export KPIMean, KPISigma, KPIMax, KPIMin, KPIMedian,
        KPIMeanPlus3Sigma, KPIMeanMinus3Sigma, KPIP99
 export ColorScale, normalize
 export divergence, vorticity
+# plotting stubs (implementations in Makie extension)
+export wafer_figure, add_colorbar!, add_kpi_panel!
+export waferscatter, waferscatter!
+export waferheatmap, waferheatmap!
+export wafercontour, wafercontour!
+export waferarrows, waferarrows!
+export waferstreamlines, waferstreamlines!
+export waferdivergence, waferdivergence!
+export wafervorticity, wafervorticity!
 
 end

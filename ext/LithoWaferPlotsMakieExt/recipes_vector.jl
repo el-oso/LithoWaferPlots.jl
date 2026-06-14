@@ -8,9 +8,8 @@ WaferDivergence, WaferVorticity.
 @recipe(WaferArrows, data) do scene
     Attributes(
         arrowcolor         = :black,
-        arrowsize          = 10f0,
         lengthscale        = 1.0,
-        max_arrows         = 20_000,   # subsample above this for readability
+        max_arrows         = 20_000,
         boundary_color     = :black,
         boundary_linewidth = 1.5f0,
         field_color        = (:steelblue, 0.12),
@@ -25,7 +24,6 @@ function Makie.plot!(p::WaferArrows)
     max_n = p[:max_arrows][]
 
     if n > max_n
-        # uniform random subsample
         idx = sort(randperm(n)[1:max_n])
         x, y, vx, vy = d.x[idx], d.y[idx], d.vx[idx], d.vy[idx]
     else
@@ -33,9 +31,8 @@ function Makie.plot!(p::WaferArrows)
     end
 
     scale = Float64(p[:lengthscale][])
-    arrows!(p, x, y, vx .* scale, vy .* scale;
-        color     = p[:arrowcolor],
-        arrowsize = p[:arrowsize])
+    # Pass color only — avoid attribute-name collisions with arrows2d! internals
+    arrows2d!(p, x, y, vx .* scale, vy .* scale; color=p[:arrowcolor])
 
     draw_wafer_boundary!(p, d.wafer;
         color     = p[:boundary_color][],
@@ -139,7 +136,7 @@ end
 
 @recipe(WaferVorticity, data) do scene
     Attributes(
-        colormap           = :RdBu_r,
+        colormap           = Reverse(:RdBu),
         markersize         = 4f0,
         grid_n             = 256,
         boundary_color     = :black,

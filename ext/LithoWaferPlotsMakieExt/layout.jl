@@ -27,51 +27,54 @@ function wafer_figure(; resolution=(900, 650), figure_kwargs...)
         xlabel="x (mm)", ylabel="y (mm)")
 
     side = gl[1, 2] = GridLayout(; tellwidth=true)
-    colsize!(gl, 2, Relative(0.22))
+    colsize!(gl, 2, Relative(0.32))
 
     return fig, ax, side
 end
 
 """
-    add_colorbar!(side, plot_obj; label="", colormap=:viridis, limits=(0.0, 1.0))
+    add_colorbar!(side, plot_obj; label="", kwargs...)
 
 Add a `Colorbar` to the top slot of the side panel.
-`plot_obj` should be the Makie plot object returned by a recipe (has `.colorrange`).
+`plot_obj` is the recipe plot returned by a wafer recipe call.
+The colorbar is attached to the first `Scatter` child plot (which carries the
+colormap and colorrange), avoiding ambiguity when field `Poly` patches are present.
 """
 function add_colorbar!(side, plot_obj; label::String="", kwargs...)
-    Colorbar(side[1, 1], plot_obj; label, vertical=true, kwargs...)
+    # Find the first Scatter child — that's where our colormap lives
+    scatter_child = findfirst(p -> p isa Scatter, plot_obj.plots)
+    cb_source = scatter_child !== nothing ? plot_obj.plots[scatter_child] : plot_obj
+    Colorbar(side[1, 1], cb_source; label, vertical=true, kwargs...)
     return nothing
 end
 
 """
     add_kpi_panel!(side, data::WaferData; kpis=DEFAULT_KPIS)
 
-Compute KPIs and render a two-column text table in the bottom slot of the side panel.
+Compute KPIs and render a label grid in the bottom slot of the side panel.
+Each KPI gets its own row with name on the left and value on the right.
+Uses `Label` blocks (not `text!`) so content never clips to an Axis frame.
 """
 function add_kpi_panel!(side, data::WaferData; kpis::AbstractVector{<:AbstractKPI}=DEFAULT_KPIS)
     vals = filter(isfinite, data.values)
     isempty(vals) && return nothing
 
-    rows = ["$(name(k))  $(format_value(k, compute(k, vals)))" for k in kpis]
-    text_content = join(rows, "\n")
+    kpi_gl = side[2, 1] = GridLayout()
 
-    ax_kpi = Axis(side[2, 1];
-        aspect=nothing,
-        xgridvisible=false, ygridvisible=false,
-        xticksvisible=false, yticksvisible=false,
-        xticklabelsvisible=false, yticklabelsvisible=false,
-        topspinevisible=true, bottomspinevisible=true,
-        leftspinevisible=true, rightspinevisible=true,
-        title="KPIs", titlesize=11f0)
+    Label(kpi_gl[1, 1]; text="KPIs",
+        fontsize=11f0, font=:bold, halign=:center, tellwidth=false)
 
-    hidedecorations!(ax_kpi; label=false, title=false)
-    text!(ax_kpi, 0.05, 0.95;
-        text=text_content,
-        space=:relative,
-        align=(:left, :top),
-        fontsize=10f0,
-        font="DejaVu Sans Mono")
+    for (i, k) in enumerate(kpis)
+        nm  = name(k)
+        val = format_value(k, compute(k, vals))
+        # Fixed-width name column (12 chars) + value in a single monospaced label
+        line = rpad(nm, 12) * val
+        Label(kpi_gl[i + 1, 1]; text=line,
+            fontsize=9f0, halign=:left, tellwidth=false,
+            font="DejaVu Sans Mono")
+    end
 
-    rowsize!(side, 2, Relative(0.35))
+    rowgap!(kpi_gl, 1)
+    rowsize!(side, 2, Auto())
     return nothing
 end
