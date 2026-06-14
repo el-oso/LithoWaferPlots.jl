@@ -135,6 +135,44 @@ add_colorbar!(side, p; label="Vorticity (a.u.)")
 
 ---
 
+## Die-level yield map
+
+Per-die yield across ~100 exposure fields (3×3 = 9 dies each). Field boundaries are
+overlaid as thin gray strokes. The 2 mm edge-exclusion ring dims the outer annulus
+where yield data is typically not trusted.
+
+```julia
+fw, fh = 26.0, 33.0
+die_w, die_h = fw / 3, fh / 3
+
+# build die centres and yield values from field list
+x, y, v = Float64[], Float64[], Float64[]
+for f in fields
+    for di in 0:2, dj in 0:2
+        cx = f.x_center_mm - fw/2 + (di + 0.5) * die_w
+        cy = f.y_center_mm - fh/2 + (dj + 0.5) * die_h
+        push!(x, cx); push!(y, cy)
+        push!(v, my_yield_value(cx, cy))   # 0–1
+    end
+end
+
+data = WaferData((x=x, y=y, value=v), wafer; fields=fields)
+
+fig, ax, side = wafer_figure()
+p = waferheatmap!(ax, data; markersize=14f0, colormap=:RdYlGn,
+                  field_color=(:black, 0.0),
+                  field_strokecolor=:gray50, field_strokewidth=0.7f0)
+add_colorbar!(side, p; label="Yield")
+add_kpi_panel!(side, data)
+add_exclusion_ring!(ax, wafer; mm_to_edge=2.0, label="2 mm EE",
+                    color=:black, linestyle=:dash, dim_outside=true, dim_alpha=0.4)
+add_ring_legend!(ax; position=:lb)
+```
+
+![Die-level yield map](assets/example_yield.png)
+
+---
+
 ## Exclusion ring annotation
 
 Draw dashed/dotted radial exclusion rings on any plot, specified as **mm to the edge**

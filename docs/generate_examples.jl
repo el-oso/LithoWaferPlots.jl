@@ -251,4 +251,57 @@ let vdata = vorticity_data()
     println("cfd vorticity+streamlines done")
 end
 
+# ── 12. Die-level yield map ────────────────────────────────────────────────────
+# ~96 exposure fields × 9 dies (3×3 per field) = ~864 dies.
+# Yield follows a radially decaying Gaussian (process non-uniformity) + noise.
+
+function yield_data()
+    fw, fh = 26.0, 33.0
+    r_wafer = WAFER.diameter_mm / 2.0
+    fields = example_fields()   # ~96 partially-on-wafer fields
+
+    die_w, die_h = fw / 3.0, fh / 3.0
+    x = Float64[]
+    y = Float64[]
+    v = Float64[]
+
+    for f in fields
+        for di in 0:2, dj in 0:2
+            cx = f.x_center_mm - fw / 2.0 + (di + 0.5) * die_w
+            cy = f.y_center_mm - fh / 2.0 + (dj + 0.5) * die_h
+            r2 = cx^2 + cy^2
+            # radially-decaying base yield, lower at edge
+            base = clamp(1.0 - r2 / (0.85 * r_wafer^2), 0.0, 1.0)
+            yield = clamp(base + 0.12 * randn(), 0.0, 1.0)
+            push!(x, cx)
+            push!(y, cy)
+            push!(v, yield)
+        end
+    end
+
+    return WaferData((x = x, y = y, value = v), WAFER; fields = fields)
+end
+
+let ydata = yield_data()
+    fig, ax, side = wafer_figure(; resolution = RESOLUTION)
+    p = waferheatmap!(
+        ax, ydata;
+        markersize = 14.0f0,
+        colormap = :RdYlGn,
+        field_color = (:black, 0.0),
+        field_strokecolor = :gray50,
+        field_strokewidth = 0.7f0,
+    )
+    add_colorbar!(side, p; label = "Yield")
+    add_kpi_panel!(side, ydata)
+    add_exclusion_ring!(
+        ax, WAFER; mm_to_edge = 2.0,
+        label = "2 mm EE", color = :black, linestyle = :dash,
+        dim_outside = true, dim_alpha = 0.4,
+    )
+    add_ring_legend!(ax; position = :lb)
+    save(joinpath(OUT, "example_yield.png"), fig; px_per_unit = 2)
+    println("yield done")
+end
+
 println("\nAll images written to $OUT")
