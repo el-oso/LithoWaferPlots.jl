@@ -2,15 +2,29 @@
 
 ## Time to first plot
 
-LithoWaferPlots ships a `PrecompileTools` workload that is executed once during
-`Pkg.precompile()`. Subsequent Julia sessions skip recompiling the recipe methods,
-cutting time-to-first-plot from **~5–12 s to ~0.1–0.5 s** (after `using` returns).
+The Makie extension runs a precompile workload (guarded by `jl_generating_output`, so it
+only executes during `Pkg.precompile()`) that exercises **every recipe** plus the layout,
+annotation and overlay helpers. Subsequent Julia sessions reuse the cached native code, so
+the first plot of a session is fast (e.g. first `waferarrows!` ≈ 0.3 s instead of ~3.5 s).
 
 Run precompilation explicitly after installation or after upgrading packages:
 
 ```
 julia -e 'using Pkg; Pkg.precompile()'
 ```
+
+!!! note "Invalidations matter as much as precompilation"
+    A precompile workload only helps if its cached code is not *invalidated* when a backend
+    loads. A single overly-broad method in a dependency (e.g. `Base.show(::IO, ::Type{X})`)
+    can invalidate the whole type/print pipeline and force seconds of recompilation on the
+    first plot — even for already-precompiled paths. If first-plot time regresses, check for
+    invalidations with `SnoopCompile`:
+    ```julia
+    using CairoMakie, SnoopCompileCore
+    invs = @snoop_invalidations using LithoWaferPlots
+    using SnoopCompile
+    length(uinvalidated(invs))   # should be small (tens, not thousands)
+    ```
 
 ### Pinning Makie for reproducible startup times
 

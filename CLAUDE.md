@@ -108,6 +108,14 @@ Use `draw!(fig[r, c], aog_layer)` to place an AoG layer beside a LithoWaferPlots
 in the same `Figure`. `wafer_facet` covers the spatial multi-panel use case; AoG covers
 statistical views (violin, radial scatter, lot comparison).
 
+### Time-to-first-plot / precompilation
+The extension's precompile workload (bottom of `LithoWaferPlotsMakieExt.jl`, guarded by
+`ccall(:jl_generating_output, …)`) must exercise **every recipe** — add new recipes to it.
+Precompilation is undone by *invalidations*: never overload `Base.show(::IO, ::Type{X})` or
+other broad type/print methods — they invalidate the whole pipeline and recompile seconds of
+code on first plot. After dependency bumps, audit with `SnoopCompile`'s
+`@snoop_invalidations` (see `docs/src/performance.md`); keep total invalidations in the tens.
+
 ## Requirements
 
 - Never add Makie as a hard `[deps]` entry — keep it in `[weakdeps]`.
