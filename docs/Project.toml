@@ -1,12 +1,14 @@
 [deps]
 AlgebraOfGraphics = "cbdf2221-f076-402e-a563-3d30da359d67"
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+Bonito = "824d6782-a2ef-11e9-3a09-e5662e0c26f8"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 DocumenterVitepress = "4710194d-e776-4893-9690-8d956a29c365"
 LithoWaferPlots = "81c163b9-06bd-4c7c-88ff-a139205f0cbd"
 PkgBenchmark = "32113eaa-f34f-5b0d-bd6c-c81e245fc73d"
+WGLMakie = "276b4fcb-3e11-5398-bf8b-a0c2d153d008"
 
 [sources]
 LithoWaferPlots = {path = ".."}
