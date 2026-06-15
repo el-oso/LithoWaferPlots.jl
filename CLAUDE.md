@@ -129,3 +129,10 @@ code on first plot. After dependency bumps, audit with `SnoopCompile`'s
   Never use backend-specific APIs in the extension code itself.
 - `docs/Project.toml` includes AlgebraOfGraphics and DataFrames for example generation.
   Do not add these to the main `[deps]`.
+- **Gallery plots must show their generating code.** Every plot in `docs/src/gallery.md`
+  is a live Documenter ` ```@example gallery ` block whose last expression is the `fig`, so
+  the rendered image is produced by exactly the code shown above it. New gallery entries
+  must follow this pattern — never a static `![](assets/…)` image with a hand-written
+  snippet (they drift). Shared synthetic-data helpers live in the hidden ` ```@setup gallery `
+  block. `docs/generate_examples.jl` is only for the few static images embedded by *other*
+  pages (getting_started, index, aog_compositing).
