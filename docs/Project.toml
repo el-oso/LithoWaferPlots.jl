@@ -13,7 +13,7 @@ LithoWaferPlots = {path = ".."}
 TypeContracts = {rev = "master", url = "https://github.com/el-oso/TypeContracts.jl"}
 
 [compat]
-julia = "1.9"
+julia = "1.11"
 
 [extras]
 TypeContracts = "c7a3f1e2-84b5-4d69-9e0a-1f2b3c4d5e6f"
