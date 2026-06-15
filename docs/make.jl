@@ -56,7 +56,6 @@ makedocs(;
         "Home" => "index.md",
         "Getting Started" => "getting_started.md",
         "Gallery" => "gallery.md",
-        "Interactive" => "interactive.md",
         "Custom KPIs" => "custom_kpi.md",
         "AlgebraOfGraphics" => "aog_compositing.md",
         "Performance" => "performance.md",
