@@ -317,6 +317,49 @@ wafer_facet(table, wafer; by = :lot, plot_type = :heatmap,
 
 ---
 
+## Faceted wafer grid with AlgebraOfGraphics
+
+For a faceted scatter/heatmap coloured by value, [AlgebraOfGraphics.jl](https://aog.makie.org)
+is a more natural fit: `mapping(…; layout = :lot)` builds the panel grid, titles, shared
+colour scale and colorbar automatically. The only wafer-specific touch is overlaying the
+boundary, added here as a second `Lines` layer repeated per lot. Reach for `wafer_facet`
+(above) when you want the full wafer-map treatment per panel — exposure fields, KPI panels,
+the optimized heatmap paths, and the notch without a manual layer.
+
+```@example gallery_aog
+using LithoWaferPlots, CairoMakie, AlgebraOfGraphics, DataFrames
+wafer = WaferSpec(300.0)
+
+lots = [("Lot A", (cx, cy) -> 100 + 8exp(-((cx - 50)^2 + (cy + 30)^2) / 4000)),
+        ("Lot B", (cx, cy) -> 100 - 8exp(-((cx + 40)^2 + (cy - 60)^2) / 5000)),
+        ("Lot C", (cx, cy) -> 100 + 5sin(cx / 35) * cos(cy / 35)),
+        ("Lot D", (cx, cy) -> 100 + 6 * (cx^2 + cy^2) / 150^2)]
+lot_table((name, pat)) = begin
+    θ = rand(3000) .* 2π
+    r = sqrt.(rand(3000)) .* 148.0
+    x = @. r * cos(θ); y = @. r * sin(θ)
+    (x = x, y = y, value = pat.(x, y) .+ 1.5 .* randn(3000), lot = fill(name, 3000))
+end
+cols = lot_table.(lots)
+df = DataFrame(x = reduce(vcat, c.x for c in cols), y = reduce(vcat, c.y for c in cols),
+               value = reduce(vcat, c.value for c in cols), lot = reduce(vcat, c.lot for c in cols))
+
+# wafer outline repeated per lot so it draws in every facet
+bpts = wafer_polygon(wafer)
+lotnames = unique(df.lot)
+edge = DataFrame(x = repeat(first.(bpts), outer = length(lotnames)),
+                 y = repeat(last.(bpts), outer = length(lotnames)),
+                 lot = repeat(lotnames, inner = length(bpts)))
+
+plt = data(df) * mapping(:x, :y; color = :value => "Thickness (nm)", layout = :lot) *
+      visual(Scatter; markersize = 2, colormap = :plasma)
+ring = data(edge) * mapping(:x, :y; layout = :lot) * visual(Lines; color = :black)
+
+draw(plt + ring; axis = (aspect = DataAspect(), width = 170, height = 170))
+```
+
+---
+
 ## CFD Combined: Divergence + Streamlines
 
 The standard CFD summary view: ∇·**v** heatmap as background, streamlines overlaid in white.
