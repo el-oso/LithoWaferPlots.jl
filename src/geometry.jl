@@ -80,3 +80,41 @@ function die_bounds(d::WaferDie)
     y0 = f.y_center_mm - f.height_mm / 2.0 + (d.row_idx - 1) * dh
     return (x0, x0 + dw, y0, y0 + dh)
 end
+
+"""
+    field_grid(centers, field_size; wafer=nothing) -> Vector{WaferField}
+
+Build exposure `WaferField`s of size `field_size` at the given `centers`.
+
+- `centers`: any array of `(x, y)` centre coordinates in mm. When `centers` is a matrix
+  (e.g. from a `[(x, y) for row in …, col in …]` comprehension) the array indices become
+  each field's `(row_idx, col_idx)`; for a vector they are numbered in order.
+- `field_size`: `(width, height)` in mm, or a single number for square fields.
+- `wafer`: optional `WaferSpec`. When given, fields whose nearest point lies outside the
+  wafer disk are dropped, keeping only fields that overlap the wafer.
+
+```julia
+centers = [((c - 0.5) * 26.0, (r - 5) * 33.0) for r in 1:9, c in -5:6]
+fields = field_grid(centers, (26.0, 33.0); wafer = WaferSpec(300.0))
+```
+"""
+function field_grid(centers::AbstractArray, field_size; wafer::Union{WaferSpec, Nothing} = nothing)
+    fw, fh = field_size isa Union{Tuple, AbstractVector} ?
+        (Float64(field_size[1]), Float64(field_size[2])) :
+        (Float64(field_size), Float64(field_size))
+    r2 = wafer === nothing ? Inf : (wafer.diameter_mm / 2.0)^2
+    nd = ndims(centers)
+    fields = WaferField[]
+    for I in CartesianIndices(centers)
+        cx, cy = centers[I]
+        row = Tuple(I)[1]
+        col = nd >= 2 ? Tuple(I)[2] : 1
+        # nearest point of the field rectangle to the wafer centre
+        nx = clamp(0.0, cx - fw / 2.0, cx + fw / 2.0)
+        ny = clamp(0.0, cy - fh / 2.0, cy + fh / 2.0)
+        if nx^2 + ny^2 <= r2
+            push!(fields, WaferField(Float64(cx), Float64(cy), fw, fh, Int(col), Int(row)))
+        end
+    end
+    return fields
+end

@@ -25,40 +25,29 @@ const RESOLUTION = (800, 580)
 # ── shared data ────────────────────────────────────────────────────────────────
 
 function dense_scalar_data(step_mm = 3.0)
-    xs = collect(-148.0:step_mm:148.0)
-    ys = collect(-148.0:step_mm:148.0)
+    xs = range(-148.0, 148.0; step = step_mm)
+    ys = range(-148.0, 148.0; step = step_mm)
     pts = [(x, y) for x in xs, y in ys if x^2 + y^2 <= 148.0^2]
     x = first.(pts)
     y = last.(pts)
-    v = sin.(x ./ 40) .* cos.(y ./ 40) .+ 0.5 .* exp.(-(x .^ 2 .+ y .^ 2) ./ 8000) .+
-        0.08 .* randn(length(x))
+    v = @. sin(x / 40) * cos(y / 40) + 0.5 * exp(-(x^2 + y^2) / 8000) + 0.08 * $(randn(length(x)))
     return WaferData((x = x, y = y, value = v), WAFER)
 end
 
 function vector_data(n = 6_000)
     θ = rand(n) .* 2π
     r = sqrt.(rand(n)) .* 130.0
-    x = r .* cos.(θ)
-    y = r .* sin.(θ)
-    vx = -y ./ 80 .+ x ./ 300 .+ 0.03 .* randn(n)
-    vy = x ./ 80 .+ y ./ 300 .+ 0.03 .* randn(n)
+    x = @. r * cos(θ)
+    y = @. r * sin(θ)
+    vx = @. -y / 80 + x / 300 + 0.03 * $(randn(n))
+    vy = @. x / 80 + y / 300 + 0.03 * $(randn(n))
     return WaferVectorData((x = x, y = y, vx = vx, vy = vy), WAFER)
 end
 
 function example_fields()
     fw, fh = 26.0, 33.0
-    r = WAFER.diameter_mm / 2.0
-    all_fields = vec(
-        [
-            WaferField((ci - 0.5) * fw, (ri - 5) * fh, fw, fh, ci, ri)
-                for ri in 1:9, ci in -5:6
-        ]
-    )
-    return filter(all_fields) do f
-        nx = clamp(0.0, f.x_center_mm - fw / 2.0, f.x_center_mm + fw / 2.0)
-        ny = clamp(0.0, f.y_center_mm - fh / 2.0, f.y_center_mm + fh / 2.0)
-        nx^2 + ny^2 <= r^2
-    end
+    centers = [((ci - 0.5) * fw, (ri - 5) * fh) for ri in 1:9, ci in -5:6]
+    return field_grid(centers, (fw, fh); wafer = WAFER)
 end
 
 # ── Heatmap (getting_started) ──────────────────────────────────────────────────
@@ -118,10 +107,10 @@ let
     n = 6_000
     θ = rand(n) .* 2π
     r = sqrt.(rand(n)) .* 148.0
-    x = r .* cos.(θ)
-    y = r .* sin.(θ)
-    thickness = 100.0 .+ 12.0 .* exp.(-r .^ 2 ./ 7000) .+ 2.5 .* randn(n)
-    zone = ifelse.(r .< 50, "Center", ifelse.(r .< 110, "Middle", "Edge"))
+    x = @. r * cos(θ)
+    y = @. r * sin(θ)
+    thickness = @. 100.0 + 12.0 * exp(-r^2 / 7000) + 2.5 * $(randn(n))
+    zone = @. ifelse(r < 50, "Center", ifelse(r < 110, "Middle", "Edge"))
 
     wdata = WaferData((x = x, y = y, value = thickness), WAFER)
     df = DataFrame(r = r, thickness = thickness, zone = zone)

@@ -47,3 +47,11 @@ end
     d = WaferData(tbl, w; fields = [f])
     @test length(d.fields) == 1
 end
+
+@testitem "wafer argument defaults to WaferSpec(300.0)" begin
+    using LithoWaferPlots
+    d = WaferData((x = [0.0, 50.0], y = [0.0, -50.0], value = [1.0, 2.0]))
+    @test d.wafer == WaferSpec(300.0)
+    v = WaferVectorData((x = [0.0], y = [0.0], vx = [1.0], vy = [0.0]))
+    @test v.wafer == WaferSpec(300.0)
+end

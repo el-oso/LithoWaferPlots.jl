@@ -46,3 +46,31 @@ end
     @test ymin ≈ 17.0
     @test ymax ≈ 23.0
 end
+
+@testitem "field_grid builds and clips fields" begin
+    using LithoWaferPlots
+    wafer = WaferSpec(300.0)
+    centers = [((c - 0.5) * 26.0, (r - 5) * 33.0) for r in 1:9, c in -5:6]
+
+    # without a wafer: every centre becomes a field
+    all_fields = field_grid(centers, (26.0, 33.0))
+    @test length(all_fields) == length(centers)
+    @test all(f -> f.width_mm == 26.0 && f.height_mm == 33.0, all_fields)
+
+    # array indices become (row_idx, col_idx)
+    @test all_fields[1].row_idx == 1 && all_fields[1].col_idx == 1
+
+    # with a wafer: off-disk fields are dropped, on-disk kept
+    clipped = field_grid(centers, (26.0, 33.0); wafer = wafer)
+    @test 0 < length(clipped) < length(all_fields)
+    r = wafer.diameter_mm / 2
+    @test all(clipped) do f
+        nx = clamp(0.0, f.x_center_mm - 13.0, f.x_center_mm + 13.0)
+        ny = clamp(0.0, f.y_center_mm - 16.5, f.y_center_mm + 16.5)
+        nx^2 + ny^2 <= r^2
+    end
+
+    # scalar field_size → square fields; vector centres → 1 column
+    sq = field_grid([(0.0, 0.0), (10.0, 0.0)], 8.0)
+    @test length(sq) == 2 && sq[1].width_mm == 8.0 && sq[1].height_mm == 8.0
+end

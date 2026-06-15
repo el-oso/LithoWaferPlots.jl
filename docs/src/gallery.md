@@ -19,8 +19,8 @@ Sparse measurement points coloured by value. Good for raw probe data where point
 ```@example gallery
 θ = rand(8000) .* 2π
 r = sqrt.(rand(8000)) .* 148.0
-x = r .* cos.(θ); y = r .* sin.(θ)
-v = 2.5 .* exp.(-(((x .- 60) .^ 2 .+ (y .+ 40) .^ 2) ./ 4000)) .+ 0.15 .* randn(8000)
+x = @. r * cos(θ); y = @. r * sin(θ)
+v = @. 2.5 * exp(-((x - 60)^2 + (y + 40)^2) / 4000) + 0.15 * $(randn(8000))
 data = WaferData((x = x, y = y, value = v), wafer)
 
 fig, ax, side = wafer_figure()
@@ -39,10 +39,10 @@ to an `image!` GPU texture path automatically; override with `imagemode = :scatt
 `percentile_clip` reduces outlier distortion of the colour scale.
 
 ```@example gallery
-xs = -148.0:3.0:148.0; ys = -148.0:3.0:148.0
+xs = range(-148.0, 148.0; step = 3.0); ys = range(-148.0, 148.0; step = 3.0)
 pts = [(x, y) for x in xs, y in ys if x^2 + y^2 <= 148.0^2]
 x = first.(pts); y = last.(pts)
-v = sin.(x ./ 40) .* cos.(y ./ 40) .+ 0.5 .* exp.(-(x .^ 2 .+ y .^ 2) ./ 8000) .+ 0.08 .* randn(length(x))
+v = @. sin(x / 40) * cos(y / 40) + 0.5 * exp(-(x^2 + y^2) / 8000) + 0.08 * $(randn(length(x)))
 data = WaferData((x = x, y = y, value = v), wafer)
 
 fig, ax, side = wafer_figure()
@@ -61,19 +61,14 @@ type. Fields may extend beyond the wafer edge.
 
 ```@example gallery
 fw, fh = 26.0, 33.0
-rmax = wafer.diameter_mm / 2
-fields = filter(vec([WaferField((c - 0.5) * fw, (rw - 5) * fh, fw, fh, c, rw)
-                     for rw in 1:9, c in -5:6])) do f
-    nx = clamp(0.0, f.x_center_mm - fw / 2, f.x_center_mm + fw / 2)
-    ny = clamp(0.0, f.y_center_mm - fh / 2, f.y_center_mm + fh / 2)
-    nx^2 + ny^2 <= rmax^2
-end
+centers = [((c - 0.5) * fw, (rw - 5) * fh) for rw in 1:9, c in -5:6]
+fields = field_grid(centers, (fw, fh); wafer = wafer)
 
-xs = -148.0:3.0:148.0; ys = -148.0:3.0:148.0
+xs = range(-148.0, 148.0; step = 3.0); ys = range(-148.0, 148.0; step = 3.0)
 pts = [(x, y) for x in xs, y in ys if x^2 + y^2 <= 148.0^2]
 x = first.(pts); y = last.(pts)
-v = sin.(x ./ 40) .* cos.(y ./ 40) .+ 0.08 .* randn(length(x))
-data = WaferData((x = x, y = y, value = v), wafer; fields = fields)
+v = @. sin(x / 40) * cos(y / 40) + 0.08 * $(randn(length(x)))
+data = WaferData((x = x, y = y, value = v); fields = fields)
 
 fig, ax, side = wafer_figure()
 p = waferheatmap!(ax, data; colormap = :plasma,
@@ -92,10 +87,10 @@ Scattered data is interpolated to a regular grid via IDW before contouring. Adju
 (default 256) and `levels` as needed.
 
 ```@example gallery
-xs = -148.0:5.0:148.0; ys = -148.0:5.0:148.0
+xs = range(-148.0, 148.0; step = 5.0); ys = range(-148.0, 148.0; step = 5.0)
 pts = [(x, y) for x in xs, y in ys if x^2 + y^2 <= 148.0^2]
 x = first.(pts); y = last.(pts)
-v = sin.(x ./ 40) .* cos.(y ./ 40) .+ 0.5 .* exp.(-(x .^ 2 .+ y .^ 2) ./ 8000) .+ 0.08 .* randn(length(x))
+v = @. sin(x / 40) * cos(y / 40) + 0.5 * exp(-(x^2 + y^2) / 8000) + 0.08 * $(randn(length(x)))
 data = WaferData((x = x, y = y, value = v), wafer)
 
 fig, ax, side = wafer_figure()
@@ -115,7 +110,7 @@ with `lengthscale`; tune the head with `head_frac` and `head_angle`.
 ```@example gallery
 θ = rand(600) .* 2π
 r = sqrt.(rand(600)) .* 130.0
-x = r .* cos.(θ); y = r .* sin.(θ)
+x = @. r * cos(θ); y = @. r * sin(θ)
 vdata = WaferVectorData((x = x, y = y, vx = -y ./ 80 .+ x ./ 300, vy = x ./ 80 .+ y ./ 300), wafer)
 
 fig, ax, side = wafer_figure()
@@ -134,7 +129,7 @@ large datasets. Controls: `n_seeds`, `max_steps`, `step_size`, and `grid_n`.
 ```@example gallery
 θ = rand(15_000) .* 2π
 r = sqrt.(rand(15_000)) .* 130.0
-x = r .* cos.(θ); y = r .* sin.(θ)
+x = @. r * cos(θ); y = @. r * sin(θ)
 vdata = WaferVectorData((x = x, y = y, vx = -y ./ 80 .+ x ./ 300, vy = x ./ 80 .+ y ./ 300), wafer)
 
 fig, ax, side = wafer_figure()
@@ -153,9 +148,9 @@ differences. A diverging colormap (`:RdBu`) centres the colour scale on zero.
 # a source at (+60, +40) and a sink at (−50, −50)
 θ = rand(30_000) .* 2π
 r = sqrt.(rand(30_000)) .* 140.0
-x = r .* cos.(θ); y = r .* sin.(θ)
-src(cx, cy, a) = (w = a .* exp.(-((x .- cx) .^ 2 .+ (y .- cy) .^ 2) ./ 2500);
-                  (w .* (x .- cx), w .* (y .- cy)))
+x = @. r * cos(θ); y = @. r * sin(θ)
+src(cx, cy, a) = (w = @.(a * exp(-((x - cx)^2 + (y - cy)^2) / 2500));
+                  (@.(w * (x - cx)), @.(w * (y - cy))))
 vx1, vy1 = src(60.0, 40.0, 1.0)
 vx2, vy2 = src(-50.0, -50.0, -1.0)
 vdata = WaferVectorData((x = x, y = y, vx = vx1 .+ vx2, vy = vy1 .+ vy2), wafer)
@@ -177,8 +172,8 @@ fig
 # differential rotation: fast core, slow rim
 θ = rand(30_000) .* 2π
 r = sqrt.(rand(30_000)) .* 140.0
-x = r .* cos.(θ); y = r .* sin.(θ)
-speed = exp.(-(x .^ 2 .+ y .^ 2) ./ 5000.0)
+x = @. r * cos(θ); y = @. r * sin(θ)
+speed = @. exp(-(x^2 + y^2) / 5000.0)
 vdata = WaferVectorData((x = x, y = y, vx = -y .* speed ./ 40, vy = x .* speed ./ 40), wafer)
 
 fig, ax, side = wafer_figure()
@@ -198,21 +193,16 @@ typically not trusted.
 ```@example gallery
 fw, fh = 26.0, 33.0
 rmax = wafer.diameter_mm / 2
-fields = filter(vec([WaferField((c - 0.5) * fw, (rw - 5) * fh, fw, fh, c, rw)
-                     for rw in 1:9, c in -5:6])) do f
-    nx = clamp(0.0, f.x_center_mm - fw / 2, f.x_center_mm + fw / 2)
-    ny = clamp(0.0, f.y_center_mm - fh / 2, f.y_center_mm + fh / 2)
-    nx^2 + ny^2 <= rmax^2
-end
+centers = [((c - 0.5) * fw, (rw - 5) * fh) for rw in 1:9, c in -5:6]
+fields = field_grid(centers, (fw, fh); wafer = wafer)
 
-x = Float64[]; y = Float64[]; v = Float64[]
-for f in fields, di in 0:2, dj in 0:2
-    cx = f.x_center_mm - fw / 2 + (di + 0.5) * fw / 3
-    cy = f.y_center_mm - fh / 2 + (dj + 0.5) * fh / 3
-    base = clamp(1.0 - (cx^2 + cy^2) / (0.85 * rmax^2), 0.0, 1.0)
-    push!(x, cx); push!(y, cy); push!(v, clamp(base + 0.12 * randn(), 0.0, 1.0))
-end
-data = WaferData((x = x, y = y, value = v), wafer; fields = fields)
+# 3×3 die centres per field
+dies = [(f.x_center_mm - fw / 2 + (di + 0.5) * fw / 3,
+         f.y_center_mm - fh / 2 + (dj + 0.5) * fh / 3)
+        for f in fields for di in 0:2 for dj in 0:2]
+yieldval(cx, cy) = clamp(clamp(1 - (cx^2 + cy^2) / (0.85 * rmax^2), 0, 1) + 0.12 * randn(), 0, 1)
+data = WaferData((x = first.(dies), y = last.(dies),
+                  value = [yieldval(d...) for d in dies]); fields = fields)
 
 fig, ax, side = wafer_figure()
 p = waferheatmap!(ax, data; markersize = 14.0f0, colormap = :RdYlGn,
@@ -235,10 +225,10 @@ natural fab unit). Optionally dim the region outside the ring with a semi-transp
 that works with every recipe type.
 
 ```@example gallery
-xs = -148.0:3.0:148.0; ys = -148.0:3.0:148.0
+xs = range(-148.0, 148.0; step = 3.0); ys = range(-148.0, 148.0; step = 3.0)
 pts = [(x, y) for x in xs, y in ys if x^2 + y^2 <= 148.0^2]
-data = WaferData((x = first.(pts), y = last.(pts),
-                  value = sin.(first.(pts) ./ 40) .* cos.(last.(pts) ./ 40)), wafer)
+x = first.(pts); y = last.(pts)
+data = WaferData((x = x, y = y, value = @.(sin(x / 40) * cos(y / 40))), wafer)
 
 fig, ax, side = wafer_figure()
 p = waferheatmap!(ax, data; colormap = :plasma)
@@ -280,10 +270,10 @@ for i in 1:160, j in 1:160
     rr <= 0.12 && (logo[i, j] = RGBAf(0.95, 0.55, 0.05, 1.0))
 end
 
-xs = -148.0:3.0:148.0; ys = -148.0:3.0:148.0
+xs = range(-148.0, 148.0; step = 3.0); ys = range(-148.0, 148.0; step = 3.0)
 pts = [(x, y) for x in xs, y in ys if x^2 + y^2 <= 148.0^2]
-data = WaferData((x = first.(pts), y = last.(pts),
-                  value = sin.(first.(pts) ./ 40) .* cos.(last.(pts) ./ 40)), wafer)
+x = first.(pts); y = last.(pts)
+data = WaferData((x = x, y = y, value = @.(sin(x / 40) * cos(y / 40))), wafer)
 
 fig, ax, side = wafer_figure()
 p = waferheatmap!(ax, data; colormap = :viridis)
@@ -303,18 +293,23 @@ omit it for independent per-panel scaling. Works with any `plot_type`: `:heatmap
 `:scatter`, or `:contour`.
 
 ```@example gallery
-x = Float64[]; y = Float64[]; v = Float64[]; lot = String[]
 patterns = [("Lot A", (cx, cy) -> 100 + 8exp(-((cx - 50)^2 + (cy + 30)^2) / 4000)),
             ("Lot B", (cx, cy) -> 100 - 8exp(-((cx + 40)^2 + (cy - 60)^2) / 5000)),
             ("Lot C", (cx, cy) -> 100 + 5sin(cx / 35) * cos(cy / 35)),
             ("Lot D", (cx, cy) -> 100 + 6 * (cx^2 + cy^2) / 150^2)]
-for (name, pat) in patterns
-    θ = rand(3000) .* 2π; r = sqrt.(rand(3000)) .* 148.0
-    cx = r .* cos.(θ); cy = r .* sin.(θ)
-    append!(x, cx); append!(y, cy)
-    append!(v, pat.(cx, cy) .+ 1.5 .* randn(3000)); append!(lot, fill(name, 3000))
+
+function lot_columns((name, pat))
+    θ = rand(3000) .* 2π
+    r = sqrt.(rand(3000)) .* 148.0
+    x = @. r * cos(θ); y = @. r * sin(θ)
+    return (x = x, y = y, value = pat.(x, y) .+ 1.5 .* randn(3000), lot = fill(name, 3000))
 end
-table = (x = x, y = y, value = v, lot = lot)
+
+cols = lot_columns.(patterns)
+table = (x = reduce(vcat, c.x for c in cols),
+         y = reduce(vcat, c.y for c in cols),
+         value = reduce(vcat, c.value for c in cols),
+         lot = reduce(vcat, c.lot for c in cols))
 
 wafer_facet(table, wafer; by = :lot, plot_type = :heatmap,
             colormap = :plasma, colorrange = (90.0, 112.0), ncols = 2)
@@ -330,9 +325,9 @@ The standard CFD summary view: ∇·**v** heatmap as background, streamlines ove
 ```@example gallery
 θ = rand(30_000) .* 2π
 r = sqrt.(rand(30_000)) .* 140.0
-x = r .* cos.(θ); y = r .* sin.(θ)
-src(cx, cy, a) = (w = a .* exp.(-((x .- cx) .^ 2 .+ (y .- cy) .^ 2) ./ 2500);
-                  (w .* (x .- cx), w .* (y .- cy)))
+x = @. r * cos(θ); y = @. r * sin(θ)
+src(cx, cy, a) = (w = @.(a * exp(-((x - cx)^2 + (y - cy)^2) / 2500));
+                  (@.(w * (x - cx)), @.(w * (y - cy))))
 vx1, vy1 = src(60.0, 40.0, 1.0)
 vx2, vy2 = src(-50.0, -50.0, -1.0)
 vdata = WaferVectorData((x = x, y = y, vx = vx1 .+ vx2, vy = vy1 .+ vy2), wafer)
@@ -351,8 +346,8 @@ Rotation intensity as background with streamlines showing the flow direction sim
 ```@example gallery
 θ = rand(30_000) .* 2π
 r = sqrt.(rand(30_000)) .* 140.0
-x = r .* cos.(θ); y = r .* sin.(θ)
-speed = exp.(-(x .^ 2 .+ y .^ 2) ./ 5000.0)
+x = @. r * cos(θ); y = @. r * sin(θ)
+speed = @. exp(-(x^2 + y^2) / 5000.0)
 vdata = WaferVectorData((x = x, y = y, vx = -y .* speed ./ 40, vy = x .* speed ./ 40), wafer)
 
 fig, ax, side = wafer_cfd_figure(vdata; scalar = :vorticity, vector = :streamlines,
@@ -367,9 +362,9 @@ For full control use `draw_boundary = false` on the overlay recipe:
 ```@example gallery
 θ = rand(30_000) .* 2π
 r = sqrt.(rand(30_000)) .* 140.0
-x = r .* cos.(θ); y = r .* sin.(θ)
-src(cx, cy, a) = (w = a .* exp.(-((x .- cx) .^ 2 .+ (y .- cy) .^ 2) ./ 2500);
-                  (w .* (x .- cx), w .* (y .- cy)))
+x = @. r * cos(θ); y = @. r * sin(θ)
+src(cx, cy, a) = (w = @.(a * exp(-((x - cx)^2 + (y - cy)^2) / 2500));
+                  (@.(w * (x - cx)), @.(w * (y - cy))))
 vx1, vy1 = src(60.0, 40.0, 1.0)
 vx2, vy2 = src(-50.0, -50.0, -1.0)
 vdata = WaferVectorData((x = x, y = y, vx = vx1 .+ vx2, vy = vy1 .+ vy2), wafer)
