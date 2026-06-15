@@ -38,23 +38,6 @@ jobs:
           # No display available in CI — rendering tests are skipped automatically
           JULIA_NUM_THREADS: 2
 
-  docs:
-    name: Documentation
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-      - uses: julia-actions/setup-julia@v2
-        with:
-          version: "1.12"
-      - uses: julia-actions/cache@v2
-      - name: Install docs dependencies
-        run: julia --project=docs -e 'import Pkg; Pkg.instantiate()'
-      - name: Generate example images
-        run: julia --project=docs docs/generate_examples.jl
-      - name: Build docs
-        run: julia --project=docs docs/make.jl
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
+  # NOTE: documentation is built and deployed by Documentation.yml only. Do NOT add a
+  # docs job here — two workflows pushing to gh-pages in parallel race and fail the
+  # deploy with "cannot lock ref 'refs/heads/gh-pages'".
