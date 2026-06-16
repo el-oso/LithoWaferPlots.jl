@@ -36,6 +36,9 @@ features:
   - title: Backend-agnostic
     icon: 🔌
     details: "CairoMakie, GLMakie and WGLMakie all work. Makie is a weak dependency, so the core package stays light."
+  - title: Built from open references
+    icon: 📖
+    details: "Every part — geometry, SEMI conventions, algorithms — is derived from free, openly-licensed references. No proprietary, NDA-bound, or reverse-engineered material."
 ---
 ```
 
@@ -66,9 +69,13 @@ Pkg.add(url = "https://github.com/el-oso/TypeContracts.jl")
 Pkg.add(url = "https://github.com/el-oso/LithoWaferPlots.jl")
 ```
 
-## Sources
+## Built entirely from open references
 
-This package is built entirely from free, open resources:
+!!! tip "Open by construction"
+    **Every part of LithoWaferPlots is derived from free, openly-licensed references** —
+    wafer geometry, SEMI coordinate conventions, and the rendering algorithms alike.
+    No proprietary, NDA-bound, or reverse-engineered material was used anywhere in this
+    package. The complete provenance is below; each entry links to its public source.
 
 | Source | License | Use |
 |---|---|---|
