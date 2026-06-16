@@ -1,36 +1,70 @@
-# LithoWaferPlots.jl
+```@raw html
+---
+layout: home
 
-Open-source semiconductor wafer map visualization for Julia.
+hero:
+  name: LithoWaferPlots.jl
+  text: Wafer-map visualization for Julia
+  tagline: Scatter, heatmaps, contours, CFD vector fields, faceting, exclusion rings, logos and KPIs for semiconductor wafer data — on any Makie backend.
+  actions:
+    - theme: brand
+      text: Get Started
+      link: /getting_started
+    - theme: alt
+      text: Gallery
+      link: /gallery
+    - theme: alt
+      text: API Reference
+      link: /api
 
-![Heatmap with field overlay](assets/example_heatmap_fields.png)
+features:
+  - title: Seven plot recipes
+    icon: 🗺️
+    details: "Scatter, heatmap, contour, arrows, streamlines, divergence and vorticity — each draws the wafer boundary and V-notch automatically."
+  - title: Fields, dies & faceting
+    icon: 🔲
+    details: "Overlay exposure-field and die boundaries on any plot; lay out multi-wafer grids with wafer_facet or AlgebraOfGraphics."
+  - title: KPI panel
+    icon: 📊
+    details: "Built-in mean, σ, min/max, P99 and ±3σ metrics, extensible through a simple TypeContracts interface."
+  - title: Annotations & branding
+    icon: 🏷️
+    details: "Edge-exclusion rings specified in mm-to-edge, plus custom logos and faded watermarks with full alpha support."
+  - title: Fast time-to-first-plot
+    icon: ⚡
+    details: "A GPU image! texture path for dense heatmaps and a precompile workload that keeps the first plot well under a second."
+  - title: Backend-agnostic
+    icon: 🔌
+    details: "CairoMakie, GLMakie and WGLMakie all work. Makie is a weak dependency, so the core package stays light."
+---
+```
 
 ## Quick start
 
 ```julia
-using LithoWaferPlots
-using CairoMakie          # or GLMakie / WGLMakie
+using LithoWaferPlots, CairoMakie   # or GLMakie / WGLMakie
 
-wafer = WaferSpec(300.0)  # 300mm wafer, notch at bottom (270°)
-
-# x, y in mm from wafer centre; value is your measurement
-data = WaferData(my_table, wafer)
+wafer = WaferSpec(300.0)            # 300 mm wafer, notch at 270°
+data  = WaferData(my_table, wafer)  # columns :x, :y (mm), :value
 
 fig, ax, side = wafer_figure()
-p = waferheatmap!(ax, data; colormap=:plasma)
-add_colorbar!(side, p; label="Thickness (nm)")
+p = waferheatmap!(ax, data; colormap = :plasma)
+add_colorbar!(side, p; label = "Thickness (nm)")
 add_kpi_panel!(side, data)
-display(fig)
+fig
 ```
 
-## Features
+![Wafer heatmap with exposure-field overlay](assets/example_heatmap_fields.png)
 
-- **Seven plot types** — scatter, heatmap, contour, arrows, streamlines, divergence, vorticity
-- **Field and die overlays** — rectangular exposure-field boundaries on any plot
-- **KPI panel** — built-in metrics (mean, sigma, min/max, P99, ±3σ) with a simple extension contract
-- **Any tabular input** — DataFrames, NamedTuples, CSV rows, or plain arrays via Tables.jl
-- **mm and die-index coordinates** — automatic column/row → mm conversion via `DieGrid`
-- **Fast rendering** — `image!` GPU texture path for dense heatmaps (>5 000 points); target 300 000 pts < 0.3 s on GLMakie
-- **Backend-agnostic** — CairoMakie, GLMakie, and WGLMakie all supported; Makie is a weak dependency
+## Install
+
+The package is not yet registered; install it (and its `TypeContracts` dependency) from GitHub:
+
+```julia
+using Pkg
+Pkg.add(url = "https://github.com/el-oso/TypeContracts.jl")
+Pkg.add(url = "https://github.com/el-oso/LithoWaferPlots.jl")
+```
 
 ## Sources
 
