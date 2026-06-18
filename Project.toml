@@ -17,12 +17,9 @@ Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 [extensions]
 LithoWaferPlotsMakieExt = "Makie"
 
-[sources]
-TypeContracts = {url = "https://github.com/el-oso/TypeContracts.jl", rev = "master"}
-
 [compat]
-julia = "1.11"
 Makie = "0.21, 0.22, 0.23"
 NearestNeighbors = "0.4"
 Tables = "1"
 TypeContracts = "0.13"
+julia = "1.11"

@@ -10,7 +10,6 @@ PkgBenchmark = "32113eaa-f34f-5b0d-bd6c-c81e245fc73d"
 
 [sources]
 LithoWaferPlots = {path = ".."}
-TypeContracts = {rev = "master", url = "https://github.com/el-oso/TypeContracts.jl"}
 
 [compat]
 julia = "1.11"
