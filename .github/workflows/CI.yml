@@ -33,10 +33,18 @@ jobs:
       - name: Install test dependencies
         run: julia --project=test -e 'import Pkg; Pkg.instantiate()'
       - name: Run tests (no rendering)
-        run: julia --project=test test/runtests.jl
+        run: julia --project=test --code-coverage=user test/runtests.jl
         env:
           # No display available in CI — rendering tests are skipped automatically
           JULIA_NUM_THREADS: 2
+      - uses: julia-actions/julia-processcoverage@v1
+      - name: Upload coverage to Coveralls
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file: lcov.info
+          format: lcov
+          fail-on-error: false
 
   # NOTE: documentation is built and deployed by Documentation.yml only. Do NOT add a
   # docs job here — two workflows pushing to gh-pages in parallel race and fail the
