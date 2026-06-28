@@ -1,6 +1,6 @@
 """
 Generate the static example images used by pages **other than the gallery**
-(getting_started.md, index.md, aog_compositing.md).
+(getting_started.md, index.md).
 
     julia --project=docs docs/generate_examples.jl
 
@@ -10,8 +10,6 @@ so it needs no pre-generated assets. Only the handful below are committed as PNG
 
 using LithoWaferPlots
 using CairoMakie
-using AlgebraOfGraphics
-using DataFrames
 using Random: seed!
 
 seed!(42)
@@ -99,50 +97,6 @@ let vdata = vector_data(15_000)
     )
     save(joinpath(OUT, "example_streamlines.png"), fig; px_per_unit = 2)
     println("streamlines done")
-end
-
-# ── AlgebraOfGraphics compositing (aog_compositing) ───────────────────────────
-
-let
-    n = 6_000
-    θ = rand(n) .* 2π
-    r = sqrt.(rand(n)) .* 148.0
-    x = @. r * cos(θ)
-    y = @. r * sin(θ)
-    thickness = @. 100.0 + 12.0 * exp(-r^2 / 7000) + 2.5 * $(randn(n))
-    zone = @. ifelse(r < 50, "Center", ifelse(r < 110, "Middle", "Edge"))
-
-    wdata = WaferData((x = x, y = y, value = thickness), WAFER)
-    df = DataFrame(r = r, thickness = thickness, zone = zone)
-
-    fig = Figure(size = (1050, 480))
-    gl = fig[1, 1] = GridLayout()
-    ax = Axis(
-        gl[1, 1];
-        aspect = DataAspect(),
-        title = "Thickness map",
-        xgridvisible = false, ygridvisible = false,
-        topspinevisible = false, rightspinevisible = false,
-        xlabel = "x (mm)", ylabel = "y (mm)",
-    )
-    p = waferheatmap!(ax, wdata; colormap = :plasma)
-    cb_side = gl[1, 2] = GridLayout()
-    add_colorbar!(cb_side, p; label = "Thickness (nm)")
-    colsize!(gl, 2, Relative(0.2))
-    colsize!(fig.layout, 1, Relative(0.52))
-
-    zone_ord = sorter("Center", "Middle", "Edge")
-    aog_plt = data(df) *
-        mapping(
-        :r => "Radius (mm)",
-        :thickness => "Thickness (nm)";
-        color = :zone => zone_ord => "Zone",
-    ) *
-        visual(Scatter; markersize = 3, alpha = 0.3f0)
-    draw!(fig[1, 2], aog_plt; axis = (title = "Radial profile by zone",))
-
-    save(joinpath(OUT, "example_aog.png"), fig; px_per_unit = 2)
-    println("aog compositing done")
 end
 
 println("\nStatic images written to $OUT")

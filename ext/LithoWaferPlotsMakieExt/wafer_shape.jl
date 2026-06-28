@@ -1,5 +1,5 @@
 """
-Draw the wafer boundary (circle + V-notch) and optional field overlays.
+Draw the wafer boundary (circle + rounded notch) and optional field overlays.
 """
 
 function draw_wafer_boundary!(ax, spec::WaferSpec; color = :black, linewidth = 1.5)

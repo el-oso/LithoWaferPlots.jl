@@ -20,7 +20,7 @@ hero:
 features:
   - title: Seven plot recipes
     icon: 🗺️
-    details: "Scatter, heatmap, contour, arrows, streamlines, divergence and vorticity — each draws the wafer boundary and V-notch automatically."
+    details: "Scatter, heatmap, contour, arrows, streamlines, divergence and vorticity — each draws the wafer boundary and notch automatically."
   - title: Fields, dies & faceting
     icon: 🔲
     details: "Overlay exposure-field and die boundaries on any plot; lay out multi-wafer grids with wafer_facet or AlgebraOfGraphics."
