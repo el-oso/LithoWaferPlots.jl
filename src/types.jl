@@ -13,9 +13,11 @@ struct WaferSpec
     edge_exclusion_mm::Float64
 end
 
-WaferSpec(diameter_mm::Real) = WaferSpec(Float64(diameter_mm), 270.0, 1.0, 2.0)
+# notch_depth_mm defaults to 4.0: the outline is schematic, and a physical ~1 mm notch
+# is sub-pixel at plot scale. 4 mm renders as a clean, visible rounded U.
+WaferSpec(diameter_mm::Real) = WaferSpec(Float64(diameter_mm), 270.0, 4.0, 2.0)
 WaferSpec(diameter_mm::Real, notch_angle_deg::Real) =
-    WaferSpec(Float64(diameter_mm), Float64(notch_angle_deg), 1.0, 2.0)
+    WaferSpec(Float64(diameter_mm), Float64(notch_angle_deg), 4.0, 2.0)
 
 """
     DieGrid(origin_x_mm, origin_y_mm, die_width_mm, die_height_mm)

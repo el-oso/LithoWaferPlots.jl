@@ -1,43 +1,62 @@
 """
     wafer_polygon(spec::WaferSpec; n::Int=256) -> Vector{Tuple{Float64,Float64}}
 
-Return a closed polygon approximating the wafer boundary with a V-notch.
+Return a closed polygon approximating the wafer boundary with a smooth rounded notch.
 
-The circle is sampled at `n` points. Three extra vertices replace the arc segment
-nearest `notch_angle_deg` to form a V-notch indented by `notch_depth_mm`.
+The rim is sampled along its circle; a small circular bite at `notch_angle_deg`
+replaces the segment near the notch. The bite is the unique circle through the two
+rim corners and the inward apex (depth `notch_depth_mm`), giving a rounded U with a
+narrow mouth (half-width ≈ 1.25 × depth) rather than a wide, shallow V.
 
 Reference: notch geometry derived from cap1tan/wafermap (MIT) and
 Artwork Systems wafer map glossary (https://www.artwork.com/package/wmapconvert/).
 """
 function wafer_polygon(spec::WaferSpec; n::Int = 256)
     r = spec.diameter_mm / 2.0
-    notch_r = r - spec.notch_depth_mm
-    θ_notch = deg2rad(spec.notch_angle_deg)
+    d = spec.notch_depth_mm
+    θ0 = deg2rad(spec.notch_angle_deg)
 
-    # half-angle subtended by the notch opening on the circle (≈2° each side)
-    δ = deg2rad(2.0)
-    θ_left = θ_notch - δ
-    θ_right = θ_notch + δ
+    # Notch mouth half-width on the rim, tied to depth so it reads as a deep, narrow
+    # rounded U (mouth ≈ 0.9 × depth) rather than a wide, flat scoop.
+    w = 0.45 * d
 
-    pts = Tuple{Float64, Float64}[]
-    sizehint!(pts, n + 3)
-
-    step = 2π / n
-    θ = θ_right  # start just after right notch edge, go counter-clockwise
-    while θ < θ_right + 2π - step / 2
-        θn = θ + step
-        # insert notch when we reach the left edge
-        if θ <= θ_left + 2π < θn
-            push!(pts, (r * cos(θ_left + 2π), r * sin(θ_left + 2π)))
-            push!(pts, (notch_r * cos(θ_notch), notch_r * sin(θ_notch)))
-            push!(pts, (r * cos(θ_right + 2π), r * sin(θ_right + 2π)))
-        end
-        push!(pts, (r * cos(θn), r * sin(θn)))
-        θ = θn
+    # Degenerate notch → plain circle.
+    if d <= 0 || w >= r || (r - d) <= 0
+        return [(r * cos(θ), r * sin(θ)) for θ in range(0, 2π; length = n + 1)]
     end
 
-    # close polygon
-    push!(pts, pts[1])
+    # The U: two straight walls drop radially inward from the rim corners, joined by a
+    # semicircular bottom of radius `w`. Walls are radial so the sides never bulge past
+    # the mouth (no undercut), and the bottom is smoothly rounded.
+    α = asin(w / r)                       # rim half-angle to each corner
+    L = d - w                             # straight wall length (d > w ⇒ L > 0)
+    u = (cos(θ0), sin(θ0))                # outward radial at the notch
+    t = (-sin(θ0), cos(θ0))               # rim tangent
+    md = r * cos(α) - L                   # radial distance of the bottom-arc centre
+    Mx, My = md * u[1], md * u[2]
+
+    pts = Tuple{Float64, Float64}[]
+    sizehint!(pts, n + 24)
+
+    # 1) rim: corner₊ (θ0+α) counter-clockwise the long way to corner₋ (θ0-α+2π)
+    for k in 0:n
+        θ = (θ0 + α) + (2π - 2α) * (k / n)
+        push!(pts, (r * cos(θ), r * sin(θ)))
+    end
+
+    # 2) notch interior: corner₋ → wall → semicircular bottom → wall → corner₊.
+    # β sweeps -π/2 (B₋) → 0 (apex) → +π/2 (B₊). The straight walls corner→B are the
+    # implicit segments to/from the rim corners (which close the polygon).
+    nb = 14
+    for k in 0:nb
+        β = -π / 2 + π * (k / nb)
+        push!(pts, (
+            Mx + w * (sin(β) * t[1] - cos(β) * u[1]),
+            My + w * (sin(β) * t[2] - cos(β) * u[2]),
+        ))
+    end
+
+    push!(pts, pts[1])   # close (B₊ → corner₊ wall)
     return pts
 end
 

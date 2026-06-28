@@ -25,6 +25,25 @@ end
     @test min_r < r - 0.5
 end
 
+@testitem "rounded notch geometry" begin
+    using LithoWaferPlots
+    spec = WaferSpec(300.0, 270.0, 1.0, 2.0)  # r=150, notch at bottom, 1 mm deep
+    r, d = 150.0, 1.0
+    pts = wafer_polygon(spec; n = 256)
+
+    # apex sits at depth d from the rim (at the notch angle, 270° → bottom);
+    # tolerance covers the sub-mm radial-curvature offset of the rounded bottom
+    radii = [sqrt(x^2 + y^2) for (x, y) in pts]
+    @test minimum(radii) ≈ r - d atol = 0.05
+    apex = pts[argmin(radii)]
+    @test apex[1] ≈ 0.0 atol = 1e-3       # x ≈ 0 at 270°
+    @test apex[2] ≈ -(r - d) atol = 0.05  # straight down
+
+    # the bulk of the boundary is on the rim (corners + circle), within r
+    @test all(<=(r + 1e-6), radii)
+    @test count(≈(r; atol = 1e-3), radii) > 200
+end
+
 @testitem "inside_wafer mask" begin
     using LithoWaferPlots
     spec = WaferSpec(300.0)  # r=150, edge_excl=2 → r_active=148
