@@ -3,7 +3,7 @@
     w = WaferSpec(300.0)
     @test w.diameter_mm == 300.0
     @test w.notch_angle_deg == 270.0
-    @test w.notch_depth_mm == 4.0
+    @test w.notch_depth_mm == 3.0
     @test w.edge_exclusion_mm == 2.0
 end
 

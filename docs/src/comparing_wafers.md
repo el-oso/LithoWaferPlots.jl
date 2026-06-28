@@ -121,17 +121,17 @@ fingerprint_grid(fingerprint_overlay, coeffs, 3, 4, 1:12;
                  title = "Overlay-term fingerprint")
 ```
 
-## Layout option 2 — two 3×2 figures
+## Layout option 2 — two 2×3 figures
 
 For a larger per-wafer view — two slides, or comparing half-lots — split the twelve into two
-3×2 figures by passing a different `idx` range to the same function:
+2×3 figures by passing a different `idx` range to the same function:
 
 ```@example fingerprint
-fingerprint_grid(fingerprint_gradient, coeffs, 3, 2, 1:6; title = "Wafers 1–6")
+fingerprint_grid(fingerprint_gradient, coeffs, 2, 3, 1:6; title = "Wafers 1–6")
 ```
 
 ```@example fingerprint
-fingerprint_grid(fingerprint_gradient, coeffs, 3, 2, 7:12; title = "Wafers 7–12")
+fingerprint_grid(fingerprint_gradient, coeffs, 2, 3, 7:12; title = "Wafers 7–12")
 ```
 
 ## The scale arrow
