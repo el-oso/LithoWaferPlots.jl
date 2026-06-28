@@ -260,15 +260,8 @@ regions let the plot show through. The image can be a **file path** (PNG with al
 accepts `:lt :ct :rt :lc :center :rc :lb :cb :rb` or an `(fx, fy)` tuple.
 
 ```@example gallery
-# a synthetic RGBA logo: brand-coloured ring with a notch + filled centre dot
-logo = fill(RGBAf(0, 0, 0, 0), 160, 160)
-for i in 1:160, j in 1:160
-    px = (i - 0.5) / 160 - 0.5; py = (j - 0.5) / 160 - 0.5
-    rr = sqrt(px^2 + py^2); a = atan(py, px)
-    0.30 <= rr <= 0.46 && (logo[i, j] = RGBAf(0.10, 0.45, 0.80, 0.95))
-    (rr >= 0.28 && abs(a + π / 2) < 0.22) && (logo[i, j] = RGBAf(0, 0, 0, 0))
-    rr <= 0.12 && (logo[i, j] = RGBAf(0.95, 0.55, 0.05, 1.0))
-end
+# the official Julia logo, shipped with the docs as a PNG with transparency
+logo = joinpath(pkgdir(LithoWaferPlots), "docs", "src", "assets", "julia-logo.png")
 
 xs = range(-148.0, 148.0; step = 3.0); ys = range(-148.0, 148.0; step = 3.0)
 pts = [(x, y) for x in xs, y in ys if x^2 + y^2 <= 148.0^2]
@@ -278,8 +271,8 @@ data = WaferData((x = x, y = y, value = @.(sin(x / 40) * cos(y / 40))), wafer)
 fig, ax, side = wafer_figure()
 p = waferheatmap!(ax, data; colormap = :viridis)
 add_colorbar!(side, p; label = "Thickness (nm)")
-add_watermark!(ax, logo; opacity = 0.12, scale = 0.7)   # faded, centred
-add_logo!(ax, logo; position = :rt, scale = 0.16)        # opaque, top-right
+add_watermark!(ax, logo; opacity = 0.10, scale = 0.55)   # faded, centred
+add_logo!(ax, logo; position = :rt, scale = 0.18)         # opaque, top-right
 fig
 ```
 
