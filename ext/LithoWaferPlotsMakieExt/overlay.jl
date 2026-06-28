@@ -127,3 +127,72 @@ function add_watermark!(
     )
     return add_image_overlay!(target, image; position, scale, opacity, kwargs...)
 end
+
+"""
+    add_scale_arrow!(ax, length_data; label="", position=:rb, kwargs...)
+
+Draw a horizontal reference arrow `length_data` long **in data (mm) coordinates** on a
+wafer `Axis`, with `label` centred above it. Because it lives in data coordinates it
+shares the `lengthscale` used by [`waferarrows!`](@ref): pass `length_data = ref *
+lengthscale` and `label = "\$ref nm"` so the arrow reads as "this length = ref nm".
+
+The arrow is anchored to a corner/edge of the axis (tracking the axis limits, so it stays
+put on resize and for static saves).
+
+Keywords:
+- `label`: text drawn above the arrow (e.g. `"50 nm"`); empty = no text.
+- `position`: `:lt :ct :rt :lc :center :rc :lb :cb :rb` (default `:rb`, bottom-right).
+- `color`: arrow colour (default `:black`).
+- `linewidth`: shaft/head width (default `1.5`).
+- `head_frac`: arrowhead length as a fraction of `length_data` (default `0.25`).
+- `head_angle`: half-angle of the arrowhead in radians (default `0.45`).
+- `fontsize`: label font size (default `11`).
+- `margin`: inset from the axis edges as a fraction of the axis span (default `0.06`).
+- `textcolor`: label colour (defaults to `color`).
+
+Requires a Makie backend.
+"""
+function add_scale_arrow!(
+        ax, length_data::Real;
+        label::AbstractString = "",
+        position = :rb,
+        color = :black,
+        linewidth = 1.5f0,
+        head_frac::Real = 0.25,
+        head_angle::Real = 0.45,
+        fontsize = 11.0f0,
+        margin::Real = 0.06,
+        textcolor = nothing,
+    )
+    L = Float64(length_data)
+    L > 0 || error("length_data must be positive, got $L")
+    haskey(_OVERLAY_ANCHORS, position) ||
+        error("position must be one of $(sort(collect(keys(_OVERLAY_ANCHORS)))), got :$position")
+    hz, vt = _OVERLAY_ANCHORS[position]
+    tc = textcolor === nothing ? color : textcolor
+    hl = head_frac * L
+    hw = hl * tan(head_angle)
+
+    # Geometry tracks the axis limits so placement is correct after layout / on resize.
+    geom = lift(ax.finallimits) do lims
+        xmin, ymin = lims.origin[1], lims.origin[2]
+        w, h = lims.widths[1], lims.widths[2]
+        mx, my = margin * w, margin * h
+        x1 = hz === :left ? xmin + mx : hz === :right ? xmin + w - mx - L : xmin + (w - L) / 2
+        y = vt === :bottom ? ymin + my : vt === :top ? ymin + h - my : ymin + h / 2
+        (x1, x1 + L, y, h)
+    end
+
+    shaft = lift(g -> [Point2f(g[1], g[3]), Point2f(g[2], g[3])], geom)
+    head = lift(g -> [
+        Point2f(g[2] - hl, g[3] + hw), Point2f(g[2], g[3]), Point2f(g[2] - hl, g[3] - hw),
+    ], geom)
+    lines!(ax, shaft; color, linewidth)
+    lines!(ax, head; color, linewidth)
+
+    if !isempty(label)
+        lpos = lift(g -> Point2f((g[1] + g[2]) / 2, g[3] + 0.012 * g[4]), geom)
+        text!(ax, lpos; text = label, align = (:center, :bottom), fontsize, color = tc)
+    end
+    return nothing
+end

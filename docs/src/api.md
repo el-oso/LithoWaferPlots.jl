@@ -65,6 +65,7 @@ add_ring_legend!
 add_image_overlay!
 add_logo!
 add_watermark!
+add_scale_arrow!
 ```
 
 ## Scalar plots

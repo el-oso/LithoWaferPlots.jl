@@ -102,3 +102,21 @@ end
     @test fig isa Figure
     @test fig2 isa Figure
 end
+
+@testitem "add_scale_arrow! renders without error" tags = [:rendering] begin
+    using CairoMakie
+
+    w = WaferSpec(300.0)
+    xs = [x for x in -120.0:20.0:120.0 for y in -120.0:20.0:120.0]
+    ys = [y for x in -120.0:20.0:120.0 for y in -120.0:20.0:120.0]
+    d = WaferVectorData(xs, ys, -ys ./ 100, xs ./ 100, w, WaferField[])
+
+    fig, ax, side = wafer_figure()
+    waferarrows!(ax, d; lengthscale = 8.0)
+    # length_data is in mm; keep it a sane fraction of the wafer so it doesn't
+    # blow up the axis limits (here a 50 nm vector at lengthscale 0.8 → 40 mm)
+    @test add_scale_arrow!(ax, 50.0 * 0.8; label = "50 nm", position = :rb) === nothing
+    @test add_scale_arrow!(ax, 40.0; position = :cb) === nothing  # no label path
+    @test_throws ErrorException add_scale_arrow!(ax, -1.0)
+    @test fig isa Figure
+end

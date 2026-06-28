@@ -109,6 +109,22 @@ function add_watermark!(args...; kwargs...)
 end
 
 """
+    add_scale_arrow!(ax, length_data; label="", position=:rb, kwargs...)
+
+Draw a horizontal reference arrow `length_data` long in data (mm) coordinates on a wafer
+`Axis`, with `label` centred above it. Shares the `lengthscale` of `waferarrows!`: pass
+`length_data = ref * lengthscale` and `label = "\$ref nm"` so the arrow reads as a scale.
+
+Keywords: `label`, `position` (`:rb` default), `color`, `linewidth`, `head_frac`,
+`head_angle`, `fontsize`, `margin`, `textcolor`. Requires a Makie backend.
+"""
+function add_scale_arrow!(args...; kwargs...)
+    ext = _makie_ext()
+    ext === nothing && _require_makie(:add_scale_arrow!)
+    return ext.add_scale_arrow!(args...; kwargs...)
+end
+
+"""
     wafer_cfd_figure(vdata::WaferVectorData; scalar=:divergence, vector=:streamlines, kwargs...)
 
 Create a combined CFD plot: scalar background (divergence or vorticity) with a streamline or
