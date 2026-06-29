@@ -7,7 +7,8 @@ WaferDivergence, WaferVorticity.
 
 @recipe(WaferArrows, data) do scene
     Attributes(
-        arrowcolor = :black,
+        arrowcolor = :black,           # color name, or :magnitude to color by |v| via colormap
+        colormap = :viridis,           # used only when arrowcolor === :magnitude
         linewidth = 1.0f0,
         lengthscale = 1.0,
         max_arrows = 4_000,
@@ -28,7 +29,9 @@ end
 # allocation tiny compared with `arrows2d!`, which tessellates a mesh per arrow.
 function _arrow_segments(x, y, vx, vy, scale::Float64, head_frac::Float64, head_angle::Float64)
     pts = Point2f[]
+    mags = Float32[]                  # parallel to pts: true |v| at each vertex (for color-by-magnitude)
     sizehint!(pts, length(x) * 9)
+    sizehint!(mags, length(x) * 9)
     ca = cos(head_angle)
     sa = sin(head_angle)
     nan = Point2f(NaN32, NaN32)
@@ -39,9 +42,11 @@ function _arrow_segments(x, y, vx, vy, scale::Float64, head_frac::Float64, head_
         by = Float64(y[i])
         tx = bx + dx
         ty = by + dy
+        m = Float32(hypot(Float64(vx[i]), Float64(vy[i])))
         base = Point2f(bx, by)
         tip = Point2f(tx, ty)
         push!(pts, base, tip, nan)               # shaft
+        push!(mags, m, m, m)
         L = hypot(dx, dy)
         L == 0.0 && continue
         ux = dx / L
@@ -54,8 +59,9 @@ function _arrow_segments(x, y, vx, vy, scale::Float64, head_frac::Float64, head_
         h2y = ty + hl * (ux * sa - uy * ca)
         push!(pts, tip, Point2f(h1x, h1y), nan)  # barb 1
         push!(pts, tip, Point2f(h2x, h2y), nan)  # barb 2
+        push!(mags, m, m, m, m, m, m)
     end
-    return pts
+    return pts, mags
 end
 
 function Makie.plot!(p::WaferArrows)
@@ -71,8 +77,16 @@ function Makie.plot!(p::WaferArrows)
     end
 
     scale = Float64(p[:lengthscale][])
-    pts = _arrow_segments(x, y, vx, vy, scale, Float64(p[:head_frac][]), Float64(p[:head_angle][]))
-    isempty(pts) || lines!(p, pts; color = p[:arrowcolor], linewidth = p[:linewidth])
+    head_frac = Float64(p[:head_frac][])
+    head_angle = Float64(p[:head_angle][])
+    pts, mags = _arrow_segments(x, y, vx, vy, scale, head_frac, head_angle)
+    if !isempty(pts)
+        if p[:arrowcolor][] === :magnitude
+            lines!(p, pts; color = mags, colormap = p[:colormap], linewidth = p[:linewidth])
+        else
+            lines!(p, pts; color = p[:arrowcolor], linewidth = p[:linewidth])
+        end
+    end
 
     p[:draw_boundary][] && draw_wafer_boundary!(
         p, d.wafer;

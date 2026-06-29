@@ -9,6 +9,7 @@ using LithoWaferPlots: WaferSpec, WaferData, WaferVectorData, WaferField,
     divergence, vorticity, _vector_to_grid
 using NearestNeighbors: KDTree, knn, knn!
 using Random: randperm
+using Statistics: median
 using Tables
 
 include("wafer_shape.jl")
@@ -58,6 +59,7 @@ if ccall(:jl_generating_output, Cint, ()) == 1
         # vector recipes (also covers divergence/vorticity/streamline compute paths)
         fig2, ax2, side2 = wafer_figure()
         waferarrows!(ax2, vdata)
+        waferarrows!(ax2, vdata; arrowcolor = :magnitude)
         waferstreamlines!(ax2, vdata; n_seeds = 2, max_steps = 5, grid_n = 16)
         pd = waferdivergence!(ax2, vdata; grid_n = 16)
         add_colorbar!(side2, pd)

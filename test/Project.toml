@@ -10,6 +10,6 @@ TypeContracts = "c7a3f1e2-84b5-4d69-9e0a-1f2b3c4d5e6f"
 LithoWaferPlots = {path = ".."}
 
 [compat]
-CairoMakie = "0.14"
+CairoMakie = "0.14, 0.15"
 ReTestItems = "1"
 julia = "1.11"

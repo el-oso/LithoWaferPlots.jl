@@ -1,6 +1,6 @@
 name = "LithoWaferPlots"
 uuid = "81c163b9-06bd-4c7c-88ff-a139205f0cbd"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["el_oso"]
 
 [deps]
@@ -18,7 +18,7 @@ Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 LithoWaferPlotsMakieExt = "Makie"
 
 [compat]
-Makie = "0.21, 0.22, 0.23"
+Makie = "0.21, 0.22, 0.23, 0.24"
 NearestNeighbors = "0.4"
 Tables = "1"
 TypeContracts = "0.13"

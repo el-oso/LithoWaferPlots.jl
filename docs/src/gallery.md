@@ -105,7 +105,9 @@ fig
 
 Arrow plot of a vector field. Subsampled to `max_arrows` (default 4 000) for legibility, and
 drawn as a single batched `lines!` call (shaft plus a V arrowhead) for low memory use. Scale
-with `lengthscale`; tune the head with `head_frac` and `head_angle`.
+with `lengthscale`; tune the head with `head_frac` and `head_angle`. Set `arrowcolor = :magnitude`
+to color arrows by `|v|` via `colormap`. Add a reference [`add_scale_arrow!`](@ref) so readers
+can map arrow length back to a magnitude (`wafer_cfd_figure` does this automatically for arrows).
 
 ```@example gallery
 θ = rand(600) .* 2π
@@ -113,8 +115,10 @@ r = sqrt.(rand(600)) .* 130.0
 x = @. r * cos(θ); y = @. r * sin(θ)
 vdata = WaferVectorData((x = x, y = y, vx = -y ./ 80 .+ x ./ 300, vy = x ./ 80 .+ y ./ 300), wafer)
 
+LS = 8.0
 fig, ax, side = wafer_figure()
-waferarrows!(ax, vdata; lengthscale = 8.0, arrowcolor = :steelblue)
+waferarrows!(ax, vdata; lengthscale = LS, arrowcolor = :magnitude, colormap = :viridis)
+add_scale_arrow!(ax, 1.0 * LS; label = "1.0", position = :rb)
 fig
 ```
 

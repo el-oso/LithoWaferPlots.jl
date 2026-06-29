@@ -101,7 +101,19 @@ Keywords:
 - `streamline_linewidth`: line width (default `1.5f0`)
 - `n_seeds`, `max_steps`: passed to `waferstreamlines!`
 - `arrowcolor`: arrow colour when `vector=:arrows`
+- `lengthscale`: arrow length scale when `vector=:arrows` (default `1.0`)
+- `scale_arrow`: when `vector=:arrows`, draw a reference [`add_scale_arrow!`](@ref) sized to
+  the nice-rounded median `|v|` (default `true`); set `false` to omit it
 """
+# Round to a "nice" 1/2/5 × 10^k value for the reference-arrow label.
+function _nice_magnitude(v::Float64)
+    v <= 0 && return v
+    p = 10.0^floor(log10(v))
+    m = v / p
+    nice = m < 1.5 ? 1.0 : m < 3.0 ? 2.0 : m < 7.0 ? 5.0 : 10.0
+    return nice * p
+end
+
 function wafer_cfd_figure(
         vdata::WaferVectorData;
         scalar::Symbol = :divergence,
@@ -113,6 +125,8 @@ function wafer_cfd_figure(
         n_seeds = 20,
         max_steps = 300,
         arrowcolor = :white,
+        lengthscale = 1.0,
+        scale_arrow::Bool = true,
         resolution = (900, 650),
         figure_kwargs...
     )
@@ -139,7 +153,15 @@ function wafer_cfd_figure(
             n_seeds = n_seeds, max_steps = max_steps
         )
     elseif vector === :arrows
-        waferarrows!(ax, vdata; draw_boundary = false, draw_fields = false, arrowcolor = arrowcolor)
+        waferarrows!(
+            ax, vdata;
+            draw_boundary = false, draw_fields = false,
+            arrowcolor = arrowcolor, lengthscale = lengthscale
+        )
+        if scale_arrow
+            ref = _nice_magnitude(median(hypot.(Float64.(vdata.vx), Float64.(vdata.vy))))
+            ref > 0 && add_scale_arrow!(ax, ref * lengthscale; label = string(ref), position = :rb)
+        end
     elseif vector !== :none
         error("vector must be :streamlines, :arrows, or :none, got :$vector")
     end
