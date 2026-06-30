@@ -28,13 +28,29 @@ function draw_fields!(
     return nothing
 end
 
+# label placement within a field rectangle: position symbol → (x-fraction, y-fraction, align)
+const _FIELD_LABEL_ANCHORS = Dict(
+    :c => (0.5, 0.5, (:center, :center)),
+    :tl => (0.0, 1.0, (:left, :top)),
+    :bl => (0.0, 0.0, (:left, :bottom)),
+    :tr => (1.0, 1.0, (:right, :top)),
+    :br => (1.0, 0.0, (:right, :bottom)),
+)
+
 """
     draw_field_numbers!(ax, fields; numbers=nothing, start=:bottomleft, first_row=:lr,
-                        fontsize=9, color=:black)
+                        position=:c, fontsize=9, color=:black, alpha=1.0)
 
-Label each exposure field with its shot number, centred in the field. When `numbers` is
-`nothing` the serpentine (boustrophedon) scan order is used (`serpentine_numbers`); otherwise
-pass an explicit vector aligned with `fields`.
+Label each exposure field with its shot number. When `numbers` is `nothing` the serpentine
+(boustrophedon) scan order is used (`serpentine_numbers`); otherwise pass an explicit vector
+aligned with `fields`.
+
+Font/placement options:
+- `position`: where the number sits within each field — `:c` (centre, default), `:tl`, `:bl`,
+  `:tr`, `:br` (corners, inset slightly from the edge).
+- `fontsize`: label size (default `9`).
+- `color`: label colour (default `:black`).
+- `alpha`: label opacity in `0..1` (default `1.0`).
 
 Requires a Makie backend.
 """
@@ -42,17 +58,24 @@ function draw_field_numbers!(
         ax, fields::AbstractVector{WaferField};
         numbers::Union{Nothing, AbstractVector{<:Integer}} = nothing,
         start::Symbol = :bottomleft, first_row::Symbol = :lr,
-        fontsize = 9.0f0, color = :black
+        position::Symbol = :c, fontsize = 9.0f0, color = :black, alpha::Real = 1.0
     )
     isempty(fields) && return nothing
+    haskey(_FIELD_LABEL_ANCHORS, position) ||
+        error("position must be one of :c, :tl, :bl, :tr, :br, got :$position")
     nums = numbers === nothing ? serpentine_numbers(fields; start, first_row) : numbers
     length(nums) == length(fields) ||
         error("numbers must align with fields ($(length(nums)) vs $(length(fields)))")
+
+    xf, yf, align = _FIELD_LABEL_ANCHORS[position]
+    pad = 0.06   # inset corner labels so they don't touch the field border
+    ix = xf == 0.0 ? pad : xf == 1.0 ? 1.0 - pad : 0.5
+    iy = yf == 0.0 ? pad : yf == 1.0 ? 1.0 - pad : 0.5
     for (f, num) in zip(fields, nums)
-        text!(
-            ax, f.x_center_mm, f.y_center_mm;
-            text = string(num), align = (:center, :center), fontsize, color
-        )
+        xmin, xmax, ymin, ymax = field_bounds(f)
+        px = xmin + ix * (xmax - xmin)
+        py = ymin + iy * (ymax - ymin)
+        text!(ax, px, py; text = string(num), align, fontsize, color = (color, Float32(alpha)))
     end
     return nothing
 end

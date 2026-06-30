@@ -137,6 +137,10 @@ end
     add_kpi_panel!(side, d; sigdigits = 3)
     @test draw_field_numbers!(ax, fields) === nothing
     @test draw_field_numbers!(ax, fields; numbers = collect(1:length(fields))) === nothing
+    # font/placement options
+    @test draw_field_numbers!(ax, fields; position = :tr, fontsize = 11, color = :white, alpha = 0.6) === nothing
+    @test draw_field_numbers!(ax, fields; position = :bl) === nothing
+    @test_throws ErrorException draw_field_numbers!(ax, fields; position = :xx)
     @test fig isa Figure
 end
 
