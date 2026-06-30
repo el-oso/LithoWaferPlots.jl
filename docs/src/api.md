@@ -9,6 +9,10 @@ WaferField
 WaferDie
 WaferData
 WaferVectorData
+FieldedData
+AveragedField
+FieldProfile
+ArrowScale
 ColorScale
 AbstractKPI
 KPIMean
@@ -43,6 +47,7 @@ wafer_polygon
 inside_wafer
 field_bounds
 die_bounds
+field_grid
 ```
 
 ## Vector field analysis
@@ -50,6 +55,26 @@ die_bounds
 ```@docs
 divergence
 vorticity
+```
+
+## Field analysis
+
+```@docs
+fielded
+assign_to_fields
+is_full_field
+is_full_die
+full_fields
+partial_fields
+full_dies
+filter_full
+serpentine_numbers
+stack_fields
+field_average_profiles
+field_kpis
+average_wafers
+arrow_scale
+arrow_scale_from
 ```
 
 ## Figure layout
@@ -66,6 +91,9 @@ add_image_overlay!
 add_logo!
 add_watermark!
 add_scale_arrow!
+plot_averaged_field
+field_facet
+draw_field_numbers!
 ```
 
 ## Scalar plots
