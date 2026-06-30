@@ -58,6 +58,7 @@ makedocs(;
         "Gallery" => "gallery.md",
         "Custom KPIs" => "custom_kpi.md",
         "Comparing Wafers" => "comparing_wafers.md",
+        "Field & Wafer Analysis" => "field_analysis.md",
         "Performance" => "performance.md",
         "API Reference" => "api.md",
     ],
