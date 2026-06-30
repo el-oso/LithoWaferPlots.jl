@@ -11,6 +11,7 @@ WaferDivergence, WaferVorticity.
         colormap = :viridis,           # used only when arrowcolor === :magnitude
         linewidth = 1.0f0,
         lengthscale = 1.0,
+        scale = nothing,               # an ArrowScale overrides lengthscale (shared scale across plots)
         max_arrows = 4_000,
         head_frac = 0.3,
         head_angle = 0.45,
@@ -76,7 +77,8 @@ function Makie.plot!(p::WaferArrows)
         x, y, vx, vy = d.x, d.y, d.vx, d.vy
     end
 
-    scale = Float64(p[:lengthscale][])
+    sc = p[:scale][]
+    scale = sc isa ArrowScale ? sc.lengthscale : Float64(p[:lengthscale][])
     head_frac = Float64(p[:head_frac][])
     head_angle = Float64(p[:head_angle][])
     pts, mags = _arrow_segments(x, y, vx, vy, scale, head_frac, head_angle)

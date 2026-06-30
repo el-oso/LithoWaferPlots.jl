@@ -419,3 +419,79 @@ fig
 
 The same `draw_boundary` and `draw_fields` keywords are available on every recipe, so any
 combination (e.g. contour + scatter overlay) is possible without duplicate boundaries.
+
+---
+
+## Field & wafer analysis
+
+These build on a per-point exposure-field association: [`fielded`](@ref) attaches each
+measurement to its field and intrafield coordinate, enabling partial-field filtering,
+intrafield stacking, and field labelling.
+
+### Field shot numbers
+
+[`draw_field_numbers!`](@ref) labels each field with its exposure (shot) number following the
+scanner's serpentine path (bottom-left first, meandering up). Pass `numbers=...` for an
+explicit order.
+
+```@example gallery
+fields = full_fields(
+    field_grid([((c - 0.5) * 26.0, (r - 5) * 33.0) for r in 1:9, c in -5:6], (26.0, 33.0); wafer = wafer),
+    wafer,
+)
+xs = (rand(3000) .- 0.5) .* 280; ys = (rand(3000) .- 0.5) .* 280
+d = WaferData((x = xs, y = ys, value = xs .^ 2 .+ ys .^ 2), wafer; fields = fields)
+
+fig, ax, side = wafer_figure()
+p = waferheatmap!(ax, d)
+add_colorbar!(side, p; label = "r² (a.u.)")
+draw_field_numbers!(ax, fields)
+fig
+```
+
+---
+
+### Stacked field average with slit/scan profiles
+
+[`stack_fields`](@ref) averages every full field on top of each other by intrafield
+coordinate; [`plot_averaged_field`](@ref) shows the result with the slit- and scan-direction
+average profiles as margins and a KPI strip. Per-field noise averages out, leaving the
+intrafield signature.
+
+```@example gallery
+fx = Float64[]; fy = Float64[]; dx = Float64[]; dy = Float64[]; val = Float64[]
+for f in fields, ix in -10.0:5.0:10.0, iy in -13.0:6.5:13.0
+    push!(fx, f.x_center_mm); push!(fy, f.y_center_mm)
+    push!(dx, ix); push!(dy, iy)
+    push!(val, 0.02 * ix^2 + 0.1 * iy + 0.3 * randn())   # signature + per-point noise
+end
+fd = fielded((fx = fx, fy = fy, dx = dx, dy = dy, value = val), fields; wafer = wafer)
+af = stack_fields(fd; full_only = true)
+plot_averaged_field(af; markersize = 16.0f0)
+```
+
+---
+
+### Comparing wafers at one arrow scale
+
+[`arrow_scale_from`](@ref) designates a scale from a reference wafer; passing the same
+`ArrowScale` to every plot makes arrows directly comparable across lots/wafers — here lot B
+has twice the magnitude, so its arrows are visibly longer while the reference arrow is
+identical.
+
+```@example gallery
+θ = rand(180) .* 2π; r = sqrt.(rand(180)) .* 140
+x = @. r * cos(θ); y = @. r * sin(θ)
+vdA = WaferVectorData((x = x, y = y, vx = -y ./ 150, vy = x ./ 150), wafer)
+vdB = WaferVectorData((x = x, y = y, vx = -y ./ 75, vy = x ./ 75), wafer)
+scale = arrow_scale_from(vdA; ref_fraction = 0.12)
+
+fig = Figure(size = (760, 400))
+for (j, (lab, vd)) in enumerate((("lot A", vdA), ("lot B", vdB)))
+    pax = Axis(fig[1, j]; aspect = DataAspect(), title = lab,
+               xgridvisible = false, ygridvisible = false)
+    waferarrows!(pax, vd; scale = scale, arrowcolor = :magnitude)
+    add_scale_arrow!(pax, scale)
+end
+fig
+```

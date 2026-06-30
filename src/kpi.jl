@@ -57,8 +57,12 @@ const DEFAULT_KPIS = AbstractKPI[
 
 """
     format_value(kpi::AbstractKPI, v::Real) -> String
+    format_value(kpi::AbstractKPI, v::Real, sigdigits::Integer) -> String
 
-Default formatter: 6 significant figures. Override in your `AbstractKPI` subtype
-via the optional `format_value` method.
+Render a KPI value as a string. The **2-arg** form (default: 6 significant figures) is the
+override point — define `format_value(::MyKPI, v::Real)` to customise rendering. The **3-arg**
+form rounds `v` to `sigdigits` significant figures and then delegates to the 2-arg form, so
+`add_kpi_panel!(...; sigdigits=…)` honours custom formatters instead of bypassing them.
 """
 format_value(::AbstractKPI, v::Real) = string(round(v; sigdigits = 6))
+format_value(kpi::AbstractKPI, v::Real, sigdigits::Integer) = format_value(kpi, round(v; sigdigits))

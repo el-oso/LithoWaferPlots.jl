@@ -59,3 +59,22 @@ end
 
     @test implements(MyRange, AbstractKPI)
 end
+
+@testitem "format_value significant digits" begin
+    using LithoWaferPlots
+    @test format_value(KPIMean(), 3.14159) == "3.14159"            # 2-arg default: 6 sig figs
+    @test format_value(KPIMean(), 3.14159, 3) == "3.14"            # 3-arg: sigdigits
+    @test format_value(KPIMean(), 123.456, 2) == "120.0"
+end
+
+@testitem "sigdigits honours custom format_value (non-breaking)" begin
+    using LithoWaferPlots
+    # A custom KPI overriding only the 2-arg form (the documented 0.1.x way)
+    struct TaggedKPI <: AbstractKPI end
+    LithoWaferPlots.name(::TaggedKPI) = "Tagged"
+    LithoWaferPlots.compute(::TaggedKPI, v::AbstractVector{<:Real})::Float64 = Float64(sum(v))
+    LithoWaferPlots.format_value(::TaggedKPI, v::Real) = "v=$v"
+
+    @test format_value(TaggedKPI(), 3.14159) == "v=3.14159"        # override used
+    @test format_value(TaggedKPI(), 3.14159, 3) == "v=3.14"        # override still used, value pre-rounded
+end

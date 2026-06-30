@@ -6,7 +6,9 @@ using LithoWaferPlots: WaferSpec, WaferData, WaferVectorData, WaferField,
     wafer_polygon, inside_wafer, field_bounds,
     ColorScale, normalize, DEFAULT_KPIS, AbstractKPI,
     name, compute, format_value,
-    divergence, vorticity, _vector_to_grid
+    divergence, vorticity, _vector_to_grid,
+    FieldedData, AveragedField, filter_full, field_average_profiles, serpentine_numbers,
+    ArrowScale, _nice_magnitude
 using NearestNeighbors: KDTree, knn, knn!
 using Random: randperm
 using Statistics: median
@@ -20,6 +22,7 @@ include("recipes_scalar.jl")
 include("recipes_vector.jl")
 
 export wafer_figure, wafer_cfd_figure, wafer_facet, add_colorbar!, add_kpi_panel!
+export plot_averaged_field, field_facet, draw_field_numbers!
 export add_exclusion_ring!, add_ring_legend!
 export add_image_overlay!, add_logo!, add_watermark!, add_scale_arrow!
 export WaferScatter, waferscatter, waferscatter!

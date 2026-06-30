@@ -15,7 +15,9 @@ Mandatory methods:
 
 Optional methods:
 - `description(kpi) :: String` — tooltip / longer description
-- `format_value(kpi, v) :: String` — how to render the numeric result (default: 6 sig figs)
+- `format_value(kpi, v) :: String` — how to render the numeric result (default: 6 sig figs).
+  `add_kpi_panel!(...; sigdigits=…)` rounds the value to `sigdigits` *before* calling this, so
+  a custom override is always honoured (never bypassed) and still respects the chosen precision.
 """
 abstract type AbstractKPI end
 

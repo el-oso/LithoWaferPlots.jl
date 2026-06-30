@@ -103,6 +103,72 @@ end
     @test fig2 isa Figure
 end
 
+@testitem "GLMakie backend loads and compiles recipes" tags = [:rendering, :glmakie] begin
+    # The Makie extension must load and its recipes must compile under GLMakie, not just
+    # CairoMakie. Building plot objects exercises the GLMakie pipeline without opening a
+    # window, so this stays headless-safe (no display / save).
+    using GLMakie
+
+    @test Base.get_extension(LithoWaferPlots, :LithoWaferPlotsMakieExt) !== nothing
+
+    GLMakie.activate!()
+    wafer = WaferSpec(300.0)
+    xs = [x for x in -120.0:20.0:120.0 for y in -120.0:20.0:120.0]
+    ys = [y for x in -120.0:20.0:120.0 for y in -120.0:20.0:120.0]
+    sd = WaferData((x = xs, y = ys, value = sin.(xs ./ 40)), wafer)
+    vd = WaferVectorData((x = xs, y = ys, vx = -ys ./ 100, vy = xs ./ 100), wafer)
+
+    fig, ax, side = wafer_figure()
+    @test waferheatmap!(ax, sd) isa Any
+    @test waferarrows!(ax, vd; arrowcolor = :magnitude) isa Any
+    @test fig isa Figure
+end
+
+@testitem "draw_field_numbers! and sigdigits KPI panel render" tags = [:rendering] begin
+    using CairoMakie
+    wafer = WaferSpec(300.0)
+    fields = full_fields(
+        field_grid([((c - 0.5) * 26.0, (r - 5) * 33.0) for r in 1:9, c in -5:6], (26.0, 33.0); wafer = wafer),
+        wafer,
+    )
+    d = WaferData((x = randn(500) .* 100, y = randn(500) .* 100, value = rand(500)), wafer; fields = fields)
+    fig, ax, side = wafer_figure()
+    p = waferheatmap!(ax, d)
+    add_kpi_panel!(side, d; sigdigits = 3)
+    @test draw_field_numbers!(ax, fields) === nothing
+    @test draw_field_numbers!(ax, fields; numbers = collect(1:length(fields))) === nothing
+    @test fig isa Figure
+end
+
+@testitem "ArrowScale drives arrows and reference consistently" tags = [:rendering] begin
+    using CairoMakie
+    wafer = WaferSpec(300.0)
+    xs = [x for x in -120.0:20.0:120.0 for y in -120.0:20.0:120.0]
+    ys = [y for x in -120.0:20.0:120.0 for y in -120.0:20.0:120.0]
+    vd = WaferVectorData((x = xs, y = ys, vx = -ys ./ 100, vy = xs ./ 100), wafer)
+    s = arrow_scale(0.5, 18.0)
+    fig, ax, side = wafer_figure()
+    @test waferarrows!(ax, vd; scale = s) isa Any
+    @test add_scale_arrow!(ax, s) === nothing
+    @test fig isa Figure
+    @test wafer_cfd_figure(vd; vector = :arrows, scale = s)[1] isa Figure
+end
+
+@testitem "plot_averaged_field and field_facet render" tags = [:rendering] begin
+    using CairoMakie
+    wafer = WaferSpec(300.0)
+    fields = field_grid([((c - 0.5) * 26.0, (r - 5) * 33.0) for r in 1:9, c in -5:6], (26.0, 33.0); wafer = wafer)
+    fx = Float64[]; fy = Float64[]; dx = Float64[]; dy = Float64[]; val = Float64[]
+    for f in fields, ix in -10.0:5.0:10.0, iy in -13.0:6.5:13.0
+        push!(fx, f.x_center_mm); push!(fy, f.y_center_mm)
+        push!(dx, ix); push!(dy, iy); push!(val, 0.02 * ix^2 + 0.1 * iy)
+    end
+    fd = fielded((fx = fx, fy = fy, dx = dx, dy = dy, value = val), fields; wafer = wafer)
+    af = stack_fields(fd; full_only = true)
+    @test plot_averaged_field(af) isa Figure
+    @test field_facet(fd; full_only = true, colorrange = extrema(val), ncols = 6) isa Figure
+end
+
 @testitem "add_scale_arrow! renders without error" tags = [:rendering] begin
     using CairoMakie
 

@@ -41,6 +41,7 @@ julia --project=benchmarks benchmarks/render_bench.jl
 | `kpi.jl` | Built-in KPI structs; `DEFAULT_KPIS`; `format_value` fallback |
 | `colorscale.jl` | `ColorScale`, `normalize` |
 | `vectorfields.jl` | `divergence`, `vorticity` (interpolate → grid → finite diff) |
+| `fields.jl` | Field-resolved analysis: `FieldedData` (`fielded`), `full_fields`/`partial_fields`/`filter_full`, `serpentine_numbers`, `stack_fields`→`AveragedField`, `field_average_profiles` (slit/scan), `field_kpis`, `average_wafers`, `ArrowScale` (`arrow_scale`/`arrow_scale_from`) |
 | `plot_interface.jl` | Stub functions that delegate to the Makie extension via `Base.get_extension` |
 
 Makie rendering lives entirely in `ext/LithoWaferPlotsMakieExt/` — loaded only

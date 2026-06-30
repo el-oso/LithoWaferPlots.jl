@@ -104,16 +104,9 @@ Keywords:
 - `lengthscale`: arrow length scale when `vector=:arrows` (default `1.0`)
 - `scale_arrow`: when `vector=:arrows`, draw a reference [`add_scale_arrow!`](@ref) sized to
   the nice-rounded median `|v|` (default `true`); set `false` to omit it
+- `scale`: an [`ArrowScale`](@ref) to apply (overrides `lengthscale`) and draw as the
+  reference arrow — pass the same `ArrowScale` to several wafers for a shared, comparable scale
 """
-# Round to a "nice" 1/2/5 × 10^k value for the reference-arrow label.
-function _nice_magnitude(v::Float64)
-    v <= 0 && return v
-    p = 10.0^floor(log10(v))
-    m = v / p
-    nice = m < 1.5 ? 1.0 : m < 3.0 ? 2.0 : m < 7.0 ? 5.0 : 10.0
-    return nice * p
-end
-
 function wafer_cfd_figure(
         vdata::WaferVectorData;
         scalar::Symbol = :divergence,
@@ -127,6 +120,7 @@ function wafer_cfd_figure(
         arrowcolor = :white,
         lengthscale = 1.0,
         scale_arrow::Bool = true,
+        scale::Union{ArrowScale, Nothing} = nothing,
         resolution = (900, 650),
         figure_kwargs...
     )
@@ -153,14 +147,17 @@ function wafer_cfd_figure(
             n_seeds = n_seeds, max_steps = max_steps
         )
     elseif vector === :arrows
+        ls = scale === nothing ? lengthscale : scale.lengthscale
         waferarrows!(
             ax, vdata;
             draw_boundary = false, draw_fields = false,
-            arrowcolor = arrowcolor, lengthscale = lengthscale
+            arrowcolor = arrowcolor, lengthscale = ls
         )
-        if scale_arrow
+        if scale !== nothing
+            add_scale_arrow!(ax, scale; position = :rb)
+        elseif scale_arrow
             ref = _nice_magnitude(median(hypot.(Float64.(vdata.vx), Float64.(vdata.vy))))
-            ref > 0 && add_scale_arrow!(ax, ref * lengthscale; label = string(ref), position = :rb)
+            ref > 0 && add_scale_arrow!(ax, ref * ls; label = string(ref), position = :rb)
         end
     elseif vector !== :none
         error("vector must be :streamlines, :arrows, or :none, got :$vector")
@@ -331,13 +328,149 @@ function wafer_facet(
 end
 
 """
-    add_kpi_panel!(side, data::WaferData; kpis=DEFAULT_KPIS)
+    plot_averaged_field(af::AveragedField; plot_type=:scatter, colormap=:inferno,
+                        slit=:x, scan=:y, show_profiles=true, kpis=DEFAULT_KPIS,
+                        value_label="avg", markersize=8.0f0, resolution=(820, 660)) -> Figure
+
+Plot the intrafield average (stacked full fields) in field-local coordinates, with the
+slit- and scan-direction average profiles as marginal line plots and a KPI panel. The
+horizontal axis is the slit direction, the vertical axis the scan direction.
+
+Requires a Makie backend.
+"""
+function plot_averaged_field(
+        af::AveragedField;
+        plot_type::Symbol = :scatter,
+        colormap = :inferno,
+        slit::Symbol = :x, scan::Symbol = :y,
+        show_profiles::Bool = true,
+        kpis::AbstractVector{<:AbstractKPI} = DEFAULT_KPIS,
+        value_label::AbstractString = "avg",
+        markersize = 8.0f0,
+        resolution = (820, 660),
+    )
+    plot_type === :scatter || error("plot_averaged_field currently supports plot_type=:scatter, got :$plot_type")
+    hpos = slit === :x ? af.ifx : af.ify
+    vpos = scan === :x ? af.ifx : af.ify
+
+    fig = Figure(; size = resolution)
+    gl = fig[1, 1] = GridLayout()
+    ax = Axis(
+        gl[2, 1];
+        aspect = DataAspect(), xgridvisible = false, ygridvisible = false,
+        topspinevisible = false, rightspinevisible = false,
+        xlabel = "slit (mm)", ylabel = "scan (mm)",
+    )
+    p = scatter!(ax, hpos, vpos; color = af.value, colormap, markersize)
+    Colorbar(gl[2, 2], p; label = value_label)
+
+    if show_profiles
+        prof = field_average_profiles(af; slit, scan)
+        axslit = Axis(gl[1, 1]; height = 90, ylabel = value_label, xgridvisible = false, ygridvisible = false)
+        lines!(axslit, prof.slit.pos, prof.slit.value; color = :black)
+        scatter!(axslit, prof.slit.pos, prof.slit.value; color = :black, markersize = 5.0f0)
+        hidexdecorations!(axslit; grid = false)
+        linkxaxes!(ax, axslit)
+
+        axscan = Axis(gl[2, 3]; width = 90, xlabel = value_label, xgridvisible = false, ygridvisible = false)
+        lines!(axscan, prof.scan.value, prof.scan.pos; color = :black)
+        scatter!(axscan, prof.scan.value, prof.scan.pos; color = :black, markersize = 5.0f0)
+        hideydecorations!(axscan; grid = false)
+        linkyaxes!(ax, axscan)
+    end
+
+    # KPI strip beneath the map
+    kpi_text = join((string(name(k), " = ", round(compute(k, af.value); sigdigits = 4)) for k in kpis), "    ")
+    Label(gl[3, 1:2]; text = kpi_text, fontsize = 9.0f0, font = "DejaVu Sans Mono", tellwidth = false)
+    return fig
+end
+
+"""
+    field_facet(fd::FieldedData; full_only=false, number=true, colormap=:inferno,
+                colorrange=nothing, ncols=4, value_label="value", markersize=6.0f0,
+                resolution=nothing, figure_kwargs...) -> Figure
+
+One panel per exposure field, each showing that field's measurements in field-local
+coordinates with the field rectangle outlined. Panels are titled by shot number (serpentine
+order) when `number=true`, else by `(col, row)`. Pass `colorrange=(lo, hi)` for a shared
+scale + colorbar.
+
+Requires a Makie backend.
+"""
+function field_facet(
+        fd::FieldedData;
+        full_only::Bool = false,
+        number::Bool = true,
+        colormap = :inferno,
+        colorrange = nothing,
+        ncols::Int = 4,
+        value_label::AbstractString = "value",
+        markersize = 6.0f0,
+        resolution = nothing,
+        figure_kwargs...
+    )
+    src = full_only ? filter_full(fd) : fd
+    ids = sort(unique(id for id in src.field_id if id != 0))
+    isempty(ids) && error("no assigned fields to plot (all field_id == 0)")
+    nums = number ? serpentine_numbers(src.fields) : nothing
+
+    ngroups = length(ids)
+    nrows = cld(ngroups, ncols)
+    sz = resolution === nothing ?
+        (250 * min(ngroups, ncols), 270 * nrows + (colorrange !== nothing ? 60 : 0)) : resolution
+    fig = Figure(; size = sz, figure_kwargs...)
+    gl = fig[1, 1] = GridLayout()
+
+    for (k, id) in enumerate(ids)
+        row, col = fldmod1(k, ncols)
+        cell = gl[row, col] = GridLayout()
+        ax = Axis(
+            cell[2, 1];
+            aspect = DataAspect(), xgridvisible = false, ygridvisible = false,
+            topspinevisible = false, rightspinevisible = false,
+            xticklabelsize = 8.0f0, yticklabelsize = 8.0f0,
+        )
+        title = number ? "shot $(nums[id])" :
+            "field ($(src.fields[id].col_idx), $(src.fields[id].row_idx))"
+        Label(cell[1, 1]; text = title, fontsize = 11.0f0, tellwidth = false)
+
+        mask = src.field_id .== id
+        p = scatter!(
+            ax, src.ifx[mask], src.ify[mask];
+            color = Float64.(src.data.values[mask]), colormap, markersize
+        )
+        f = src.fields[id]
+        hw, hh = f.width_mm / 2, f.height_mm / 2
+        poly!(
+            ax, Point2f[(-hw, -hh), (hw, -hh), (hw, hh), (-hw, hh)];
+            color = (:black, 0.0), strokecolor = :gray60, strokewidth = 0.8f0
+        )
+        colorrange !== nothing && (p.colorrange[] = (Float32(colorrange[1]), Float32(colorrange[2])))
+    end
+
+    if colorrange !== nothing
+        Colorbar(
+            gl[nrows + 1, 1:min(ngroups, ncols)];
+            colormap, limits = (Float32(colorrange[1]), Float32(colorrange[2])),
+            vertical = false, label = value_label, height = 16,
+        )
+        rowsize!(gl, nrows + 1, Fixed(50))
+    end
+    return fig
+end
+
+"""
+    add_kpi_panel!(side, data::WaferData; kpis=DEFAULT_KPIS, sigdigits=6)
 
 Compute KPIs and render a label grid in the bottom slot of the side panel.
 Each KPI gets its own row with name on the left and value on the right.
 Uses `Label` blocks (not `text!`) so content never clips to an Axis frame.
+`sigdigits` sets the displayed significant figures (forwarded to `format_value`).
 """
-function add_kpi_panel!(side, data::WaferData; kpis::AbstractVector{<:AbstractKPI} = DEFAULT_KPIS)
+function add_kpi_panel!(
+        side, data::WaferData;
+        kpis::AbstractVector{<:AbstractKPI} = DEFAULT_KPIS, sigdigits::Integer = 6
+    )
     vals = filter(isfinite, data.values)
     isempty(vals) && return nothing
 
@@ -350,7 +483,7 @@ function add_kpi_panel!(side, data::WaferData; kpis::AbstractVector{<:AbstractKP
 
     for (i, k) in enumerate(kpis)
         nm = name(k)
-        val = format_value(k, compute(k, vals))
+        val = format_value(k, compute(k, vals), sigdigits)
         # Fixed-width name column (12 chars) + value in a single monospaced label
         line = rpad(nm, 12) * val
         Label(

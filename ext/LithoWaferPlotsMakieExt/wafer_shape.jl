@@ -12,7 +12,8 @@ end
 
 function draw_fields!(
         ax, fields::AbstractVector{WaferField};
-        color = (:steelblue, 0.15), strokecolor = :steelblue, strokewidth = 0.8
+        color = (:steelblue, 0.15), strokecolor = :steelblue, strokewidth = 0.8,
+        show_numbers::Bool = false
     )
     isempty(fields) && return nothing
     for f in fields
@@ -21,6 +22,36 @@ function draw_fields!(
             ax,
             Point2f[(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax)];
             color, strokecolor, strokewidth
+        )
+    end
+    show_numbers && draw_field_numbers!(ax, fields)
+    return nothing
+end
+
+"""
+    draw_field_numbers!(ax, fields; numbers=nothing, start=:bottomleft, first_row=:lr,
+                        fontsize=9, color=:black)
+
+Label each exposure field with its shot number, centred in the field. When `numbers` is
+`nothing` the serpentine (boustrophedon) scan order is used (`serpentine_numbers`); otherwise
+pass an explicit vector aligned with `fields`.
+
+Requires a Makie backend.
+"""
+function draw_field_numbers!(
+        ax, fields::AbstractVector{WaferField};
+        numbers::Union{Nothing, AbstractVector{<:Integer}} = nothing,
+        start::Symbol = :bottomleft, first_row::Symbol = :lr,
+        fontsize = 9.0f0, color = :black
+    )
+    isempty(fields) && return nothing
+    nums = numbers === nothing ? serpentine_numbers(fields; start, first_row) : numbers
+    length(nums) == length(fields) ||
+        error("numbers must align with fields ($(length(nums)) vs $(length(fields)))")
+    for (f, num) in zip(fields, nums)
+        text!(
+            ax, f.x_center_mm, f.y_center_mm;
+            text = string(num), align = (:center, :center), fontsize, color
         )
     end
     return nothing

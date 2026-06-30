@@ -184,9 +184,11 @@ function add_scale_arrow!(
     end
 
     shaft = lift(g -> [Point2f(g[1], g[3]), Point2f(g[2], g[3])], geom)
-    head = lift(g -> [
-        Point2f(g[2] - hl, g[3] + hw), Point2f(g[2], g[3]), Point2f(g[2] - hl, g[3] - hw),
-    ], geom)
+    head = lift(
+        g -> [
+            Point2f(g[2] - hl, g[3] + hw), Point2f(g[2], g[3]), Point2f(g[2] - hl, g[3] - hw),
+        ], geom
+    )
     lines!(ax, shaft; color, linewidth)
     lines!(ax, head; color, linewidth)
 
@@ -196,3 +198,13 @@ function add_scale_arrow!(
     end
     return nothing
 end
+
+"""
+    add_scale_arrow!(ax, scale::ArrowScale; position=:rb, kwargs...)
+
+Draw the reference arrow described by an `ArrowScale` (length `scale.ref_length_mm`, labelled
+`scale.label`). Pairs with `waferarrows!(ax, vdata; scale)` so the reference matches the data
+arrows exactly.
+"""
+add_scale_arrow!(ax, scale::ArrowScale; position = :rb, kwargs...) =
+    add_scale_arrow!(ax, scale.ref_length_mm; label = scale.label, position, kwargs...)

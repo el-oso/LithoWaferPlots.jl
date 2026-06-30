@@ -170,6 +170,41 @@ function wafer_facet(args...; kwargs...)
 end
 
 """
+    plot_averaged_field(af::AveragedField; kwargs...) -> Figure
+
+Plot an intrafield average (from `stack_fields`) with slit/scan marginal profiles and a
+KPI panel. Requires a Makie backend.
+"""
+function plot_averaged_field(args...; kwargs...)
+    ext = _makie_ext()
+    ext === nothing && _require_makie(:plot_averaged_field)
+    return ext.plot_averaged_field(args...; kwargs...)
+end
+
+"""
+    field_facet(fd::FieldedData; kwargs...) -> Figure
+
+One panel per exposure field in field-local coordinates. Requires a Makie backend.
+"""
+function field_facet(args...; kwargs...)
+    ext = _makie_ext()
+    ext === nothing && _require_makie(:field_facet)
+    return ext.field_facet(args...; kwargs...)
+end
+
+"""
+    draw_field_numbers!(ax, fields; numbers=nothing, kwargs...)
+
+Label each exposure field with its shot number (serpentine order by default). Requires a
+Makie backend.
+"""
+function draw_field_numbers!(args...; kwargs...)
+    ext = _makie_ext()
+    ext === nothing && _require_makie(:draw_field_numbers!)
+    return ext.draw_field_numbers!(args...; kwargs...)
+end
+
+"""
     wafer_figure(; resolution=(900,650), kwargs...) -> (Figure, Axis, GridLayout)
 
 Create a Figure with the standard wafer layout: main wafer Axis on the left,

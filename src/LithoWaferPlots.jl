@@ -29,12 +29,19 @@ include("geometry.jl")
 include("input.jl")
 include("contracts.jl")
 include("kpi.jl")
+include("fields.jl")
 include("colorscale.jl")
 include("vectorfields.jl")
 include("plot_interface.jl")
 
 export WaferSpec, DieGrid, WaferField, WaferDie, WaferData, WaferVectorData
 export wafer_polygon, inside_wafer, field_bounds, die_bounds, field_grid
+export FieldedData, fielded, assign_to_fields, filter_full
+export is_full_field, full_fields, partial_fields, is_full_die, full_dies
+export serpentine_numbers
+export AveragedField, stack_fields, FieldProfile, field_average_profiles, field_kpis
+export average_wafers
+export ArrowScale, arrow_scale, arrow_scale_from
 export AbstractKPI, DEFAULT_KPIS, name, compute, format_value
 export KPIMean, KPISigma, KPIMax, KPIMin, KPIMedian,
     KPIMeanPlus3Sigma, KPIMeanMinus3Sigma, KPIP99
@@ -42,6 +49,7 @@ export ColorScale, normalize
 export divergence, vorticity
 # plotting stubs (implementations in Makie extension)
 export wafer_figure, wafer_cfd_figure, wafer_facet, add_colorbar!, add_kpi_panel!
+export plot_averaged_field, field_facet, draw_field_numbers!
 export add_exclusion_ring!, add_ring_legend!
 export add_image_overlay!, add_logo!, add_watermark!, add_scale_arrow!
 export waferscatter, waferscatter!
