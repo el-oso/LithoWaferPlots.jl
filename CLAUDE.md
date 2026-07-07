@@ -18,6 +18,20 @@ The extension's precompile workload takes ~15-18s and reruns in full after *any*
 edit under `src/` or `ext/` (source-invalidated `.ji` cache) — expected during
 active development, not a bug to chase.
 
+**Call every function in the workload as `LithoWaferPlots.<fn>(...)`, never bare
+`<fn>(...)`.** Every stub-delegated function (`wafer_figure`, `waferheatmap!`, etc.)
+is defined *twice*: once as the thin stub in `src/plot_interface.jl` that real users'
+code resolves to via `using LithoWaferPlots`, and once as this extension's own
+`@recipe`-generated implementation of the same name. Inside this module, a bare call
+resolves to the extension's own local binding (it shadows the `using`-imported stub),
+so a bare call in the workload only compiles+caches the local implementation — never
+the stub's `Core.kwcall` wrapper, which is what a user's call site actually goes
+through. That gap is invisible in isolated checks against the *extension's* internal
+function but shows up immediately in `--trace-compile` against real user code. Verify
+with `--trace-compile` against a script that does `using LithoWaferPlots, CairoMakie`
+and calls things bare (matching real usage) — not against calls qualified with
+`LithoWaferPlotsMakieExt.` or made from inside this file.
+
 ## Commands
 
 ```julia

@@ -57,50 +57,107 @@ export WaferVorticity, wafervorticity, wafervorticity!
         WaferVectorData((x = x, y = y, vx = vx, vy = vy); fields = fields)
         rgba = [RGBAf(0.2, 0.4, 0.8, 0.5) for _ in 1:4, _ in 1:4]
 
+        # Every public plotting function below is called through its fully-qualified
+        # `LithoWaferPlots.` name, NOT bare. `LithoWaferPlots.<fn>` is the thin stub in
+        # src/plot_interface.jl that real users' code actually calls (via `using
+        # LithoWaferPlots`); this extension ALSO defines its own same-named `<fn>` (the
+        # `@recipe`-generated implementation), which — being a local binding — shadows the
+        # `using`-imported stub for bare calls *within this module*. So a bare call here
+        # only compiles+caches this extension's own implementation, never the stub's kwcall
+        # wrapper the user's call site actually resolves to, leaving it to compile fresh on
+        # every real first use regardless of how much the workload otherwise covers.
+        # Qualifying forces the stub itself through `Base.get_extension`, caching both layers.
+
         # scalar recipes + side panel + annotations + overlays
-        fig, ax, side = wafer_figure()
-        p = waferheatmap!(ax, sdata)
-        waferheatmap!(ax, sdata; imagemode = :image)
-        waferheatmap!(
+        fig, ax, side = LithoWaferPlots.wafer_figure()
+        p = LithoWaferPlots.waferheatmap!(ax, sdata)
+        LithoWaferPlots.waferheatmap!(ax, sdata; imagemode = :image)
+        LithoWaferPlots.waferheatmap!(
             ax, sdata; colormap = :plasma,
             field_color = (:black, 0.0), field_strokecolor = :black, field_strokewidth = 1.8f0
         )
-        add_colorbar!(side, p; label = "test")
-        add_kpi_panel!(side, sdata)
-        waferscatter!(ax, sdata)
-        wafercontour!(ax, sdata; grid_n = 16)
-        add_exclusion_ring!(ax, wafer; mm_to_edge = 2.0, label = "edge")
-        add_ring_legend!(ax)
-        add_image_overlay!(ax, rgba)
-        add_logo!(ax, rgba)
-        add_watermark!(ax, rgba)
-        add_scale_arrow!(ax, 10.0; label = "10")
-        add_scale_arrow!(ax, 10.0; label = "10", position = :rb)
+        p2 = LithoWaferPlots.waferscatter!(ax, sdata)
+        LithoWaferPlots.waferscatter!(ax, sdata; markersize = 4.0f0)
+        LithoWaferPlots.add_colorbar!(side, p; label = "test")
+        LithoWaferPlots.add_colorbar!(side, p2; label = "test")
+        LithoWaferPlots.add_kpi_panel!(side, sdata)
+        LithoWaferPlots.wafercontour!(ax, sdata; grid_n = 16)
+        LithoWaferPlots.wafercontour!(ax, sdata; levels = 12, colormap = :viridis)
+        LithoWaferPlots.add_exclusion_ring!(ax, wafer; mm_to_edge = 2.0, label = "edge")
+        LithoWaferPlots.add_exclusion_ring!(
+            ax, wafer; mm_to_edge = 2.0, label = "edge", color = :black,
+            linestyle = :dash, dim_outside = true, dim_alpha = 0.4
+        )
+        LithoWaferPlots.add_ring_legend!(ax)
+        LithoWaferPlots.add_ring_legend!(ax; position = :lb)
+        LithoWaferPlots.add_image_overlay!(ax, rgba)
+        LithoWaferPlots.add_logo!(ax, rgba)
+        LithoWaferPlots.add_watermark!(ax, rgba)
+        LithoWaferPlots.add_scale_arrow!(ax, 10.0; label = "10")
+        LithoWaferPlots.add_scale_arrow!(ax, 10.0; label = "10", position = :rb)
+
+        # file-path image overlays (distinct code path from the RGBA-matrix one above:
+        # `_prepare_overlay_image(::AbstractString, ...)` reads + decodes via FileIO/PNGFiles)
+        logo_path = joinpath(mktempdir(), "logo.png")
+        Makie.FileIO.save(logo_path, rgba)
+        LithoWaferPlots.add_logo!(ax, logo_path; position = :rt, scale = 0.18)
+        LithoWaferPlots.add_watermark!(ax, logo_path; opacity = 0.1, scale = 0.55)
 
         # vector recipes (also covers divergence/vorticity/streamline compute paths)
-        fig2, ax2, side2 = wafer_figure()
-        waferarrows!(ax2, vdata)
-        waferarrows!(ax2, vdata; arrowcolor = :magnitude)
-        waferarrows!(ax2, vdata; lengthscale = 8.0, arrowcolor = :magnitude, colormap = :viridis)
-        waferstreamlines!(ax2, vdata; n_seeds = 2, max_steps = 5, grid_n = 16)
-        pd = waferdivergence!(ax2, vdata; grid_n = 16)
-        add_colorbar!(side2, pd)
-        wafervorticity!(ax2, vdata; grid_n = 16)
+        fig2, ax2, side2 = LithoWaferPlots.wafer_figure()
+        LithoWaferPlots.waferarrows!(ax2, vdata)
+        LithoWaferPlots.waferarrows!(ax2, vdata; arrowcolor = :magnitude)
+        LithoWaferPlots.waferarrows!(ax2, vdata; lengthscale = 8.0, arrowcolor = :magnitude, colormap = :viridis)
+        LithoWaferPlots.waferstreamlines!(ax2, vdata; n_seeds = 2, max_steps = 5, grid_n = 16)
+        LithoWaferPlots.waferstreamlines!(ax2, vdata; n_seeds = 2, max_steps = 5, color = :navy, linewidth = 1.2f0)
+        LithoWaferPlots.waferstreamlines!(
+            ax2, vdata; draw_boundary = false, draw_fields = false,
+            color = :white, n_seeds = 2
+        )
+        pd = LithoWaferPlots.waferdivergence!(ax2, vdata; grid_n = 16)
+        LithoWaferPlots.waferdivergence!(ax2, vdata; colormap = :RdBu)
+        LithoWaferPlots.waferdivergence!(ax2, vdata; colormap = :RdBu, markersize = 3.0f0)
+        LithoWaferPlots.add_colorbar!(side2, pd)
+        LithoWaferPlots.wafervorticity!(ax2, vdata; grid_n = 16)
+        LithoWaferPlots.wafervorticity!(ax2, vdata; markersize = 3.0f0)
+
+        # non-mutating standalone forms (`func` vs `func!`) — auto-create their own Scene,
+        # part of the public API (Makie's `@recipe` generates both) but not otherwise
+        # exercised anywhere above.
+        LithoWaferPlots.waferscatter(sdata)
+        LithoWaferPlots.waferheatmap(sdata)
+        LithoWaferPlots.wafercontour(sdata)
+        LithoWaferPlots.waferarrows(vdata)
+        LithoWaferPlots.waferstreamlines(vdata; n_seeds = 2, max_steps = 5)
+        LithoWaferPlots.waferdivergence(vdata; grid_n = 16)
+        LithoWaferPlots.wafervorticity(vdata; grid_n = 16)
 
         # combined CFD figure: both scalar backgrounds x both vector overlays
         scale = arrow_scale(0.5, 18.0)
-        wafer_cfd_figure(vdata)
-        wafer_cfd_figure(vdata; scalar = :vorticity, vector = :arrows, scale = scale)
+        LithoWaferPlots.wafer_cfd_figure(vdata)
+        LithoWaferPlots.wafer_cfd_figure(vdata; scalar = :vorticity, vector = :arrows, scale = scale)
+        LithoWaferPlots.wafer_cfd_figure(
+            vdata; scalar = :divergence, vector = :streamlines,
+            streamline_color = :white, streamline_linewidth = 1.5f0, n_seeds = 2
+        )
+        LithoWaferPlots.waferarrows!(ax2, vdata; scale = scale, arrowcolor = :magnitude)
+        LithoWaferPlots.add_scale_arrow!(ax2, scale)
+
+        arrow_scale_from(vdata; ref_fraction = 0.12)
 
         # grouped-table facet (scatter/heatmap/contour panel functions, shared colorrange)
         tbl = (
             x = vcat(x, x), y = vcat(y, y), value = vcat(v, v),
             grp = vcat(fill(:a, length(x)), fill(:b, length(x))),
         )
-        wafer_facet(tbl, wafer; by = :grp, plot_type = :heatmap, colorrange = extrema(v))
+        LithoWaferPlots.wafer_facet(tbl, wafer; by = :grp, plot_type = :heatmap, colorrange = extrema(v))
+        LithoWaferPlots.wafer_facet(
+            tbl, wafer; by = :grp, plot_type = :heatmap,
+            colormap = :plasma, colorrange = extrema(v), ncols = 2
+        )
 
         # field-resolved analysis: field numbers, intrafield averaging, per-field facet
-        draw_field_numbers!(ax, full_fields(fields, wafer))
+        LithoWaferPlots.draw_field_numbers!(ax, full_fields(fields, wafer))
 
         fx = Float64[]; fy = Float64[]; dx = Float64[]; dy = Float64[]; fval = Float64[]
         for f in fields, ix in (-5.0, 5.0), iy in (-6.0, 6.0)
@@ -109,8 +166,15 @@ export WaferVorticity, wafervorticity, wafervorticity!
         end
         fd = fielded((fx = fx, fy = fy, dx = dx, dy = dy, value = fval), fields; wafer = wafer)
         af = stack_fields(fd; full_only = true)
-        plot_averaged_field(af)
-        field_facet(fd; full_only = true, colorrange = extrema(fval))
+        LithoWaferPlots.plot_averaged_field(af)
+        LithoWaferPlots.plot_averaged_field(af; markersize = 16.0f0)
+        LithoWaferPlots.field_facet(fd; full_only = true, colorrange = extrema(fval))
+
+        # heatmap with markersize + field overlay together (die-level-yield-map pattern)
+        LithoWaferPlots.waferheatmap!(
+            ax, sdata; markersize = 14.0f0, colormap = :RdYlGn,
+            field_color = (:black, 0.0), field_strokecolor = :gray50, field_strokewidth = 0.7f0
+        )
     end
 end
 
