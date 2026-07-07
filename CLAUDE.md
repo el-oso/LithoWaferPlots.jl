@@ -1,5 +1,23 @@
 # CLAUDE.md
 
+## Precompilation
+
+Both the core package and the Makie extension use `PrecompileTools.@compile_workload`
+(not the raw `ccall(:jl_generating_output, ...)` guard) so `Pkg.precompile()` caches
+recipe code across Makie's ComputePipeline machinery, not just our own functions —
+the raw guard measurably failed to cache several ComputePipeline-generated
+specializations that `@compile_workload` does cache. The core package additionally
+wraps `using REPL` in `@recompile_invalidations` after `include("kpi.jl")`: loading
+any Makie backend transitively loads `REPL`, which activates `TypeContracts`'
+`TypeContractsREPLExt` and would otherwise invalidate the `@verify` call sites
+compiled earlier in `kpi.jl`. Forcing that extension to load during our own
+precompilation bakes in the post-invalidation compiled form instead of paying for
+it at first-plot time.
+
+The extension's precompile workload takes ~15-18s and reruns in full after *any*
+edit under `src/` or `ext/` (source-invalidated `.ji` cache) — expected during
+active development, not a bug to chase.
+
 ## Commands
 
 ```julia
@@ -58,6 +76,27 @@ when Makie is in the environment. No Makie symbols in `src/`.
 | `recipes_vector.jl` | `WaferArrows`, `WaferStreamlines`, `WaferDivergence`, `WaferVorticity` |
 | `layout.jl` | `wafer_figure`, `wafer_cfd_figure`, `wafer_facet`, `add_colorbar!`, `add_kpi_panel!`, `add_exclusion_ring!`, `add_ring_legend!` |
 
+### Per-backend precompile-only extensions
+
+`ext/LithoWaferPlotsCairoMakieExt.jl`, `ext/LithoWaferPlotsGLMakieExt.jl`, and
+`ext/LithoWaferPlotsWGLMakieExt.jl` are flat (no submodule) extensions, each triggered
+by its concrete backend **and** `Makie` (e.g. `["CairoMakie", "Makie"]`) — the `Makie`
+co-trigger is required, not decorative: an extension's own precompilation only loads its
+declared triggers, so without it `LithoWaferPlotsMakieExt` (trigger: `Makie` alone) is
+never loaded during, say, `LithoWaferPlotsCairoMakieExt`'s precompile, and the stub
+functions it calls (`wafer_figure`, `waferheatmap!`, ...) throw "load a Makie backend
+first". These extensions contain no recipe logic — they call the same public stub
+functions everyone else does, then render once through their concrete backend
+(`colorbuffer(fig)` for CairoMakie/GLMakie; a `Bonito` session/DOM serialization for
+WGLMakie, no browser needed) purely to precompile that backend's draw dispatch for our
+recipe types. `LithoWaferPlotsMakieExt`'s own workload never does this since it only
+weak-deps on abstract `Makie` — building a `Scene`/recipe object doesn't touch any
+backend's rendering code at all until a concrete backend actually draws it.
+GLMakie's render is wrapped in `try/catch` (best-effort: no GL context in headless
+CI/no-GPU installs must not fail the package install) — CairoMakie and WGLMakie's
+render paths need no GPU/display and are unconditional, matching the exact idiom each
+backend's own `src/precompiles.jl` uses.
+
 ### Stub delegation pattern
 
 Every public plotting function in `src/plot_interface.jl` follows this pattern:
@@ -110,12 +149,25 @@ in the same `Figure`. `wafer_facet` covers the spatial multi-panel use case; AoG
 statistical views (violin, radial scatter, lot comparison).
 
 ### Time-to-first-plot / precompilation
-The extension's precompile workload (bottom of `LithoWaferPlotsMakieExt.jl`, guarded by
-`ccall(:jl_generating_output, …)`) must exercise **every recipe** — add new recipes to it.
+The extension's precompile workload (bottom of `LithoWaferPlotsMakieExt.jl`, a
+`PrecompileTools.@compile_workload` block) must exercise **every recipe** — add new
+recipes to it. If a new recipe/attribute combination draws through `draw_fields!`
+(needs a non-empty `fields` vector to get past its `isempty` fast path) or adds a new
+constructor call shape (e.g. an omitted-default-argument overload), add that combination
+too — `--trace-compile` on a realistic script is how these gaps get found; "the workload
+calls it" isn't proof it compiled the same specialization a real script does. New recipes
+also need a render call added to each of the three per-backend extensions (see above) so
+their backend-specific draw dispatch precompiles too.
+
 Precompilation is undone by *invalidations*: never overload `Base.show(::IO, ::Type{X})` or
 other broad type/print methods — they invalidate the whole pipeline and recompile seconds of
 code on first plot. After dependency bumps, audit with `SnoopCompile`'s
 `@snoop_invalidations` (see `docs/src/performance.md`); keep total invalidations in the tens.
+Note: `SnoopCompile` (not `SnoopCompileCore`) fails to precompile on Julia 1.12 if the
+resolver is left to pick a version freely — it silently downgrades to an ancient
+pre-2020 release. Pin explicitly: `Pkg.add(Pkg.PackageSpec(name="SnoopCompile", version="3.2.7"))`
+(or newer). Its `report_invalidations` (PrettyTables-based) is separately broken on 1.12
+(`Core.Binding` field-name change) — use `invalidation_trees`/`uinvalidated` directly.
 
 ## Requirements
 
@@ -127,7 +179,10 @@ code on first plot. After dependency bumps, audit with `SnoopCompile`'s
 - TypeContracts: add `@verify MyKPI` after any new `AbstractKPI` implementation.
 - Run `runic -i .` from the repo root before every git commit.
 - The extension must work with **all three backends**: CairoMakie, GLMakie, and WGLMakie.
-  Never use backend-specific APIs in the extension code itself.
+  Never use backend-specific APIs in `LithoWaferPlotsMakieExt` itself — the one exception
+  is the three dedicated precompile-only extensions (`ext/LithoWaferPlotsCairoMakieExt.jl`,
+  `...GLMakieExt.jl`, `...WGLMakieExt.jl`), whose entire purpose is backend-specific
+  rendering at precompile time (see above). They contain no recipe logic of their own.
 - `docs/Project.toml` includes AlgebraOfGraphics and DataFrames for example generation.
   Do not add these to the main `[deps]`.
 - **Gallery plots must show their generating code.** Every plot in `docs/src/gallery.md`

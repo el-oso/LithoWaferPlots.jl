@@ -2,10 +2,18 @@
 
 ## Time to first plot
 
-The Makie extension runs a precompile workload (guarded by `jl_generating_output`, so it
-only executes during `Pkg.precompile()`) that exercises **every recipe** plus the layout,
-annotation and overlay helpers. Subsequent Julia sessions reuse the cached native code, so
-the first plot of a session is fast (e.g. first `waferarrows!` ≈ 0.3 s instead of ~3.5 s).
+The Makie extension runs a `PrecompileTools.@compile_workload` (only executes during
+`Pkg.precompile()`) that exercises **every recipe** plus the layout, annotation and
+overlay helpers. Subsequent Julia sessions reuse the cached native code, so the first
+plot of a session is fast (e.g. first `waferarrows!` ≈ 0.3 s instead of ~3.5 s).
+
+That workload only precompiles recipe *construction* — it never renders a frame, since
+it only weak-deps on abstract `Makie`, never a concrete backend. Backend-specific draw
+dispatch (CairoMakie's Cairo calls, GLMakie's shader/screen setup, WGLMakie's JS
+serialization) only compiles once a concrete backend actually draws something, so three
+small, backend-specific extensions (`ext/LithoWaferPlotsCairoMakieExt.jl`,
+`...GLMakieExt.jl`, `...WGLMakieExt.jl`) each render a representative figure through
+their own backend at precompile time to warm that path too.
 
 Run precompilation explicitly after installation or after upgrading packages:
 
@@ -25,6 +33,12 @@ julia -e 'using Pkg; Pkg.precompile()'
     using SnoopCompile
     length(uinvalidated(invs))   # should be small (tens, not thousands)
     ```
+    On Julia 1.12, letting the resolver pick `SnoopCompile` freely can silently install an
+    ancient pre-2020 release (its ecosystem-wide ⌅/compat chain resolves backwards). Pin it
+    explicitly: `Pkg.add(Pkg.PackageSpec(name="SnoopCompile", version="3.2.7"))` (or newer).
+    Its `report_invalidations` (needs `PrettyTables`) is separately broken on 1.12 due to a
+    `Core.Binding` field rename — use `invalidation_trees(invs)`/`uinvalidated(invs)` directly
+    instead of the pretty-printed report.
 
 ### Pinning Makie for reproducible startup times
 

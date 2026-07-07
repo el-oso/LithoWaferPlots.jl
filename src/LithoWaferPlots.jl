@@ -20,6 +20,7 @@ module LithoWaferPlots
 
 using Statistics: mean, std, median, quantile
 using NearestNeighbors: KDTree, knn, knn!
+using PrecompileTools: @recompile_invalidations
 using Random: randperm
 using Tables
 using TypeContracts
@@ -29,6 +30,20 @@ include("geometry.jl")
 include("input.jl")
 include("contracts.jl")
 include("kpi.jl")
+
+# `@verify` (above) registers each KPI's contract with TypeContracts before any
+# REPL session has loaded TypeContractsREPLExt, so the calls resolve to its
+# no-op doc-sync fallback. Loading `REPL` (pulled in transitively by every Makie
+# backend) later activates that extension and inserts its real method, which
+# would otherwise invalidate the already-compiled `@verify` call sites and force
+# a runtime recompile the first time a user loads a backend. Forcing `REPL` to
+# load here, wrapped in `@recompile_invalidations`, makes the extension's method
+# exist before precompilation ends, so PrecompileTools recompiles and caches the
+# final form now instead of at first plot.
+@recompile_invalidations begin
+    using REPL
+end
+
 include("fields.jl")
 include("colorscale.jl")
 include("vectorfields.jl")
