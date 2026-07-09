@@ -208,16 +208,37 @@ add_colorbar!(side, p; label = "Divergence (a.u.)")
 fig
 ```
 
-Extra example: overlay every arrow that produced this divergence field (no subsampling — the
-flow is localized to the two source/sink regions, so plotting all of it doesn't clutter the
-rest of the wafer), so the source/sink pattern is visible alongside the scalar field it
-derives from.
+Extra example: overlay every arrow that produced this field (no subsampling — the flow is
+localized to the two source/sink regions, so plotting all of it doesn't clutter the rest of
+the wafer) on two panels side by side — raw `|v|` magnitude on the left, derived divergence on
+the right — to compare where the flow is *strong* against where it's actually *diverging*.
 
 ```@example gallery
-fig, ax, side = wafer_figure()
-p = waferdivergence!(ax, vdata; colormap = :RdBu, markersize = 3.0f0)
-waferarrows!(ax, vdata; lengthscale = 1.2, max_arrows = length(vdata.x), arrowcolor = :magnitude, colormap = :RdBu)
-add_colorbar!(side, p; label = "Divergence (a.u.)")
+mag = hypot.(vdata.vx, vdata.vy)
+magdata = WaferData((x = vdata.x, y = vdata.y, value = mag), wafer)
+
+fig = Figure(size = (1400, 620))
+
+gl1 = fig[1, 1] = GridLayout()
+ax1 = Axis(gl1[1, 1]; aspect = DataAspect(), title = "|v| magnitude",
+    xgridvisible = false, ygridvisible = false, topspinevisible = false, rightspinevisible = false)
+side1 = gl1[1, 2] = GridLayout(; tellwidth = true)
+colsize!(gl1, 2, Relative(0.12))
+p1 = waferheatmap!(ax1, magdata; colormap = :viridis)
+waferarrows!(ax1, vdata; lengthscale = 1.2, max_arrows = length(vdata.x), arrowcolor = :magnitude, colormap = :RdBu,
+             draw_boundary = false, draw_fields = false)
+add_colorbar!(side1, p1; label = "|v| (a.u.)")
+
+gl2 = fig[1, 2] = GridLayout()
+ax2 = Axis(gl2[1, 1]; aspect = DataAspect(), title = "Divergence",
+    xgridvisible = false, ygridvisible = false, topspinevisible = false, rightspinevisible = false)
+side2 = gl2[1, 2] = GridLayout(; tellwidth = true)
+colsize!(gl2, 2, Relative(0.12))
+p2 = waferdivergence!(ax2, vdata; colormap = :RdBu, markersize = 3.0f0)
+waferarrows!(ax2, vdata; lengthscale = 1.2, max_arrows = length(vdata.x), arrowcolor = :magnitude, colormap = :RdBu,
+             draw_boundary = false, draw_fields = false)
+add_colorbar!(side2, p2; label = "Divergence (a.u.)")
+
 fig
 ```
 
