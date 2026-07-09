@@ -1,13 +1,13 @@
 | Status | Feedback | Notes |
 |---|---|---|
-| Open | KPI box is too small, can font size and style be changed? | |
-| Open | Can the notch shape and size be configured? Some people prefer larger notches | |
-| Done | When adding a reference arrow, the size is not to scale to the ones on the plot. I believe that the arrows in the plot need to be rescaled according to the reference. | PR #2: `add_scale_arrow!(ax, arrows_plot::WaferArrows)` now reads the plot's actually-resolved scale instead of requiring a hand-computed `ref * lengthscale`. |
-| Done | Makie options cannot be passed to the plots | PR #2: all 7 recipes migrated to Makie's newer `@recipe` DSL (`documented_attributes`/`filtered_attributes` mixins), so `marker`, `strokewidth`, `alpha`, `linestyle`, `interpolate`, etc. now forward through instead of being silently dropped. Raised the minimum Makie version to 0.24. |
-| Done | Cannot handle NaNs, probably values need to be automatically filtered | PR #2: `WaferData`/`WaferVectorData` now filter non-finite rows at construction (one-time warning), which transitively fixes `ColorScale`, the heatmap/contour interpolation paths, and `divergence`/`vorticity`'s IDW poisoning. |
-| Done | When plotting several plots, e.g. heatmap and arrows, the edge is plot on top making the edge thicker. This is undesirable. We want to plot the edge only once. | PR #2: `draw_wafer_boundary!`/`draw_fields!` are now idempotent per-axis. |
-| Open | When plotting arrows and heatmap, the heatmap interpolation seems to go bad at large sizes. | Not independently verified yet, but PR #2 fixed a related bug in `_heatmap_image!`: its `KDTree` was built from unmasked coordinates while indexed with masked values, an index misalignment whenever `inside_wafer` drops any point — plausible cause, worth re-checking against this report specifically before closing. |
-| Open | Want to sometimes plot the ring and the inner part of the wafer separate lets call this a donut plot. Each part has a different set of KPIs plotted either side by side or in the same plot with 2 sets of KPIs with the ring separation marked | |
-| Open | Ability to add metrics inside axis | |
-| Open | Have an option to report KPIs or important subset of KPIs inside of the wafer plot for exaple for as showcase | |
-| Done | Make an AoG section with more AoG examples in the docs. Mix arrows and heatmap, rings, KPIs. | New dedicated `docs/src/aog_compositing.md` page (linked from Gallery) with a faceted lot comparison, a heatmap+arrows panel beside a KPI bar chart, an exclusion-ring panel beside a radial value/zone scatter, and a grouped KPI-comparison bar chart across lots. |
+| Open | KPI box font size/style configurable? | |
+| Open | Configurable notch shape/size | |
+| Done | Reference arrow not to scale | PR #2: `add_scale_arrow!(ax, ::WaferArrows)` reads the plot's resolved scale |
+| Done | Makie options not passable to plots | PR #2: recipes migrated to new `@recipe` DSL; kwargs now forward through |
+| Done | NaN crashes | PR #2: `WaferData`/`WaferVectorData` filter non-finite rows at construction |
+| Done | Boundary drawn twice on overlay | PR #2: `draw_wafer_boundary!`/`draw_fields!` now idempotent per-axis |
+| Open | Heatmap interpolation bad at large sizes | Related index bug fixed in PR #2; not independently verified |
+| Open | Donut plot (ring vs. inner, separate KPIs) | |
+| Open | Metrics inside axis | |
+| Open | Show KPI subset inside wafer plot | |
+| Done | Dedicated AoG docs section | New `aog_compositing.md`: lot facets, heatmap+arrows, rings, KPI bars |
