@@ -61,12 +61,9 @@ fig
 
 ## Install
 
-The package is not yet registered; install it (and its `TypeContracts` dependency) from GitHub:
-
 ```julia
 using Pkg
-Pkg.add(url = "https://github.com/el-oso/TypeContracts.jl")
-Pkg.add(url = "https://github.com/el-oso/LithoWaferPlots.jl")
+Pkg.add("LithoWaferPlots")
 ```
 
 ## Built entirely from open references

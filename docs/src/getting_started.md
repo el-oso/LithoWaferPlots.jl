@@ -4,7 +4,7 @@
 
 ```julia
 using Pkg
-Pkg.add(url="https://github.com/el-oso/LithoWaferPlots.jl")
+Pkg.add("LithoWaferPlots")
 ```
 
 Add a Makie backend for rendering (GLMakie for desktop, WGLMakie for notebooks):

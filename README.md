@@ -1,5 +1,6 @@
 # LithoWaferPlots.jl
 
+[![Version](https://juliahub.com/docs/General/LithoWaferPlots/stable/version.svg)](https://juliahub.com/ui/Packages/General/LithoWaferPlots)
 [![CI](https://github.com/el-oso/LithoWaferPlots.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/el-oso/LithoWaferPlots.jl/actions/workflows/CI.yml)
 [![Coverage](https://coveralls.io/repos/github/el-oso/LithoWaferPlots.jl/badge.svg?branch=master)](https://coveralls.io/github/el-oso/LithoWaferPlots.jl?branch=master)
 [![Dev Docs](https://img.shields.io/badge/docs-dev-blue.svg)](https://el-oso.github.io/LithoWaferPlots.jl/dev/)
@@ -23,7 +24,7 @@ Open-source semiconductor wafer map visualization for Julia.
 
 ```julia
 using Pkg
-Pkg.add(url="https://github.com/el-oso/LithoWaferPlots.jl")
+Pkg.add("LithoWaferPlots")
 Pkg.add("CairoMakie")   # or GLMakie / WGLMakie
 ```
 
