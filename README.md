@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/el-oso/LithoWaferPlots.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/el-oso/LithoWaferPlots.jl/actions/workflows/CI.yml)
 [![Coverage](https://coveralls.io/repos/github/el-oso/LithoWaferPlots.jl/badge.svg?branch=master)](https://coveralls.io/github/el-oso/LithoWaferPlots.jl?branch=master)
+[![Dev Docs](https://img.shields.io/badge/docs-dev-blue.svg)](https://el-oso.github.io/LithoWaferPlots.jl/dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 Open-source semiconductor wafer map visualization for Julia.

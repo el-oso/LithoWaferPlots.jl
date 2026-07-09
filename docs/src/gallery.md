@@ -103,11 +103,16 @@ fig
 
 ## Arrows
 
-Arrow plot of a vector field. Subsampled to `max_arrows` (default 4 000) for legibility, and
-drawn as a single batched `lines!` call (shaft plus a V arrowhead) for low memory use. Scale
+Arrow plot of a vector field. Subsampled to `max_arrows` (default 4 000) for legibility — by
+default (`arrow_sample = :magnitude`) the largest-|v| arrows are kept; set `arrow_sample =
+:random` for a uniform random subsample instead. Drawn as a single batched `lines!` call
+(shaft plus a V arrowhead) for low memory use. Scale
 with `lengthscale`; tune the head with `head_frac` and `head_angle`. Set `arrowcolor = :magnitude`
 to color arrows by `|v|` via `colormap`. Add a reference [`add_scale_arrow!`](@ref) so readers
 can map arrow length back to a magnitude (`wafer_cfd_figure` does this automatically for arrows).
+Pass the `WaferArrows` plot object straight to `add_scale_arrow!` — it reads back the *actual*
+resolved scale, so it always matches the drawn arrows even with a raw `lengthscale=` (no need to
+recompute `ref * lengthscale` by hand).
 
 ```@example gallery
 θ = rand(600) .* 2π
@@ -115,10 +120,9 @@ r = sqrt.(rand(600)) .* 130.0
 x = @. r * cos(θ); y = @. r * sin(θ)
 vdata = WaferVectorData((x = x, y = y, vx = -y ./ 80 .+ x ./ 300, vy = x ./ 80 .+ y ./ 300), wafer)
 
-LS = 8.0
 fig, ax, side = wafer_figure()
-waferarrows!(ax, vdata; lengthscale = LS, arrowcolor = :magnitude, colormap = :viridis)
-add_scale_arrow!(ax, 1.0 * LS; label = "1.0", position = :rb)
+p = waferarrows!(ax, vdata; lengthscale = 8.0, arrowcolor = :magnitude, colormap = :viridis)
+add_scale_arrow!(ax, p; ref_magnitude = 1.0, label = "1.0", position = :rb)
 fig
 ```
 

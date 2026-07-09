@@ -2,11 +2,36 @@
 Draw the wafer boundary (circle + rounded notch) and optional field overlays.
 """
 
+# Idempotency markers: overlaying multiple recipes on one Axis (each defaulting
+# draw_boundary/draw_fields=true) must draw the boundary/fields only once, or the line
+# visually thickens. Keyed on the created marker plot (not the parent Scene, whose
+# identity survives `empty!(ax)`), so a WeakKeyDict entry dies naturally with its plot.
+# ponytail: first-writer-wins — a second recipe's differing boundary_color/linewidth or
+# fields vector is silently not drawn; matches wafer_cfd_figure's existing manual
+# draw_boundary=false precedent, just automatic instead of hand-managed per call site.
+const _BOUNDARY_MARKS = WeakKeyDict{Plot, Nothing}()
+const _FIELDS_MARKS = WeakKeyDict{Plot, Nothing}()
+
+function _marked_in_scene(marks, scene::Scene)
+    for pl in scene.plots
+        (haskey(marks, pl) || _marked_in_scene(marks, pl)) && return true
+    end
+    return any(c -> _marked_in_scene(marks, c), scene.children)
+end
+_marked_in_scene(marks, pl::Plot) = any(c -> haskey(marks, c) || _marked_in_scene(marks, c), pl.plots)
+
 function draw_wafer_boundary!(ax, spec::WaferSpec; color = :black, linewidth = 1.5)
+    # Makie requires a composite recipe plot to have >=1 child (an empty `.plots` gets
+    # treated as a primitive plot and crashes looking up `.clip_planes`, which only
+    # primitives have) — so a recipe whose own content is empty (e.g. WaferArrows/
+    # WaferStreamlines with no points/segments) must still draw here even if another
+    # recipe on this axis already drew the boundary, or it's left with zero children.
+    (_marked_in_scene(_BOUNDARY_MARKS, Makie.parent_scene(ax)) && !isempty(ax.plots)) && return nothing
     pts = wafer_polygon(spec)
     xs = [p[1] for p in pts]
     ys = [p[2] for p in pts]
-    lines!(ax, xs, ys; color, linewidth)
+    ln = lines!(ax, xs, ys; color, linewidth)
+    _BOUNDARY_MARKS[ln] = nothing
     return nothing
 end
 
@@ -16,13 +41,19 @@ function draw_fields!(
         show_numbers::Bool = false
     )
     isempty(fields) && return nothing
+    (_marked_in_scene(_FIELDS_MARKS, Makie.parent_scene(ax)) && !isempty(ax.plots)) && return nothing
+    marked = false
     for f in fields
         xmin, xmax, ymin, ymax = field_bounds(f)
-        poly!(
+        pl = poly!(
             ax,
             Point2f[(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax)];
             color, strokecolor, strokewidth
         )
+        if !marked
+            _FIELDS_MARKS[pl] = nothing
+            marked = true
+        end
     end
     show_numbers && draw_field_numbers!(ax, fields)
     return nothing

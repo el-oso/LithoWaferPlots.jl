@@ -131,6 +131,14 @@ end
     @test d["Min"] == 15.0
 end
 
+@testitem "field_kpis ignores non-finite values instead of crashing" begin
+    using LithoWaferPlots
+    af = AveragedField([0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [15.0, NaN, 35.0], [2, 2, 2])
+    d = Dict(field_kpis(af; kpis = [KPIMean(), KPIP99()]))
+    @test d["Mean"] ≈ 25.0
+    @test d["P99"] ≈ 35.0 atol = 1.0
+end
+
 @testitem "average_wafers averages matched positions" begin
     using LithoWaferPlots
     wafer = WaferSpec(300.0)

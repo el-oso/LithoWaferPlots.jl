@@ -328,8 +328,11 @@ end
 
 KPIs computed over the averaged-field values.
 """
-field_kpis(af::AveragedField; kpis::AbstractVector{<:AbstractKPI} = DEFAULT_KPIS) =
-    [name(k) => compute(k, af.value) for k in kpis]
+function field_kpis(af::AveragedField; kpis::AbstractVector{<:AbstractKPI} = DEFAULT_KPIS)
+    vals = filter(isfinite, af.value)
+    isempty(vals) && return Pair{String, Float64}[]
+    return [name(k) => compute(k, vals) for k in kpis]
+end
 
 # ── wafer averaging ────────────────────────────────────────────────────────────
 

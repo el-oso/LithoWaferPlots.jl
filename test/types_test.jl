@@ -51,3 +51,27 @@ end
     @test d.vx == vx
     @test d.vy == vy
 end
+
+@testitem "WaferData drops non-finite x/y/value rows" begin
+    using LithoWaferPlots
+    w = WaferSpec(300.0)
+    x = [0.0, 10.0, NaN, 5.0]
+    y = [0.0, 0.0, 0.0, Inf]
+    v = [1.0, NaN, 3.0, 4.0]
+    d = @test_logs (:warn, r"WaferData") WaferData(x, y, v, w, WaferField[])
+    @test length(d.x) == 1
+    @test d.x == [0.0]
+    @test d.values == [1.0]
+end
+
+@testitem "WaferVectorData drops non-finite x/y/vx/vy rows" begin
+    using LithoWaferPlots
+    w = WaferSpec(300.0)
+    x = [0.0, 1.0, 2.0]
+    y = [0.0, 1.0, 2.0]
+    vx = [1.0, NaN, 0.0]
+    vy = [0.0, 0.0, 1.0]
+    d = @test_logs (:warn, r"WaferVectorData") WaferVectorData(x, y, vx, vy, w, WaferField[])
+    @test length(d.x) == 2
+    @test !any(isnan, d.vx)
+end
