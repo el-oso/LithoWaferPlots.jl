@@ -145,6 +145,45 @@ waferstreamlines!(ax, vdata; n_seeds = 12, max_steps = 80, color = :navy, linewi
 fig
 ```
 
+Extra example: overlay streamlines directly on a divergence or vorticity background instead of
+a plain axis — just call both recipes on the same `ax`. Neither recipe needs
+`draw_boundary = false`/`draw_fields = false`; the boundary/field overlay only draws once no
+matter how many recipes share the axis.
+
+```@example gallery
+θ = rand(30_000) .* 2π
+r = sqrt.(rand(30_000)) .* 140.0
+x = @. r * cos(θ); y = @. r * sin(θ)
+src(cx, cy, a) = (w = @.(a * exp(-((x - cx)^2 + (y - cy)^2) / 2500));
+                  (@.(w * (x - cx)), @.(w * (y - cy))))
+vx1, vy1 = src(60.0, 40.0, 1.0)
+vx2, vy2 = src(-50.0, -50.0, -1.0)
+vdata = WaferVectorData((x = x, y = y, vx = vx1 .+ vx2, vy = vy1 .+ vy2), wafer)
+
+fig, ax, side = wafer_figure()
+p = waferdivergence!(ax, vdata; colormap = :RdBu, markersize = 3.0f0)
+waferstreamlines!(ax, vdata; n_seeds = 12, max_steps = 80, color = :white, linewidth = 1.2f0)
+add_colorbar!(side, p; label = "Divergence (a.u.)")
+fig
+```
+
+```@example gallery
+θ = rand(30_000) .* 2π
+r = sqrt.(rand(30_000)) .* 140.0
+x = @. r * cos(θ); y = @. r * sin(θ)
+speed = @. exp(-(x^2 + y^2) / 5000.0)
+vdata = WaferVectorData((x = x, y = y, vx = -y .* speed ./ 40, vy = x .* speed ./ 40), wafer)
+
+fig, ax, side = wafer_figure()
+p = wafervorticity!(ax, vdata; markersize = 3.0f0)
+waferstreamlines!(ax, vdata; n_seeds = 12, max_steps = 80, color = :white, linewidth = 1.2f0)
+add_colorbar!(side, p; label = "Vorticity (a.u.)")
+fig
+```
+
+(These are exactly what [`wafer_cfd_figure`](@ref) automates — see the CFD Combined examples
+below.)
+
 ---
 
 ## Divergence
@@ -169,6 +208,17 @@ add_colorbar!(side, p; label = "Divergence (a.u.)")
 fig
 ```
 
+Extra example: overlay the arrows that produced this divergence field, so the source/sink
+pattern is visible alongside the scalar field it derives from.
+
+```@example gallery
+fig, ax, side = wafer_figure()
+p = waferdivergence!(ax, vdata; colormap = :RdBu, markersize = 3.0f0)
+waferarrows!(ax, vdata; lengthscale = 6.0, arrowcolor = :black)
+add_colorbar!(side, p; label = "Divergence (a.u.)")
+fig
+```
+
 ---
 
 ## Vorticity
@@ -186,6 +236,17 @@ vdata = WaferVectorData((x = x, y = y, vx = -y .* speed ./ 40, vy = x .* speed .
 
 fig, ax, side = wafer_figure()
 p = wafervorticity!(ax, vdata; markersize = 3.0f0)
+add_colorbar!(side, p; label = "Vorticity (a.u.)")
+fig
+```
+
+Extra example: overlay the same rotating flow as arrows, so the differential-rotation pattern
+(fast core, slow rim) is visible alongside the vorticity it derives from.
+
+```@example gallery
+fig, ax, side = wafer_figure()
+p = wafervorticity!(ax, vdata; markersize = 3.0f0)
+waferarrows!(ax, vdata; lengthscale = 6.0, arrowcolor = :black)
 add_colorbar!(side, p; label = "Vorticity (a.u.)")
 fig
 ```
