@@ -225,7 +225,7 @@ ax1 = Axis(gl1[1, 1]; aspect = DataAspect(), title = "|v| magnitude",
 side1 = gl1[1, 2] = GridLayout(; tellwidth = true)
 colsize!(gl1, 2, Relative(0.12))
 p1 = waferheatmap!(ax1, magdata; colormap = :viridis)
-waferarrows!(ax1, vdata; lengthscale = 1.2, max_arrows = length(vdata.x), arrowcolor = :magnitude, colormap = :RdBu,
+waferarrows!(ax1, vdata; lengthscale = 1.2, max_arrows = length(vdata.x), arrowcolor = :magnitude, colormap = :viridis,
              draw_boundary = false, draw_fields = false)
 add_colorbar!(side1, p1; label = "|v| (a.u.)")
 
@@ -274,7 +274,7 @@ fig, ax, side = wafer_figure()
 p = wafervorticity!(ax, vdata; markersize = 3.0f0)
 waferarrows!(
     ax, vdata; lengthscale = 35.0, max_arrows = 1_000, arrow_sample = :random,
-    arrowcolor = :magnitude, colormap = :RdBu
+    arrowcolor = :magnitude, colormap = Reverse(:RdBu)
 )
 add_colorbar!(side, p; label = "Vorticity (a.u.)")
 fig
