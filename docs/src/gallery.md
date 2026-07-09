@@ -208,16 +208,15 @@ add_colorbar!(side, p; label = "Divergence (a.u.)")
 fig
 ```
 
-Extra example: overlay the arrows that produced this divergence field, so the source/sink
-pattern is visible alongside the scalar field it derives from.
+Extra example: overlay every arrow that produced this divergence field (no subsampling — the
+flow is localized to the two source/sink regions, so plotting all of it doesn't clutter the
+rest of the wafer), so the source/sink pattern is visible alongside the scalar field it
+derives from.
 
 ```@example gallery
 fig, ax, side = wafer_figure()
 p = waferdivergence!(ax, vdata; colormap = :RdBu, markersize = 3.0f0)
-waferarrows!(
-    ax, vdata; lengthscale = 1.2, max_arrows = 600, arrow_sample = :magnitude,
-    arrowcolor = :magnitude, colormap = :RdBu
-)
+waferarrows!(ax, vdata; lengthscale = 1.2, max_arrows = length(vdata.x), arrowcolor = :magnitude, colormap = :RdBu)
 add_colorbar!(side, p; label = "Divergence (a.u.)")
 fig
 ```
@@ -244,13 +243,16 @@ fig
 ```
 
 Extra example: overlay the same rotating flow as arrows, so the differential-rotation pattern
-(fast core, slow rim) is visible alongside the vorticity it derives from.
+(fast core, slow rim) is visible alongside the vorticity it derives from. Unlike divergence's
+two localized sources, this flow is nonzero across the whole wafer, so plotting *all* of it
+would blanket the heatmap in arrows — `arrow_sample = :random` keeps a legible spatial sample
+instead of `:magnitude`'s default (which would cluster every arrow on the peak-speed ring).
 
 ```@example gallery
 fig, ax, side = wafer_figure()
 p = wafervorticity!(ax, vdata; markersize = 3.0f0)
 waferarrows!(
-    ax, vdata; lengthscale = 35.0, max_arrows = 600, arrow_sample = :magnitude,
+    ax, vdata; lengthscale = 35.0, max_arrows = 1_000, arrow_sample = :random,
     arrowcolor = :magnitude, colormap = :RdBu
 )
 add_colorbar!(side, p; label = "Vorticity (a.u.)")
