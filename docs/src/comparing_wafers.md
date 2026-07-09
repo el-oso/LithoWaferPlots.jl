@@ -21,7 +21,7 @@ inline rather than in the package.
 using LithoWaferPlots, CairoMakie
 using Random: seed!
 
-wafer = WaferSpec(300.0)
+wafer = WaferSpec()
 R = wafer.diameter_mm / 2
 
 # One sample per exposure field → the interfield fingerprint.

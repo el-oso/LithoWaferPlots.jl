@@ -78,16 +78,21 @@ function Makie.plot!(p::WaferHeatmap)
     mask = inside_wafer(data.x, data.y, data.wafer)
     x, y, vals = data.x[mask], data.y[mask], data.values[mask]
     cs = ColorScale(vals; percentile_clip = p[:percentile_clip][])
+    # An explicitly provided colorrange (e.g. a scale shared across several wafers)
+    # overrides the one computed from this dataset alone.
+    cr = p[:colorrange][]
+    vmin, vmax = cr === Makie.automatic ?
+        (Float32(cs.vmin), Float32(cs.vmax)) : (Float32(cr[1]), Float32(cr[2]))
     mode = p[:imagemode][]
     use_image = mode === :image || (mode === :auto && length(x) >= IMAGE_THRESHOLD)
 
     if use_image
-        _heatmap_image!(p, data, x, y, vals, cs)
+        _heatmap_image!(p, data, x, y, vals, vmin, vmax)
     else
         scatter!(
             p, p.attributes, x, y;
             color = vals,
-            colorrange = (Float32(cs.vmin), Float32(cs.vmax))
+            colorrange = (vmin, vmax)
         )
     end
 
@@ -107,7 +112,7 @@ function Makie.plot!(p::WaferHeatmap)
     return p
 end
 
-function _heatmap_image!(p, data, x, y, vals, cs)
+function _heatmap_image!(p, data, x, y, vals, vmin::Float32, vmax::Float32)
     grid_n = p[:grid_n][]
     r = data.wafer.diameter_mm / 2.0
     r_active2 = (r - data.wafer.edge_exclusion_mm)^2
@@ -141,7 +146,7 @@ function _heatmap_image!(p, data, x, y, vals, cs)
             end
             acc / W
         end
-        cn = clamp(Float32((v - cs.vmin) / (cs.vmax - cs.vmin)), 0.0f0, 1.0f0)
+        cn = clamp(Float32((v - vmin) / (vmax - vmin)), 0.0f0, 1.0f0)
         img[i, j] = Makie.interpolated_getindex(cmap, cn)
     end
 

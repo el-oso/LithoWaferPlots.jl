@@ -8,7 +8,7 @@ windows or `WGLMakie` for Jupyter/Pluto notebooks.
 ```@example gallery
 using LithoWaferPlots, CairoMakie
 CairoMakie.activate!(type = "png")
-wafer = WaferSpec(300.0)
+wafer = WaferSpec()
 nothing # hide
 ```
 

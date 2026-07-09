@@ -9,7 +9,7 @@ through that workflow end to end. Every block below runs live during the docs bu
 using LithoWaferPlots, CairoMakie
 CairoMakie.activate!(type = "png")
 
-wafer = WaferSpec(300.0)
+wafer = WaferSpec()
 fields = field_grid([((c - 0.5) * 26.0, (r - 5) * 33.0) for r in 1:9, c in -5:6], (26.0, 33.0); wafer = wafer)
 length(fields)
 ```

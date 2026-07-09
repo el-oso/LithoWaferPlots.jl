@@ -47,8 +47,7 @@ features:
 ```julia
 using LithoWaferPlots, CairoMakie   # or GLMakie / WGLMakie
 
-wafer = WaferSpec(300.0)            # 300 mm wafer, notch at 270°
-data  = WaferData(my_table, wafer)  # columns :x, :y (mm), :value
+data = WaferData(my_table)  # columns :x, :y (mm), :value; wafer defaults to 300 mm
 
 fig, ax, side = wafer_figure()
 p = waferheatmap!(ax, data; colormap = :plasma)

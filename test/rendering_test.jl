@@ -51,6 +51,33 @@ end
     @test fig isa Figure
 end
 
+@testitem "WaferHeatmap respects an explicit colorrange" tags = [:rendering] begin
+    using CairoMakie
+
+    # A colorrange shared across several wafers (e.g. AlgebraOfGraphics' global color
+    # scale, or a manual facet comparison) must override the per-dataset ColorScale in
+    # BOTH render modes — it used to be silently recomputed from the data.
+    w = WaferSpec(300.0)
+    tbl = (x = randn(500) .* 100, y = randn(500) .* 100, value = rand(500))
+    d = WaferData(tbl, w)
+
+    # scatter mode: the range must reach the Scatter child untouched
+    fig, ax, side = wafer_figure()
+    p = waferheatmap!(ax, d; colorrange = (0.0, 10.0))
+    sc = only(filter(pl -> pl isa Scatter, p.plots))
+    @test sc[:colorrange][] == Makie.Vec2f(0.0, 10.0)
+
+    # image mode: values in [0,1] normalized against (0,10) land in the bottom tenth of
+    # the colormap, so the baked image must differ from the automatic-range one
+    fig2, ax2, side2 = wafer_figure()
+    p2 = waferheatmap!(ax2, d; imagemode = :image, grid_n = 32)
+    fig3, ax3, side3 = wafer_figure()
+    p3 = waferheatmap!(ax3, d; imagemode = :image, grid_n = 32, colorrange = (0.0, 10.0))
+    img_auto = only(filter(pl -> pl isa Image, p2.plots))[3][]
+    img_wide = only(filter(pl -> pl isa Image, p3.plots))[3][]
+    @test img_auto != img_wide
+end
+
 @testitem "WaferHeatmap forwards unrecognized Makie attributes" tags = [:rendering] begin
     using CairoMakie
 

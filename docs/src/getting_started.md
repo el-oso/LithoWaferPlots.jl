@@ -18,8 +18,8 @@ Pkg.add("GLMakie")
 ```julia
 using LithoWaferPlots
 
-wafer = WaferSpec(300.0)          # 300mm diameter, default notch at 270° (bottom)
-wafer = WaferSpec(200.0, 90.0)    # 200mm, notch at 3 o'clock
+wafer = WaferSpec()                # defaults to 300mm, notch at 270° (bottom)
+wafer = WaferSpec(200.0, 90.0)     # 200mm, notch at 3 o'clock
 ```
 
 ## Step 2 — Load measurement data

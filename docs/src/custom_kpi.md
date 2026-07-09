@@ -71,8 +71,7 @@ Full plot:
 using LithoWaferPlots, CairoMakie, Printf, Statistics
 using TypeContracts: implements
 
-wafer = WaferSpec(300.0)
-data  = WaferData((x = x, y = y, value = thickness), wafer)
+data = WaferData((x = x, y = y, value = thickness))
 
 fab_kpis = [KPIMean(), KPISigma(), KPINonUniformity(), KPIRange()]
 

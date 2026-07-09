@@ -273,6 +273,8 @@ end
 
 Heatmap-style plot using rectangular scatter markers.
 Use `percentile_clip` to reduce outlier influence on the color scale.
+Pass `colorrange = (lo, hi)` to force a shared color scale (e.g. across wafers);
+it overrides the range computed from the data in both scatter and image modes.
 """
 function waferheatmap!(args...; kwargs...)
     ext = _makie_ext()
@@ -286,6 +288,8 @@ end
 
 Heatmap-style plot using rectangular scatter markers.
 Use `percentile_clip` to reduce outlier influence on the color scale.
+Pass `colorrange = (lo, hi)` to force a shared color scale (e.g. across wafers);
+it overrides the range computed from the data in both scatter and image modes.
 """
 function waferheatmap(args...; kwargs...)
     ext = _makie_ext()
