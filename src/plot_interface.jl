@@ -320,10 +320,12 @@ end
 # ── vector plot wrappers ──────────────────────────────────────────────────────
 
 """
-    waferarrows(data::WaferVectorData; max_arrows=4_000, kwargs...) -> (Figure, Axis, plot)
-    waferarrows!(ax, data::WaferVectorData; max_arrows=4_000, kwargs...) -> plot
+    waferarrows(data::WaferVectorData; max_arrows=4_000, arrow_sample=:magnitude, kwargs...) -> (Figure, Axis, plot)
+    waferarrows!(ax, data::WaferVectorData; max_arrows=4_000, arrow_sample=:magnitude, kwargs...) -> plot
 
-Arrow plot of vector field. Subsampled to `max_arrows` for readability.
+Arrow plot of vector field. Subsampled to `max_arrows` for readability: with
+`arrow_sample=:magnitude` (default) the largest-|v| arrows are kept; with
+`arrow_sample=:random` a uniform random subsample is kept instead.
 """
 function waferarrows!(args...; kwargs...)
     ext = _makie_ext()
@@ -332,10 +334,12 @@ function waferarrows!(args...; kwargs...)
 end
 
 """
-    waferarrows(data::WaferVectorData; max_arrows=4_000, kwargs...) -> (Figure, Axis, plot)
-    waferarrows!(ax, data::WaferVectorData; max_arrows=4_000, kwargs...) -> plot
+    waferarrows(data::WaferVectorData; max_arrows=4_000, arrow_sample=:magnitude, kwargs...) -> (Figure, Axis, plot)
+    waferarrows!(ax, data::WaferVectorData; max_arrows=4_000, arrow_sample=:magnitude, kwargs...) -> plot
 
-Arrow plot of vector field. Subsampled to `max_arrows` for readability.
+Arrow plot of vector field. Subsampled to `max_arrows` for readability: with
+`arrow_sample=:magnitude` (default) the largest-|v| arrows are kept; with
+`arrow_sample=:random` a uniform random subsample is kept instead.
 """
 function waferarrows(args...; kwargs...)
     ext = _makie_ext()

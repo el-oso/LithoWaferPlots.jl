@@ -5,24 +5,24 @@ WaferDivergence, WaferVorticity.
 
 # ── WaferArrows ─────────────────────────────────────────────────────────────
 
-@recipe(WaferArrows, data) do scene
-    Attributes(
-        arrowcolor = :black,           # color name, or :magnitude to color by |v| via colormap
-        colormap = :viridis,           # used only when arrowcolor === :magnitude
-        linewidth = 1.0f0,
-        lengthscale = 1.0,
-        scale = nothing,               # an ArrowScale overrides lengthscale (shared scale across plots)
-        max_arrows = 4_000,
-        head_frac = 0.3,
-        head_angle = 0.45,
-        boundary_color = :black,
-        boundary_linewidth = 1.5f0,
-        field_color = (:steelblue, 0.12),
-        field_strokecolor = :steelblue,
-        field_strokewidth = 0.8f0,
-        draw_boundary = true,
-        draw_fields = true,
-    )
+@recipe WaferArrows (data,) begin
+    Makie.documented_attributes(Lines)...
+    arrowcolor = :black            # color name, or :magnitude to color by |v| via colormap
+    colormap = :viridis            # used only when arrowcolor === :magnitude
+    linewidth = 1.0f0
+    lengthscale = 1.0
+    scale = nothing                # an ArrowScale overrides lengthscale (shared scale across plots)
+    max_arrows = 4_000
+    arrow_sample = :magnitude      # :magnitude (largest |v| kept) or :random (uniform subsample)
+    head_frac = 0.3
+    head_angle = 0.45
+    boundary_color = :black
+    boundary_linewidth = 1.5f0
+    field_color = (:steelblue, 0.12)
+    field_strokecolor = :steelblue
+    field_strokewidth = 0.8f0
+    draw_boundary = true
+    draw_fields = true
 end
 
 # Build a single NaN-separated polyline encoding every arrow as a shaft plus a
@@ -65,28 +65,37 @@ function _arrow_segments(x, y, vx, vy, scale::Float64, head_frac::Float64, head_
     return pts, mags
 end
 
+_resolved_lengthscale(p::WaferArrows) = (sc = p[:scale][]; sc isa ArrowScale ? sc.lengthscale : Float64(p[:lengthscale][]))
+
 function Makie.plot!(p::WaferArrows)
     d = p[:data][]
     n = length(d.x)
     max_n = p[:max_arrows][]
 
     if n > max_n
-        idx = randperm(n)[1:max_n]   # order irrelevant for arrows — no sort needed
+        sample = p[:arrow_sample][]
+        idx = if sample === :magnitude
+            mag = @. hypot(d.vx, d.vy)
+            partialsortperm(mag, 1:max_n; rev = true)
+        elseif sample === :random
+            randperm(n)[1:max_n]   # order irrelevant for arrows — no sort needed
+        else
+            error("arrow_sample must be :magnitude or :random, got $(repr(sample))")
+        end
         x, y, vx, vy = d.x[idx], d.y[idx], d.vx[idx], d.vy[idx]
     else
         x, y, vx, vy = d.x, d.y, d.vx, d.vy
     end
 
-    sc = p[:scale][]
-    scale = sc isa ArrowScale ? sc.lengthscale : Float64(p[:lengthscale][])
+    scale = _resolved_lengthscale(p)
     head_frac = Float64(p[:head_frac][])
     head_angle = Float64(p[:head_angle][])
     pts, mags = _arrow_segments(x, y, vx, vy, scale, head_frac, head_angle)
     if !isempty(pts)
         if p[:arrowcolor][] === :magnitude
-            lines!(p, pts; color = mags, colormap = p[:colormap], linewidth = p[:linewidth])
+            lines!(p, p.attributes, pts; color = mags)
         else
-            lines!(p, pts; color = p[:arrowcolor], linewidth = p[:linewidth])
+            lines!(p, p.attributes, pts; color = p[:arrowcolor])
         end
     end
 
@@ -106,24 +115,48 @@ function Makie.plot!(p::WaferArrows)
     return p
 end
 
+"""
+    add_scale_arrow!(ax, arrows_plot::WaferArrows; ref_magnitude=nothing, label=nothing, position=:rb, kwargs...)
+
+Draw a reference arrow matched to `arrows_plot`'s *actually resolved* scale — the single
+source of truth is the plot object Makie already handed back from `waferarrows!`, so this
+stays consistent with the drawn arrows even when `waferarrows!` was called with a raw
+`lengthscale=` (no `ArrowScale`). When `ref_magnitude` is omitted it is auto-picked as the
+nice-rounded median `|v|` of the plotted data (same rule as `arrow_scale_from`).
+"""
+function add_scale_arrow!(
+        ax, arrows_plot::WaferArrows;
+        ref_magnitude = nothing, label = nothing, position = :rb, kwargs...
+    )
+    sc = arrows_plot[:scale][]
+    sc isa ArrowScale && return add_scale_arrow!(ax, sc; position, kwargs...)
+
+    ls = _resolved_lengthscale(arrows_plot)
+    d = arrows_plot[:data][]
+    refmag = ref_magnitude === nothing ? _nice_magnitude(median(hypot.(d.vx, d.vy))) : Float64(ref_magnitude)
+    refmag > 0 ||
+        error("add_scale_arrow!: could not auto-pick a reference magnitude (vector field is all-zero); pass ref_magnitude explicitly")
+    lbl = label === nothing ? string(refmag) : String(label)
+    return add_scale_arrow!(ax, refmag * ls; label = lbl, position, kwargs...)
+end
+
 # ── WaferStreamlines ────────────────────────────────────────────────────────
 
-@recipe(WaferStreamlines, data) do scene
-    Attributes(
-        color = :navy,
-        linewidth = 1.2f0,
-        n_seeds = 20,
-        max_steps = 300,
-        step_size = nothing,
-        grid_n = 200,
-        boundary_color = :black,
-        boundary_linewidth = 1.5f0,
-        field_color = (:steelblue, 0.12),
-        field_strokecolor = :steelblue,
-        field_strokewidth = 0.8f0,
-        draw_boundary = true,
-        draw_fields = true,
-    )
+@recipe WaferStreamlines (data,) begin
+    Makie.documented_attributes(Lines)...
+    color = :navy
+    linewidth = 1.2f0
+    n_seeds = 20
+    max_steps = 300
+    step_size = nothing
+    grid_n = 200
+    boundary_color = :black
+    boundary_linewidth = 1.5f0
+    field_color = (:steelblue, 0.12)
+    field_strokecolor = :steelblue
+    field_strokewidth = 0.8f0
+    draw_boundary = true
+    draw_fields = true
 end
 
 function Makie.plot!(p::WaferStreamlines)
@@ -143,7 +176,7 @@ function Makie.plot!(p::WaferStreamlines)
             append!(pts, seg)
             push!(pts, Point2f(NaN, NaN))
         end
-        lines!(p, pts; color = p[:color], linewidth = p[:linewidth])
+        lines!(p, p.attributes, pts)
     end
 
     p[:draw_boundary][] && draw_wafer_boundary!(
@@ -164,20 +197,20 @@ end
 
 # ── WaferDivergence ─────────────────────────────────────────────────────────
 
-@recipe(WaferDivergence, data) do scene
-    Attributes(
-        colormap = :RdBu,
-        markersize = 4.0f0,
-        grid_n = 256,
-        k = 4,
-        boundary_color = :black,
-        boundary_linewidth = 1.5f0,
-        field_color = (:steelblue, 0.12),
-        field_strokecolor = :steelblue,
-        field_strokewidth = 0.8f0,
-        draw_boundary = true,
-        draw_fields = true,
-    )
+@recipe WaferDivergence (data,) begin
+    Makie.documented_attributes(Scatter)...
+    colormap = :RdBu
+    markersize = 4.0f0
+    marker = :rect
+    grid_n = 256
+    k = 4
+    boundary_color = :black
+    boundary_linewidth = 1.5f0
+    field_color = (:steelblue, 0.12)
+    field_strokecolor = :steelblue
+    field_strokewidth = 0.8f0
+    draw_boundary = true
+    draw_fields = true
 end
 
 function Makie.plot!(p::WaferDivergence)
@@ -186,12 +219,9 @@ function Makie.plot!(p::WaferDivergence)
     cs = ColorScale(wdat.values)
 
     scatter!(
-        p, wdat.x, wdat.y;
+        p, p.attributes, wdat.x, wdat.y;
         color = Float32.(wdat.values),
-        colormap = p[:colormap],
-        colorrange = (Float32(cs.vmin), Float32(cs.vmax)),
-        markersize = p[:markersize],
-        marker = :rect
+        colorrange = (Float32(cs.vmin), Float32(cs.vmax))
     )
 
     p[:draw_boundary][] && draw_wafer_boundary!(
@@ -212,20 +242,20 @@ end
 
 # ── WaferVorticity ──────────────────────────────────────────────────────────
 
-@recipe(WaferVorticity, data) do scene
-    Attributes(
-        colormap = Reverse(:RdBu),
-        markersize = 4.0f0,
-        grid_n = 256,
-        k = 4,
-        boundary_color = :black,
-        boundary_linewidth = 1.5f0,
-        field_color = (:steelblue, 0.12),
-        field_strokecolor = :steelblue,
-        field_strokewidth = 0.8f0,
-        draw_boundary = true,
-        draw_fields = true,
-    )
+@recipe WaferVorticity (data,) begin
+    Makie.documented_attributes(Scatter)...
+    colormap = Reverse(:RdBu)
+    markersize = 4.0f0
+    marker = :rect
+    grid_n = 256
+    k = 4
+    boundary_color = :black
+    boundary_linewidth = 1.5f0
+    field_color = (:steelblue, 0.12)
+    field_strokecolor = :steelblue
+    field_strokewidth = 0.8f0
+    draw_boundary = true
+    draw_fields = true
 end
 
 function Makie.plot!(p::WaferVorticity)
@@ -234,12 +264,9 @@ function Makie.plot!(p::WaferVorticity)
     cs = ColorScale(wdat.values)
 
     scatter!(
-        p, wdat.x, wdat.y;
+        p, p.attributes, wdat.x, wdat.y;
         color = Float32.(wdat.values),
-        colormap = p[:colormap],
-        colorrange = (Float32(cs.vmin), Float32(cs.vmax)),
-        markersize = p[:markersize],
-        marker = :rect
+        colorrange = (Float32(cs.vmin), Float32(cs.vmax))
     )
 
     p[:draw_boundary][] && draw_wafer_boundary!(

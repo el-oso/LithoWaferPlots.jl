@@ -7,18 +7,16 @@ Performance target: 300 000 points rendered in < 0.3s (GLMakie GPU path).
 
 # ── WaferScatter ────────────────────────────────────────────────────────────
 
-@recipe(WaferScatter, data) do scene
-    Attributes(
-        colormap = :viridis,
-        markersize = 3.0f0,
-        boundary_color = :black,
-        boundary_linewidth = 1.5f0,
-        field_color = (:steelblue, 0.15),
-        field_strokecolor = :steelblue,
-        field_strokewidth = 0.8f0,
-        draw_boundary = true,
-        draw_fields = true,
-    )
+@recipe WaferScatter (data,) begin
+    Makie.documented_attributes(Scatter)...
+    markersize = 3.0f0
+    boundary_color = :black
+    boundary_linewidth = 1.5f0
+    field_color = (:steelblue, 0.15)
+    field_strokecolor = :steelblue
+    field_strokewidth = 0.8f0
+    draw_boundary = true
+    draw_fields = true
 end
 
 function Makie.plot!(p::WaferScatter)
@@ -28,11 +26,9 @@ function Makie.plot!(p::WaferScatter)
     cs = ColorScale(vals)
 
     scatter!(
-        p, x, y;
+        p, p.attributes, x, y;
         color = vals,
-        colormap = p[:colormap],
-        colorrange = (Float32(cs.vmin), Float32(cs.vmax)),
-        markersize = p[:markersize]
+        colorrange = (Float32(cs.vmin), Float32(cs.vmax))
     )
 
     p[:draw_boundary][] && draw_wafer_boundary!(
@@ -59,21 +55,22 @@ end
 
 const IMAGE_THRESHOLD = 5_000
 
-@recipe(WaferHeatmap, data) do scene
-    Attributes(
-        colormap = :inferno,
-        markersize = 4.0f0,
-        boundary_color = :black,
-        boundary_linewidth = 1.5f0,
-        field_color = (:steelblue, 0.12),
-        field_strokecolor = :steelblue,
-        field_strokewidth = 0.8f0,
-        percentile_clip = 0.0,
-        imagemode = :auto,
-        grid_n = 256,
-        draw_boundary = true,
-        draw_fields = true,
-    )
+@recipe WaferHeatmap (data,) begin
+    Makie.documented_attributes(Scatter)...
+    Makie.filtered_attributes(Image; allow = (:interpolate,))...
+    colormap = :inferno
+    markersize = 4.0f0
+    marker = :rect
+    boundary_color = :black
+    boundary_linewidth = 1.5f0
+    field_color = (:steelblue, 0.12)
+    field_strokecolor = :steelblue
+    field_strokewidth = 0.8f0
+    percentile_clip = 0.0
+    imagemode = :auto
+    grid_n = 256
+    draw_boundary = true
+    draw_fields = true
 end
 
 function Makie.plot!(p::WaferHeatmap)
@@ -88,12 +85,9 @@ function Makie.plot!(p::WaferHeatmap)
         _heatmap_image!(p, data, x, y, vals, cs)
     else
         scatter!(
-            p, x, y;
+            p, p.attributes, x, y;
             color = vals,
-            colormap = p[:colormap],
-            colorrange = (Float32(cs.vmin), Float32(cs.vmax)),
-            markersize = p[:markersize],
-            marker = :rect
+            colorrange = (Float32(cs.vmin), Float32(cs.vmax))
         )
     end
 
@@ -121,7 +115,7 @@ function _heatmap_image!(p, data, x, y, vals, cs)
     ys = LinRange(-r, r, grid_n)
 
     cmap = Makie.to_colormap(p[:colormap][])
-    pts = permutedims(hcat(Float64.(data.x), Float64.(data.y)))
+    pts = permutedims(hcat(Float64.(x), Float64.(y)))
     tree = KDTree(pts)
 
     k = 4
@@ -152,26 +146,25 @@ function _heatmap_image!(p, data, x, y, vals, cs)
     end
 
     # Makie 0.22+ requires interval notation (start..stop) for image! axes.
-    image!(p, (-r) .. r, (-r) .. r, img)
+    image!(p, p.attributes, (-r) .. r, (-r) .. r, img)
     return nothing
 end
 
 # ── WaferContour ────────────────────────────────────────────────────────────
 # Interpolates scattered data to a regular grid, then calls contour!.
 
-@recipe(WaferContour, data) do scene
-    Attributes(
-        colormap = :viridis,
-        levels = 10,
-        grid_n = 256,
-        boundary_color = :black,
-        boundary_linewidth = 1.5f0,
-        field_color = (:steelblue, 0.12),
-        field_strokecolor = :steelblue,
-        field_strokewidth = 0.8f0,
-        draw_boundary = true,
-        draw_fields = true,
-    )
+@recipe WaferContour (data,) begin
+    Makie.documented_attributes(Contour)...
+    colormap = :viridis
+    levels = 10
+    grid_n = 256
+    boundary_color = :black
+    boundary_linewidth = 1.5f0
+    field_color = (:steelblue, 0.12)
+    field_strokecolor = :steelblue
+    field_strokewidth = 0.8f0
+    draw_boundary = true
+    draw_fields = true
 end
 
 function Makie.plot!(p::WaferContour)
@@ -215,11 +208,7 @@ function Makie.plot!(p::WaferContour)
         end
     end
 
-    contour!(
-        p, xs, ys, Z;
-        colormap = p[:colormap],
-        levels = p[:levels]
-    )
+    contour!(p, p.attributes, xs, ys, Z)
 
     p[:draw_boundary][] && draw_wafer_boundary!(
         p, data.wafer;

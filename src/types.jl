@@ -76,7 +76,24 @@ struct WaferData{T <: Real}
     values::Vector{T}
     wafer::WaferSpec
     fields::Vector{WaferField}
+
+    function WaferData{T}(
+            x::AbstractVector{<:Real}, y::AbstractVector{<:Real}, values::AbstractVector{<:Real},
+            wafer::WaferSpec, fields::Vector{WaferField}
+        ) where {T <: Real}
+        x, y, values = Vector{Float64}(x), Vector{Float64}(y), Vector{T}(values)
+        valid = isfinite.(x) .& isfinite.(y) .& isfinite.(values)
+        if !all(valid)
+            @warn "WaferData: dropping $(count(!, valid)) point(s) with non-finite x/y/value" maxlog = 1
+            x, y, values = x[valid], y[valid], values[valid]
+        end
+        return new{T}(x, y, values, wafer, fields)
+    end
 end
+WaferData(
+    x::AbstractVector{<:Real}, y::AbstractVector{<:Real}, values::AbstractVector{T},
+    wafer::WaferSpec, fields::Vector{WaferField}
+) where {T <: Real} = WaferData{T}(x, y, values, wafer, fields)
 
 """
     WaferVectorData(x, y, vx, vy, wafer, fields)
@@ -93,4 +110,18 @@ struct WaferVectorData
     vy::Vector{Float64}
     wafer::WaferSpec
     fields::Vector{WaferField}
+
+    function WaferVectorData(
+            x::AbstractVector{<:Real}, y::AbstractVector{<:Real},
+            vx::AbstractVector{<:Real}, vy::AbstractVector{<:Real},
+            wafer::WaferSpec, fields::Vector{WaferField}
+        )
+        x, y, vx, vy = Vector{Float64}(x), Vector{Float64}(y), Vector{Float64}(vx), Vector{Float64}(vy)
+        valid = isfinite.(x) .& isfinite.(y) .& isfinite.(vx) .& isfinite.(vy)
+        if !all(valid)
+            @warn "WaferVectorData: dropping $(count(!, valid)) point(s) with non-finite x/y/vx/vy" maxlog = 1
+            x, y, vx, vy = x[valid], y[valid], vx[valid], vy[valid]
+        end
+        return new(x, y, vx, vy, wafer, fields)
+    end
 end

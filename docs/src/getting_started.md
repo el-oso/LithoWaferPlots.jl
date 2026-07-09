@@ -46,6 +46,10 @@ data = WaferData(df, grid, wafer)
 data = WaferData((x=xs, y=ys, value=vs), wafer)
 ```
 
+Rows with a non-finite `x`, `y`, or `value` (`NaN`/`Inf`) are dropped automatically at
+construction, with a one-time warning — a bad measurement point can't silently corrupt an
+entire colorbar or KPI.
+
 ## Step 3 — Plot
 
 ```julia
@@ -57,6 +61,10 @@ add_colorbar!(side, p; label="Overlay (a.u.)")
 add_kpi_panel!(side, data)
 display(fig)
 ```
+
+Any Makie attribute the underlying primitive supports (`marker`, `strokewidth`, `alpha`,
+`linestyle`, `interpolate`, ...) can be passed straight through, e.g.
+`waferscatter!(ax, data; marker=:diamond, alpha=0.7)` — no need to memorize a curated list.
 
 ![Heatmap](assets/example_heatmap.png)
 

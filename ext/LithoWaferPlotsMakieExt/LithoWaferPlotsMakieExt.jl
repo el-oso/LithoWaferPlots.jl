@@ -72,17 +72,25 @@ export WaferVorticity, wafervorticity, wafervorticity!
         fig, ax, side = LithoWaferPlots.wafer_figure()
         p = LithoWaferPlots.waferheatmap!(ax, sdata)
         LithoWaferPlots.waferheatmap!(ax, sdata; imagemode = :image)
+        # marker (scatter mode)/interpolate (image mode) arrive via mixins, not our own
+        # Attributes() block — exercise both passthrough paths so they're cached, not cold.
+        LithoWaferPlots.waferheatmap!(ax, sdata; marker = :circle)
+        LithoWaferPlots.waferheatmap!(ax, sdata; imagemode = :image, interpolate = false)
         LithoWaferPlots.waferheatmap!(
             ax, sdata; colormap = :plasma,
             field_color = (:black, 0.0), field_strokecolor = :black, field_strokewidth = 1.8f0
         )
         p2 = LithoWaferPlots.waferscatter!(ax, sdata)
         LithoWaferPlots.waferscatter!(ax, sdata; markersize = 4.0f0)
+        # marker/strokewidth/alpha arrive via the Scatter attribute mixin, not our own
+        # Attributes() block — exercise the passthrough path so it's cached, not cold.
+        LithoWaferPlots.waferscatter!(ax, sdata; marker = :diamond, strokewidth = 1.0f0, alpha = 0.8)
         LithoWaferPlots.add_colorbar!(side, p; label = "test")
         LithoWaferPlots.add_colorbar!(side, p2; label = "test")
         LithoWaferPlots.add_kpi_panel!(side, sdata)
         LithoWaferPlots.wafercontour!(ax, sdata; grid_n = 16)
         LithoWaferPlots.wafercontour!(ax, sdata; levels = 12, colormap = :viridis)
+        LithoWaferPlots.wafercontour!(ax, sdata; linewidth = 2.0f0, linestyle = :dash)
         LithoWaferPlots.add_exclusion_ring!(ax, wafer; mm_to_edge = 2.0, label = "edge")
         LithoWaferPlots.add_exclusion_ring!(
             ax, wafer; mm_to_edge = 2.0, label = "edge", color = :black,
@@ -107,9 +115,14 @@ export WaferVorticity, wafervorticity, wafervorticity!
         fig2, ax2, side2 = LithoWaferPlots.wafer_figure()
         LithoWaferPlots.waferarrows!(ax2, vdata)
         LithoWaferPlots.waferarrows!(ax2, vdata; arrowcolor = :magnitude)
-        LithoWaferPlots.waferarrows!(ax2, vdata; lengthscale = 8.0, arrowcolor = :magnitude, colormap = :viridis)
+        # max_arrows < n so both `arrow_sample` branches (subsampling code path) compile here
+        LithoWaferPlots.waferarrows!(ax2, vdata; max_arrows = 3)
+        LithoWaferPlots.waferarrows!(ax2, vdata; max_arrows = 3, arrow_sample = :random)
+        LithoWaferPlots.waferarrows!(ax2, vdata; linestyle = :dash, alpha = 0.7)
+        p3 = LithoWaferPlots.waferarrows!(ax2, vdata; lengthscale = 8.0, arrowcolor = :magnitude, colormap = :viridis)
         LithoWaferPlots.waferstreamlines!(ax2, vdata; n_seeds = 2, max_steps = 5, grid_n = 16)
         LithoWaferPlots.waferstreamlines!(ax2, vdata; n_seeds = 2, max_steps = 5, color = :navy, linewidth = 1.2f0)
+        LithoWaferPlots.waferstreamlines!(ax2, vdata; n_seeds = 2, max_steps = 5, linestyle = :dot)
         LithoWaferPlots.waferstreamlines!(
             ax2, vdata; draw_boundary = false, draw_fields = false,
             color = :white, n_seeds = 2
@@ -117,9 +130,11 @@ export WaferVorticity, wafervorticity, wafervorticity!
         pd = LithoWaferPlots.waferdivergence!(ax2, vdata; grid_n = 16)
         LithoWaferPlots.waferdivergence!(ax2, vdata; colormap = :RdBu)
         LithoWaferPlots.waferdivergence!(ax2, vdata; colormap = :RdBu, markersize = 3.0f0)
+        LithoWaferPlots.waferdivergence!(ax2, vdata; grid_n = 16, marker = :circle)
         LithoWaferPlots.add_colorbar!(side2, pd)
         LithoWaferPlots.wafervorticity!(ax2, vdata; grid_n = 16)
         LithoWaferPlots.wafervorticity!(ax2, vdata; markersize = 3.0f0)
+        LithoWaferPlots.wafervorticity!(ax2, vdata; grid_n = 16, marker = :circle)
 
         # non-mutating standalone forms (`func` vs `func!`) — auto-create their own Scene,
         # part of the public API (Makie's `@recipe` generates both) but not otherwise
@@ -140,8 +155,11 @@ export WaferVorticity, wafervorticity, wafervorticity!
             vdata; scalar = :divergence, vector = :streamlines,
             streamline_color = :white, streamline_linewidth = 1.5f0, n_seeds = 2
         )
-        LithoWaferPlots.waferarrows!(ax2, vdata; scale = scale, arrowcolor = :magnitude)
+        p4 = LithoWaferPlots.waferarrows!(ax2, vdata; scale = scale, arrowcolor = :magnitude)
         LithoWaferPlots.add_scale_arrow!(ax2, scale)
+        LithoWaferPlots.add_scale_arrow!(ax2, p3)                       # auto ref_magnitude branch
+        LithoWaferPlots.add_scale_arrow!(ax2, p3; ref_magnitude = 0.3)  # explicit ref_magnitude branch
+        LithoWaferPlots.add_scale_arrow!(ax2, p4)                       # ArrowScale delegation branch
 
         arrow_scale_from(vdata; ref_fraction = 0.12)
 

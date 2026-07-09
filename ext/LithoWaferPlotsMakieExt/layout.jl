@@ -380,7 +380,12 @@ function plot_averaged_field(
     end
 
     # KPI strip beneath the map
-    kpi_text = join((string(name(k), " = ", round(compute(k, af.value); sigdigits = 4)) for k in kpis), "    ")
+    finite_vals = filter(isfinite, af.value)
+    kpi_text = if isempty(finite_vals)
+        ""
+    else
+        join((string(name(k), " = ", round(compute(k, finite_vals); sigdigits = 4)) for k in kpis), "    ")
+    end
     Label(gl[3, 1:2]; text = kpi_text, fontsize = 9.0f0, font = "DejaVu Sans Mono", tellwidth = false)
     return fig
 end
