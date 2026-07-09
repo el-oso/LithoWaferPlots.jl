@@ -208,14 +208,19 @@ add_colorbar!(side, p; label = "Divergence (a.u.)")
 fig
 ```
 
-Extra example: overlay every arrow that produced this field (no subsampling — the flow is
-localized to the two source/sink regions, so plotting all of it doesn't clutter the rest of
-the wafer) on two panels side by side — raw `|v|` magnitude on the left, derived divergence on
-the right — to compare where the flow is *strong* against where it's actually *diverging*.
+Extra example: overlay every arrow that produced this field on two panels side by side — raw
+`|v|` magnitude on the left, derived divergence on the right — to compare where the flow is
+*strong* against where it's actually *diverging*. Points with negligible magnitude (< 2% of
+the peak) are dropped before plotting rather than drawn as clutter at effectively zero length;
+both panels share the same arrow colormap (`:grays`) so neither panel's arrows can be mistaken
+for encoding the same scale as its own heatmap (`:viridis` left, `:RdBu` right).
 
 ```@example gallery
 mag = hypot.(vdata.vx, vdata.vy)
 magdata = WaferData((x = vdata.x, y = vdata.y, value = mag), wafer)
+
+flowing = mag .> 0.02 * maximum(mag)
+vdata_flow = WaferVectorData(vdata.x[flowing], vdata.y[flowing], vdata.vx[flowing], vdata.vy[flowing], wafer, WaferField[])
 
 fig = Figure(size = (1400, 620))
 
@@ -225,7 +230,7 @@ ax1 = Axis(gl1[1, 1]; aspect = DataAspect(), title = "|v| magnitude",
 side1 = gl1[1, 2] = GridLayout(; tellwidth = true)
 colsize!(gl1, 2, Relative(0.12))
 p1 = waferheatmap!(ax1, magdata; colormap = :viridis)
-waferarrows!(ax1, vdata; lengthscale = 1.2, max_arrows = length(vdata.x), arrowcolor = :magnitude, colormap = :viridis,
+waferarrows!(ax1, vdata_flow; lengthscale = 1.2, max_arrows = length(vdata_flow.x), arrowcolor = :magnitude, colormap = :grays,
              draw_boundary = false, draw_fields = false)
 add_colorbar!(side1, p1; label = "|v| (a.u.)")
 
@@ -235,10 +240,7 @@ ax2 = Axis(gl2[1, 1]; aspect = DataAspect(), title = "Divergence",
 side2 = gl2[1, 2] = GridLayout(; tellwidth = true)
 colsize!(gl2, 2, Relative(0.12))
 p2 = waferdivergence!(ax2, vdata; colormap = :RdBu, markersize = 3.0f0)
-# grays, not :RdBu: arrows are coloured by |v| (always >=0) on a different scale than the
-# divergence heatmap underneath — sharing :RdBu made the two easy to conflate, since a
-# strongly-coloured arrow and a strongly-negative divergence pixel looked identical.
-waferarrows!(ax2, vdata; lengthscale = 1.2, max_arrows = length(vdata.x), arrowcolor = :magnitude, colormap = :grays,
+waferarrows!(ax2, vdata_flow; lengthscale = 1.2, max_arrows = length(vdata_flow.x), arrowcolor = :magnitude, colormap = :grays,
              draw_boundary = false, draw_fields = false)
 add_colorbar!(side2, p2; label = "Divergence (a.u.)")
 
@@ -268,15 +270,21 @@ fig
 
 Extra example: overlay the same rotating flow as arrows, so the differential-rotation pattern
 (fast core, slow rim) is visible alongside the vorticity it derives from. Unlike divergence's
-two localized sources, this flow is nonzero across the whole wafer, so plotting *all* of it
-would blanket the heatmap in arrows — `arrow_sample = :random` keeps a legible spatial sample
-instead of `:magnitude`'s default (which would cluster every arrow on the peak-speed ring).
+two localized sources, this flow is nonzero across almost the whole wafer, so plotting *all*
+of it would blanket the heatmap in arrows — `arrow_sample = :random` keeps a legible spatial
+sample instead of `:magnitude`'s default (which would cluster every arrow on the peak-speed
+ring). Points with negligible magnitude are dropped first, same as the divergence example
+above, though this particular flow barely has any (it decays slowly, not to a hard zero).
 
 ```@example gallery
+mag = hypot.(vdata.vx, vdata.vy)
+flowing = mag .> 0.02 * maximum(mag)
+vdata_flow = WaferVectorData(vdata.x[flowing], vdata.y[flowing], vdata.vx[flowing], vdata.vy[flowing], wafer, WaferField[])
+
 fig, ax, side = wafer_figure()
 p = wafervorticity!(ax, vdata; markersize = 3.0f0)
 waferarrows!(
-    ax, vdata; lengthscale = 35.0, max_arrows = 1_000, arrow_sample = :random,
+    ax, vdata_flow; lengthscale = 35.0, max_arrows = 1_000, arrow_sample = :random,
     arrowcolor = :magnitude, colormap = Reverse(:RdBu)
 )
 add_colorbar!(side, p; label = "Vorticity (a.u.)")
