@@ -12,7 +12,7 @@ wafer = WaferSpec(300.0)
 nothing # hide
 ```
 
-## Scatter
+## 1. Scatter
 
 Sparse measurement points coloured by value. Good for raw probe data where point density is uneven.
 
@@ -32,7 +32,7 @@ fig
 
 ---
 
-## Heatmap
+## 2. Heatmap
 
 Dense rectangular markers produce a filled colour map. Above 5 000 points the recipe switches
 to an `image!` GPU texture path automatically; override with `imagemode = :scatter` or `:image`.
@@ -54,7 +54,7 @@ fig
 
 ---
 
-## Heatmap with field overlay
+## 3. Heatmap with field overlay
 
 Pass a `fields` vector to `WaferData` to overlay exposure-field or die boundaries on any plot
 type. Fields may extend beyond the wafer edge.
@@ -81,7 +81,7 @@ fig
 
 ---
 
-## Contour
+## 4. Contour
 
 Scattered data is interpolated to a regular grid via IDW before contouring. Adjust `grid_n`
 (default 256) and `levels` as needed.
@@ -101,7 +101,7 @@ fig
 
 ---
 
-## Arrows
+## 5. Arrows
 
 Arrow plot of a vector field. Subsampled to `max_arrows` (default 4 000) for legibility — by
 default (`arrow_sample = :magnitude`) the largest-|v| arrows are kept; set `arrow_sample =
@@ -128,7 +128,7 @@ fig
 
 ---
 
-## Streamlines
+## 6. Streamlines
 
 RK4-traced stream lines from a uniform seed grid. The velocity field is interpolated once to a
 `grid_n × grid_n` grid and sampled bilinearly during integration, so tracing is fast even for
@@ -186,7 +186,7 @@ below.)
 
 ---
 
-## Divergence
+## 7. Divergence
 
 ∇·**v** = ∂vx/∂x + ∂vy/∂y, computed by IDW interpolation to a regular grid then central finite
 differences. A diverging colormap (`:RdBu`) centres the colour scale on zero.
@@ -224,7 +224,7 @@ fig
 
 ---
 
-## Vorticity
+## 8. Vorticity
 
 ∇×**v** = ∂vy/∂x − ∂vx/∂y. Positive values (red) indicate counterclockwise rotation; negative
 (blue) indicate clockwise.
@@ -259,7 +259,7 @@ fig
 
 ---
 
-## Die-level yield map
+## 9. Die-level yield map
 
 Per-die yield across ~100 exposure fields (3×3 = 9 dies each). Field boundaries are overlaid as
 thin gray strokes. The 2 mm edge-exclusion ring dims the outer annulus where yield data is
@@ -293,7 +293,7 @@ fig
 
 ---
 
-## Exclusion ring annotation
+## 10. Exclusion ring annotation
 
 Draw dashed/dotted radial exclusion rings on any plot, specified as **mm to the edge** (the
 natural fab unit). Optionally dim the region outside the ring with a semi-transparent overlay
@@ -325,7 +325,7 @@ fig
 
 ---
 
-## Logo & watermark
+## 11. Logo & watermark
 
 Brand a plot with a custom logo and/or a faded watermark. The image is anchored in a fixed
 position (corner or centre) and keeps its aspect ratio regardless of zoom or data range.
@@ -353,7 +353,7 @@ fig
 
 ---
 
-## Faceted wafer grid
+## 12. Faceted wafer grid
 
 `wafer_facet` groups any Tables.jl-compatible source by a column and renders one wafer panel per
 group. Pass `colorrange = (lo, hi)` for a shared colorscale (single colorbar below the grid);
@@ -390,7 +390,7 @@ bar charts — see the dedicated [AlgebraOfGraphics](@ref) page.
 
 ---
 
-## CFD Combined: Divergence + Streamlines
+## 13. CFD Combined: Divergence + Streamlines
 
 The standard CFD summary view: ∇·**v** heatmap as background, streamlines overlaid in white.
 `wafer_cfd_figure` handles the layout and prevents the wafer boundary from being drawn twice.
@@ -412,7 +412,7 @@ fig
 
 ---
 
-## CFD Combined: Vorticity + Streamlines
+## 14. CFD Combined: Vorticity + Streamlines
 
 Rotation intensity as background with streamlines showing the flow direction simultaneously.
 
@@ -428,7 +428,7 @@ fig, ax, side = wafer_cfd_figure(vdata; scalar = :vorticity, vector = :streamlin
 fig
 ```
 
-### Manual composition
+### 15. Manual composition
 
 For full control use `draw_boundary = false` on the overlay recipe:
 
@@ -455,13 +455,13 @@ combination (e.g. contour + scatter overlay) is possible without duplicate bound
 
 ---
 
-## Field & wafer analysis
+## 16. Field & wafer analysis
 
 These build on a per-point exposure-field association: [`fielded`](@ref) attaches each
 measurement to its field and intrafield coordinate, enabling partial-field filtering,
 intrafield stacking, and field labelling.
 
-### Field shot numbers
+### 17. Field shot numbers
 
 [`draw_field_numbers!`](@ref) labels each field with its exposure (shot) number following the
 scanner's serpentine path (bottom-left first, meandering up). Pass `numbers=...` for an
@@ -484,7 +484,7 @@ fig
 
 ---
 
-### Stacked field average with slit/scan profiles
+### 18. Stacked field average with slit/scan profiles
 
 [`stack_fields`](@ref) averages every full field on top of each other by intrafield
 coordinate; [`plot_averaged_field`](@ref) shows the result with the slit- and scan-direction
@@ -505,7 +505,7 @@ plot_averaged_field(af; markersize = 16.0f0)
 
 ---
 
-### Comparing wafers at one arrow scale
+### 19. Comparing wafers at one arrow scale
 
 [`arrow_scale_from`](@ref) designates a scale from a reference wafer; passing the same
 `ArrowScale` to every plot makes arrows directly comparable across lots/wafers — here lot B
