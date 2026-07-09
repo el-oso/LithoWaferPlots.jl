@@ -55,3 +55,19 @@ end
     v = WaferVectorData((x = [0.0], y = [0.0], vx = [1.0], vy = [0.0]))
     @test v.wafer == WaferSpec(300.0)
 end
+
+@testitem "WaferData/WaferVectorData are Tables.jl sources" begin
+    using LithoWaferPlots
+    Tables = LithoWaferPlots.Tables
+    w = WaferSpec(300.0)
+
+    d = WaferData((x = [0.0, 10.0], y = [0.0, 5.0], value = [1.0, 2.0]), w)
+    @test Tables.istable(typeof(d))
+    cols = Tables.columns(d)
+    @test cols.x == d.x && cols.y == d.y && cols.value == d.values
+
+    v = WaferVectorData((x = [0.0], y = [0.0], vx = [1.0], vy = [0.0]), w)
+    @test Tables.istable(typeof(v))
+    vcols = Tables.columns(v)
+    @test vcols.x == v.x && vcols.vx == v.vx && vcols.vy == v.vy
+end

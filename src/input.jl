@@ -19,6 +19,19 @@ function _die_to_mm(col::AbstractVector, row::AbstractVector, grid::DieGrid)
     return x, y
 end
 
+# --- Tables.jl source interface ---
+# The reverse direction of the constructors below: WaferData/WaferVectorData are themselves
+# valid Tables.jl sources, so `DataFrame(wd)` and (more usefully) AlgebraOfGraphics' `data(wd)`
+# work directly, without manually unpacking fields into a DataFrame first.
+
+Tables.istable(::Type{<:WaferData}) = true
+Tables.columnaccess(::Type{<:WaferData}) = true
+Tables.columns(d::WaferData) = (x = d.x, y = d.y, value = d.values)
+
+Tables.istable(::Type{WaferVectorData}) = true
+Tables.columnaccess(::Type{WaferVectorData}) = true
+Tables.columns(d::WaferVectorData) = (x = d.x, y = d.y, vx = d.vx, vy = d.vy)
+
 # --- WaferData constructors ---
 
 """

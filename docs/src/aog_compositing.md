@@ -55,10 +55,12 @@ edge = DataFrame(
 )
 
 plt = data(df) * mapping(:x, :y; color = :value => "Thickness (nm)", layout = :lot) *
-      visual(Scatter; markersize = 2, colormap = :plasma)
+      visual(Scatter; markersize = 2)
 ring = data(edge) * mapping(:x, :y; layout = :lot) * visual(Lines; color = :black)
 
-draw(plt + ring; axis = (aspect = DataAspect(), width = 170, height = 170))
+# colormap goes through `scales`, not `visual` — AoG resolves color scales globally across
+# every layer in the plot, so `visual(Scatter; colormap=...)` is silently ignored.
+draw(plt + ring, scales(Color = (; colormap = :plasma)); axis = (aspect = DataAspect(), width = 170, height = 170))
 ```
 
 ## Heatmap + arrows beside a KPI summary

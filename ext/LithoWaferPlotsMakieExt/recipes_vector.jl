@@ -197,6 +197,12 @@ end
 
 # ── WaferDivergence ─────────────────────────────────────────────────────────
 
+# Divergence/vorticity are signed quantities meant for a diverging colormap (:RdBu and
+# friends) whose neutral colour sits at the midpoint of colorrange — raw (vmin, vmax) only
+# centers that midpoint on zero when the data happens to be symmetric. Force it explicitly
+# so "positive = one colour, negative = the other" is actually true of the rendered plot.
+_symmetric_colorrange(cs::ColorScale) = (m = Float32(max(abs(cs.vmin), abs(cs.vmax))); (-m, m))
+
 @recipe WaferDivergence (data,) begin
     Makie.documented_attributes(Scatter)...
     colormap = :RdBu
@@ -221,7 +227,7 @@ function Makie.plot!(p::WaferDivergence)
     scatter!(
         p, p.attributes, wdat.x, wdat.y;
         color = Float32.(wdat.values),
-        colorrange = (Float32(cs.vmin), Float32(cs.vmax))
+        colorrange = _symmetric_colorrange(cs)
     )
 
     p[:draw_boundary][] && draw_wafer_boundary!(
@@ -266,7 +272,7 @@ function Makie.plot!(p::WaferVorticity)
     scatter!(
         p, p.attributes, wdat.x, wdat.y;
         color = Float32.(wdat.values),
-        colorrange = (Float32(cs.vmin), Float32(cs.vmax))
+        colorrange = _symmetric_colorrange(cs)
     )
 
     p[:draw_boundary][] && draw_wafer_boundary!(

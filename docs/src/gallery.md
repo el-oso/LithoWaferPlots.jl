@@ -235,7 +235,10 @@ ax2 = Axis(gl2[1, 1]; aspect = DataAspect(), title = "Divergence",
 side2 = gl2[1, 2] = GridLayout(; tellwidth = true)
 colsize!(gl2, 2, Relative(0.12))
 p2 = waferdivergence!(ax2, vdata; colormap = :RdBu, markersize = 3.0f0)
-waferarrows!(ax2, vdata; lengthscale = 1.2, max_arrows = length(vdata.x), arrowcolor = :magnitude, colormap = :RdBu,
+# grays, not :RdBu: arrows are coloured by |v| (always >=0) on a different scale than the
+# divergence heatmap underneath — sharing :RdBu made the two easy to conflate, since a
+# strongly-coloured arrow and a strongly-negative divergence pixel looked identical.
+waferarrows!(ax2, vdata; lengthscale = 1.2, max_arrows = length(vdata.x), arrowcolor = :magnitude, colormap = :grays,
              draw_boundary = false, draw_fields = false)
 add_colorbar!(side2, p2; label = "Divergence (a.u.)")
 

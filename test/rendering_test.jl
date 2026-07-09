@@ -214,6 +214,33 @@ end
     @test fig isa Figure && fig2 isa Figure
 end
 
+@testitem "WaferDivergence/WaferVorticity colorrange is centered on zero" tags = [:rendering] begin
+    using CairoMakie
+    # A one-sided synthetic field has a genuinely asymmetric raw (min, max) — colorrange
+    # must still straddle zero symmetrically or a diverging colormap's neutral point lands
+    # away from the true zero-crossing (verified bug: raw (vmin,vmax) put the midpoint at
+    # +0.04 for a field ranging -0.02..0.10, so the whole near-zero region rendered as one
+    # solid color instead of transitioning through white at the actual zero).
+    w = WaferSpec(300.0)
+    x = [x for x in -100.0:20.0:100.0 for y in -100.0:20.0:100.0]
+    y = [y for x in -100.0:20.0:100.0 for y in -100.0:20.0:100.0]
+    # single source only (no sink): divergence and vorticity are both one-sided
+    r2 = @. (x - 30.0)^2 + (y - 20.0)^2
+    vx = @. exp(-r2 / 2000.0) * (x - 30.0)
+    vy = @. exp(-r2 / 2000.0) * (y - 20.0)
+    d = WaferVectorData(x, y, vx, vy, w, WaferField[])
+
+    fig, ax, side = wafer_figure()
+    pd = waferdivergence!(ax, d; grid_n = 32)
+    lo, hi = pd.plots[1][:colorrange][]
+    @test lo ≈ -hi atol = 1.0e-4
+
+    fig2, ax2, side2 = wafer_figure()
+    pv = wafervorticity!(ax2, d; grid_n = 32)
+    lo2, hi2 = pv.plots[1][:colorrange][]
+    @test lo2 ≈ -hi2 atol = 1.0e-4
+end
+
 @testitem "Image overlays render without error" tags = [:rendering] begin
     using CairoMakie
     using CairoMakie: RGBAf
