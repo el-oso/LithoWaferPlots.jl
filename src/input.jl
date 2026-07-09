@@ -22,12 +22,12 @@ end
 # --- WaferData constructors ---
 
 """
-    WaferData(table, wafer::WaferSpec = WaferSpec(300.0); fields=[])
+    WaferData(table, wafer::WaferSpec = WaferSpec(); fields=[])
 
 Construct from mm-coordinate data. `table` must have columns `:x`, `:y`, `:value`.
-`wafer` defaults to a 300 mm wafer (`WaferSpec(300.0)`).
+`wafer` defaults to a 300 mm wafer (`WaferSpec()`).
 """
-function WaferData(table, wafer::WaferSpec = WaferSpec(300.0); fields::Vector{WaferField} = WaferField[])
+function WaferData(table, wafer::WaferSpec = WaferSpec(); fields::Vector{WaferField} = WaferField[])
     cols = Tables.columns(table)
     x = Float64.(Tables.getcolumn(cols, :x))
     y = Float64.(Tables.getcolumn(cols, :y))
@@ -36,12 +36,12 @@ function WaferData(table, wafer::WaferSpec = WaferSpec(300.0); fields::Vector{Wa
 end
 
 """
-    WaferData(table, grid::DieGrid, wafer::WaferSpec = WaferSpec(300.0); fields=[])
+    WaferData(table, grid::DieGrid, wafer::WaferSpec = WaferSpec(); fields=[])
 
 Construct from die-index data. `table` must have columns `:col`, `:row`, `:value`.
-Die indices are converted to mm using `grid`. `wafer` defaults to `WaferSpec(300.0)`.
+Die indices are converted to mm using `grid`. `wafer` defaults to `WaferSpec()`.
 """
-function WaferData(table, grid::DieGrid, wafer::WaferSpec = WaferSpec(300.0); fields::Vector{WaferField} = WaferField[])
+function WaferData(table, grid::DieGrid, wafer::WaferSpec = WaferSpec(); fields::Vector{WaferField} = WaferField[])
     cols = Tables.columns(table)
     col = Tables.getcolumn(cols, :col)
     row = Tables.getcolumn(cols, :row)
@@ -53,12 +53,12 @@ end
 # --- WaferVectorData constructors ---
 
 """
-    WaferVectorData(table, wafer::WaferSpec = WaferSpec(300.0); fields=[])
+    WaferVectorData(table, wafer::WaferSpec = WaferSpec(); fields=[])
 
 Construct from mm-coordinate vector data. `table` must have columns `:x`, `:y`, `:vx`, `:vy`.
-`wafer` defaults to `WaferSpec(300.0)`.
+`wafer` defaults to `WaferSpec()`.
 """
-function WaferVectorData(table, wafer::WaferSpec = WaferSpec(300.0); fields::Vector{WaferField} = WaferField[])
+function WaferVectorData(table, wafer::WaferSpec = WaferSpec(); fields::Vector{WaferField} = WaferField[])
     cols = Tables.columns(table)
     x = Float64.(Tables.getcolumn(cols, :x))
     y = Float64.(Tables.getcolumn(cols, :y))
@@ -68,12 +68,12 @@ function WaferVectorData(table, wafer::WaferSpec = WaferSpec(300.0); fields::Vec
 end
 
 """
-    WaferVectorData(table, grid::DieGrid, wafer::WaferSpec = WaferSpec(300.0); fields=[])
+    WaferVectorData(table, grid::DieGrid, wafer::WaferSpec = WaferSpec(); fields=[])
 
 Construct from die-index vector data. `table` must have columns `:col`, `:row`, `:vx`, `:vy`.
-`wafer` defaults to `WaferSpec(300.0)`.
+`wafer` defaults to `WaferSpec()`.
 """
-function WaferVectorData(table, grid::DieGrid, wafer::WaferSpec = WaferSpec(300.0); fields::Vector{WaferField} = WaferField[])
+function WaferVectorData(table, grid::DieGrid, wafer::WaferSpec = WaferSpec(); fields::Vector{WaferField} = WaferField[])
     cols = Tables.columns(table)
     col = Tables.getcolumn(cols, :col)
     row = Tables.getcolumn(cols, :row)

@@ -7,6 +7,11 @@
     @test w.edge_exclusion_mm == 2.0
 end
 
+@testitem "WaferSpec() defaults to a 300mm wafer" begin
+    using LithoWaferPlots
+    @test WaferSpec() == WaferSpec(300.0)
+end
+
 @testitem "WaferSpec custom notch angle" begin
     using LithoWaferPlots
     w = WaferSpec(200.0, 90.0)

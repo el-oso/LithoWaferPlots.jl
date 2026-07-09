@@ -51,7 +51,7 @@ end
 
 """
     fielded(table, fields; field_x=:fx, field_y=:fy, dx=:dx, dy=:dy, value=:value,
-            wafer=WaferSpec(300.0), tol=1e-3) -> FieldedData
+            wafer=WaferSpec(), tol=1e-3) -> FieldedData
 
 Preferred constructor: `table` carries the field centre (`field_x`, `field_y`) and the
 intrafield offset (`dx`, `dy`) per measurement. The intrafield coordinate is stored
@@ -63,7 +63,7 @@ function fielded(
         table, fields::Vector{WaferField};
         field_x::Symbol = :fx, field_y::Symbol = :fy,
         dx::Symbol = :dx, dy::Symbol = :dy, value::Symbol = :value,
-        wafer::WaferSpec = WaferSpec(300.0), tol::Real = 1.0e-3
+        wafer::WaferSpec = WaferSpec(), tol::Real = 1.0e-3
     )
     cols = Tables.columns(table)
     fx = Float64.(Tables.getcolumn(cols, field_x))

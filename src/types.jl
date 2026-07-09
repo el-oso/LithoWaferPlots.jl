@@ -19,6 +19,10 @@ WaferSpec(diameter_mm::Real) = WaferSpec(Float64(diameter_mm), 270.0, 3.0, 2.0)
 WaferSpec(diameter_mm::Real, notch_angle_deg::Real) =
     WaferSpec(Float64(diameter_mm), Float64(notch_angle_deg), 3.0, 2.0)
 
+# 300 mm is the standard wafer size across the package's defaults (WaferData/WaferVectorData
+# input constructors, precompile workloads, docs) — WaferSpec() with no diameter matches it.
+WaferSpec() = WaferSpec(300.0)
+
 """
     DieGrid(origin_x_mm, origin_y_mm, die_width_mm, die_height_mm)
 
