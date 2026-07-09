@@ -56,6 +56,7 @@ makedocs(;
         "Home" => "index.md",
         "Getting Started" => "getting_started.md",
         "Gallery" => "gallery.md",
+        "AlgebraOfGraphics" => "aog_compositing.md",
         "Custom KPIs" => "custom_kpi.md",
         "Comparing Wafers" => "comparing_wafers.md",
         "Field & Wafer Analysis" => "field_analysis.md",
