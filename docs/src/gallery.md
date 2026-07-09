@@ -215,8 +215,8 @@ pattern is visible alongside the scalar field it derives from.
 fig, ax, side = wafer_figure()
 p = waferdivergence!(ax, vdata; colormap = :RdBu, markersize = 3.0f0)
 waferarrows!(
-    ax, vdata; lengthscale = 1.2, max_arrows = 600, arrow_sample = :random,
-    arrowcolor = :magnitude, colormap = :grays
+    ax, vdata; lengthscale = 1.2, max_arrows = 600, arrow_sample = :magnitude,
+    arrowcolor = :magnitude, colormap = :RdBu
 )
 add_colorbar!(side, p; label = "Divergence (a.u.)")
 fig
@@ -250,8 +250,8 @@ Extra example: overlay the same rotating flow as arrows, so the differential-rot
 fig, ax, side = wafer_figure()
 p = wafervorticity!(ax, vdata; markersize = 3.0f0)
 waferarrows!(
-    ax, vdata; lengthscale = 35.0, max_arrows = 600, arrow_sample = :random,
-    arrowcolor = :magnitude, colormap = :grays
+    ax, vdata; lengthscale = 35.0, max_arrows = 600, arrow_sample = :magnitude,
+    arrowcolor = :magnitude, colormap = :RdBu
 )
 add_colorbar!(side, p; label = "Vorticity (a.u.)")
 fig
