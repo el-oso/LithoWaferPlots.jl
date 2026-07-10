@@ -12,6 +12,26 @@ wafer = WaferSpec()
 nothing # hide
 ```
 
+## Notch shape and size
+
+`notch_width_mm` and `notch_shape` are independent of `notch_depth_mm` and of each other:
+`:rounded_u` (default) requires `notch_width_mm <= notch_depth_mm` (a wider-than-deep rounded
+U would bulge outside the rim); `:flat` and `:v` have no such coupling, so they can go wide
+and shallow.
+
+```@example gallery
+fig = Figure(size = (900, 320))
+for (i, (shape, width, depth)) in enumerate([(:rounded_u, 3.0, 4.0), (:flat, 10.0, 3.0), (:v, 12.0, 4.0)])
+    spec = WaferSpec(300.0, 270.0, depth, 2.0; notch_shape = shape, notch_width_mm = width)
+    ax = Axis(fig[1, i]; aspect = DataAspect(), title = string(shape),
+              xgridvisible = false, ygridvisible = false, topspinevisible = false, rightspinevisible = false)
+    pts = wafer_polygon(spec)
+    lines!(ax, first.(pts), last.(pts); color = :black, linewidth = 2)
+    limits!(ax, -50, 50, -155, -95)
+end
+fig
+```
+
 ## 1. Scatter
 
 Sparse measurement points coloured by value. Good for raw probe data where point density is uneven.

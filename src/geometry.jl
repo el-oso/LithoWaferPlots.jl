@@ -1,12 +1,8 @@
 """
     wafer_polygon(spec::WaferSpec; n::Int=256) -> Vector{Tuple{Float64,Float64}}
 
-Return a closed polygon approximating the wafer boundary with a smooth rounded notch.
-
-The rim is sampled along its circle; a small circular bite at `notch_angle_deg`
-replaces the segment near the notch. The bite is the unique circle through the two
-rim corners and the inward apex (depth `notch_depth_mm`), giving a rounded U with a
-narrow mouth (half-width ≈ 1.25 × depth) rather than a wide, shallow V.
+Return a closed polygon approximating the wafer boundary with a notch cut at
+`spec.notch_angle_deg`, in the profile selected by `spec.notch_shape` (see [`WaferSpec`](@ref)).
 
 Reference: notch geometry derived from cap1tan/wafermap (MIT) and
 Artwork Systems wafer map glossary (https://www.artwork.com/package/wmapconvert/).
@@ -14,26 +10,17 @@ Artwork Systems wafer map glossary (https://www.artwork.com/package/wmapconvert/
 function wafer_polygon(spec::WaferSpec; n::Int = 256)
     r = spec.diameter_mm / 2.0
     d = spec.notch_depth_mm
+    w = spec.notch_width_mm / 2.0   # half-width, as used throughout the geometry below
     θ0 = deg2rad(spec.notch_angle_deg)
 
-    # Notch mouth half-width on the rim, tied to depth so it reads as a deep, narrow
-    # rounded U (mouth ≈ 0.9 × depth) rather than a wide, flat scoop.
-    w = 0.45 * d
-
     # Degenerate notch → plain circle.
-    if d <= 0 || w >= r || (r - d) <= 0
+    if d <= 0 || w <= 0 || w >= r || (r - d) <= 0
         return [(r * cos(θ), r * sin(θ)) for θ in range(0, 2π; length = n + 1)]
     end
 
-    # The U: two straight walls drop radially inward from the rim corners, joined by a
-    # semicircular bottom of radius `w`. Walls are radial so the sides never bulge past
-    # the mouth (no undercut), and the bottom is smoothly rounded.
     α = asin(w / r)                       # rim half-angle to each corner
-    L = d - w                             # straight wall length (d > w ⇒ L > 0)
     u = (cos(θ0), sin(θ0))                # outward radial at the notch
     t = (-sin(θ0), cos(θ0))               # rim tangent
-    md = r * cos(α) - L                   # radial distance of the bottom-arc centre
-    Mx, My = md * u[1], md * u[2]
 
     pts = Tuple{Float64, Float64}[]
     sizehint!(pts, n + 24)
@@ -44,19 +31,37 @@ function wafer_polygon(spec::WaferSpec; n::Int = 256)
         push!(pts, (r * cos(θ), r * sin(θ)))
     end
 
-    # 2) notch interior: corner₋ → wall → semicircular bottom → wall → corner₊.
-    # β sweeps -π/2 (B₋) → 0 (apex) → +π/2 (B₊). The straight walls corner→B are the
-    # implicit segments to/from the rim corners (which close the polygon).
-    nb = 14
-    for k in 0:nb
-        β = -π / 2 + π * (k / nb)
-        push!(pts, (
-            Mx + w * (sin(β) * t[1] - cos(β) * u[1]),
-            My + w * (sin(β) * t[2] - cos(β) * u[2]),
-        ))
+    # The rim loop above already ended exactly at corner₋, so the notch interior below
+    # starts from there implicitly — its first pushed point becomes the wall to corner₋.
+    corner₊ = (r * cos(θ0 + α), r * sin(θ0 + α))
+
+    if spec.notch_shape === :v
+        # notch interior: corner₋ → straight wall → apex → straight wall → corner₊.
+        apex = ((r - d) * u[1], (r - d) * u[2])
+        push!(pts, apex)
+    elseif spec.notch_shape === :flat
+        # notch interior: corner₋ → radial wall → chord → radial wall → corner₊.
+        wall₋ = (r * cos(α) - d) * u[1] - w * t[1], (r * cos(α) - d) * u[2] - w * t[2]
+        wall₊ = (r * cos(α) - d) * u[1] + w * t[1], (r * cos(α) - d) * u[2] + w * t[2]
+        append!(pts, (wall₋, wall₊))
+    else # :rounded_u — two radial walls joined by a semicircular bottom of radius w
+        L = d - w                         # straight wall length (w <= d, enforced at construction)
+        md = r * cos(α) - L               # radial distance of the bottom-arc centre
+        Mx, My = md * u[1], md * u[2]
+        # β sweeps -π/2 (B₋, matching corner₋'s tangential offset) → 0 (apex) → +π/2 (B₊).
+        nb = 14
+        for k in 0:nb
+            β = -π / 2 + π * (k / nb)
+            push!(
+                pts, (
+                    Mx + w * (sin(β) * t[1] - cos(β) * u[1]),
+                    My + w * (sin(β) * t[2] - cos(β) * u[2]),
+                )
+            )
+        end
     end
 
-    push!(pts, pts[1])   # close (B₊ → corner₊ wall)
+    push!(pts, pts[1])   # close (last notch point → corner₊ wall)
     return pts
 end
 

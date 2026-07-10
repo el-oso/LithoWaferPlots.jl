@@ -1,7 +1,7 @@
 | Status | Feedback | Notes |
 |---|---|---|
 | ❌ | KPI box font size/style configurable? | |
-| ❌ | Configurable notch shape/size | |
+| ✅ | Configurable notch shape/size | `WaferSpec(...; notch_shape=:rounded_u\|:flat\|:v, notch_width_mm=...)`; width decoupled from depth |
 | ✅ | Reference arrow not to scale | PR #2: `add_scale_arrow!(ax, ::WaferArrows)` reads the plot's resolved scale |
 | ✅ | Makie options not passable to plots | PR #2: recipes migrated to new `@recipe` DSL; kwargs now forward through |
 | ✅ | NaN crashes | PR #2: `WaferData`/`WaferVectorData` filter non-finite rows at construction |

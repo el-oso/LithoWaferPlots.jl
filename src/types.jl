@@ -1,27 +1,58 @@
 """
-    WaferSpec(diameter_mm, notch_angle_deg, notch_depth_mm, edge_exclusion_mm)
+    WaferSpec(diameter_mm, notch_angle_deg, notch_depth_mm, edge_exclusion_mm;
+              notch_width_mm=0.9*notch_depth_mm, notch_shape=:rounded_u)
 
 Physical parameters of a semiconductor wafer.
 
 Coordinate system follows SEMI M20: origin at wafer centre, units in mm, +x right, +y up.
 Notch position convention: 270° = bottom (6 o'clock), per Artwork Systems glossary.
+
+`notch_shape` selects the notch profile drawn by [`wafer_polygon`](@ref):
+- `:rounded_u` (default) — two radial walls joined by a semicircular bottom of radius
+  `notch_width_mm/2`. Requires `notch_width_mm <= notch_depth_mm` (a wider-than-deep rounded
+  U would bulge outside the wafer rim) — use `:flat` or `:v` for a shallow, wide notch.
+- `:flat` — two radial walls joined by a straight chord.
+- `:v` — two straight walls meeting at a point (no rounding); no width/depth coupling.
+
+`notch_width_mm` is the full mouth width on the rim (not the half-width).
 """
 struct WaferSpec
     diameter_mm::Float64
     notch_angle_deg::Float64
     notch_depth_mm::Float64
     edge_exclusion_mm::Float64
+    notch_width_mm::Float64
+    notch_shape::Symbol
+
+    function WaferSpec(
+            diameter_mm::Real, notch_angle_deg::Real, notch_depth_mm::Real, edge_exclusion_mm::Real;
+            notch_width_mm::Real = 0.9 * notch_depth_mm, notch_shape::Symbol = :rounded_u
+        )
+        notch_shape in (:rounded_u, :flat, :v) ||
+            error("WaferSpec: notch_shape must be :rounded_u, :flat, or :v, got :$notch_shape")
+        if notch_shape === :rounded_u && notch_width_mm > notch_depth_mm
+            error(
+                "WaferSpec: :rounded_u requires notch_width_mm ($notch_width_mm) <= " *
+                    "notch_depth_mm ($notch_depth_mm) — a wider-than-deep rounded U bulges " *
+                    "outside the wafer rim. Use notch_shape=:flat or :v for a shallow, wide notch."
+            )
+        end
+        return new(
+            Float64(diameter_mm), Float64(notch_angle_deg), Float64(notch_depth_mm),
+            Float64(edge_exclusion_mm), Float64(notch_width_mm), notch_shape
+        )
+    end
 end
 
 # notch_depth_mm defaults to 3.0: the outline is schematic, and a physical ~1 mm notch
 # is sub-pixel at plot scale. 3 mm renders as a clean, visible rounded U.
-WaferSpec(diameter_mm::Real) = WaferSpec(Float64(diameter_mm), 270.0, 3.0, 2.0)
-WaferSpec(diameter_mm::Real, notch_angle_deg::Real) =
-    WaferSpec(Float64(diameter_mm), Float64(notch_angle_deg), 3.0, 2.0)
+WaferSpec(diameter_mm::Real; kwargs...) = WaferSpec(Float64(diameter_mm), 270.0, 3.0, 2.0; kwargs...)
+WaferSpec(diameter_mm::Real, notch_angle_deg::Real; kwargs...) =
+    WaferSpec(Float64(diameter_mm), Float64(notch_angle_deg), 3.0, 2.0; kwargs...)
 
 # 300 mm is the standard wafer size across the package's defaults (WaferData/WaferVectorData
 # input constructors, precompile workloads, docs) — WaferSpec() with no diameter matches it.
-WaferSpec() = WaferSpec(300.0)
+WaferSpec(; kwargs...) = WaferSpec(300.0; kwargs...)
 
 """
     DieGrid(origin_x_mm, origin_y_mm, die_width_mm, die_height_mm)

@@ -20,6 +20,9 @@ using LithoWaferPlots
 
 wafer = WaferSpec()                # defaults to 300mm, notch at 270° (bottom)
 wafer = WaferSpec(200.0, 0.0)      # 200mm, notch at 3 o'clock (0°, standard math angle)
+
+# notch depth/width/shape are independently configurable keywords:
+wafer = WaferSpec(300.0, 270.0, 3.0, 2.0; notch_shape = :flat, notch_width_mm = 8.0)
 ```
 
 ## Step 2 — Load measurement data

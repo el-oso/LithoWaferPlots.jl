@@ -36,12 +36,37 @@ end
     radii = [sqrt(x^2 + y^2) for (x, y) in pts]
     @test minimum(radii) ≈ r - d atol = 0.05
     apex = pts[argmin(radii)]
-    @test apex[1] ≈ 0.0 atol = 1e-3       # x ≈ 0 at 270°
+    @test apex[1] ≈ 0.0 atol = 1.0e-3       # x ≈ 0 at 270°
     @test apex[2] ≈ -(r - d) atol = 0.05  # straight down
 
     # the bulk of the boundary is on the rim (corners + circle), within r
-    @test all(<=(r + 1e-6), radii)
-    @test count(≈(r; atol = 1e-3), radii) > 200
+    @test all(<=(r + 1.0e-6), radii)
+    @test count(≈(r; atol = 1.0e-3), radii) > 200
+end
+
+@testitem "flat and v notch shapes stay within the wafer radius" begin
+    using LithoWaferPlots
+    r = 150.0
+
+    for (shape, width) in ((:flat, 10.0), (:v, 10.0))
+        spec = WaferSpec(300.0, 270.0, 2.0, 2.0; notch_shape = shape, notch_width_mm = width)
+        pts = wafer_polygon(spec; n = 256)
+        radii = [sqrt(x^2 + y^2) for (x, y) in pts]
+        @test all(<=(r + 1.0e-6), radii)          # never bulges past the rim
+        @test minimum(radii) < r - 0.5            # genuinely indented
+        @test pts[1] == pts[end]                  # closed polygon
+    end
+end
+
+@testitem "v notch apex sits at exactly notch_depth_mm, decoupled from width" begin
+    using LithoWaferPlots
+    r, d = 150.0, 5.0
+    for width in (2.0, 20.0)   # width can exceed depth for :v, unlike :rounded_u
+        spec = WaferSpec(300.0, 270.0, d, 2.0; notch_shape = :v, notch_width_mm = width)
+        pts = wafer_polygon(spec; n = 256)
+        radii = [sqrt(x^2 + y^2) for (x, y) in pts]
+        @test minimum(radii) ≈ r - d atol = 1.0e-9
+    end
 end
 
 @testitem "inside_wafer mask" begin
