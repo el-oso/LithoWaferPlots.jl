@@ -22,7 +22,7 @@ include("overlay.jl")
 include("recipes_scalar.jl")
 include("recipes_vector.jl")
 
-export wafer_figure, wafer_cfd_figure, wafer_facet, add_colorbar!, add_kpi_panel!, add_kpi_overlay!
+export wafer_figure, wafer_cfd_figure, wafer_facet, add_colorbar!, add_kpi_panel!, add_kpi_overlay!, add_zone_kpis!
 export plot_averaged_field, field_facet, draw_field_numbers!
 export add_exclusion_ring!, add_ring_legend!
 export add_image_overlay!, add_logo!, add_watermark!, add_scale_arrow!
@@ -91,6 +91,9 @@ export WaferVorticity, wafervorticity, wafervorticity!
         LithoWaferPlots.add_kpi_panel!(side, sdata; fontsize = 8.0f0, title = "Stats")
         LithoWaferPlots.add_kpi_overlay!(ax, sdata)
         LithoWaferPlots.add_kpi_overlay!(ax, sdata; kpis = DEFAULT_KPIS[1:2], position = :lb, sigdigits = 4)
+        LithoWaferPlots.add_zone_kpis!(ax, sdata; mm_to_edge = 90.0)
+        # empty-zone branch (@warn path) — every sample point is well inside this boundary
+        LithoWaferPlots.add_zone_kpis!(ax, sdata; mm_to_edge = 1.0, draw_ring = false)
         LithoWaferPlots.wafercontour!(ax, sdata; grid_n = 16)
         LithoWaferPlots.wafercontour!(ax, sdata; levels = 12, colormap = :viridis)
         LithoWaferPlots.wafercontour!(ax, sdata; linewidth = 2.0f0, linestyle = :dash)

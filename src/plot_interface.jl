@@ -252,20 +252,41 @@ function add_kpi_panel!(args...; kwargs...)
 end
 
 """
-    add_kpi_overlay!(ax, data::WaferData; kpis=DEFAULT_KPIS, sigdigits=6, position=:rt, kwargs...)
+    add_kpi_overlay!(ax, data::WaferData; kpis=DEFAULT_KPIS, sigdigits=6, position=:rt,
+                      title="", kwargs...)
 
 Draw a small KPI summary box directly inside the wafer `Axis`, anchored to a corner (screen
 space — stays put on pan/zoom/resize, like a legend). `kpis` may be any subset of
 `DEFAULT_KPIS`, so a plot can surface just the one or two metrics that matter for it instead
 of the full side panel. `position` follows [`add_scale_arrow!`](@ref)'s convention (`:lt :ct
-:rt :lc :center :rc :lb :cb :rb`, or an `(fx, fy)` tuple). Other keywords: `margin`,
-`fontsize`, `font` (must be monospaced), `padding`, `background_color`, `strokecolor`,
-`strokewidth`. Requires a Makie backend.
+:rt :lc :center :rc :lb :cb :rb`, or an `(fx, fy)` tuple). `title` (empty by default) adds a
+header line, e.g. to distinguish two overlays on the same axis (see
+[`add_zone_kpis!`](@ref)). Other keywords: `margin`, `fontsize`, `font` (must be monospaced),
+`padding`, `background_color`, `strokecolor`, `strokewidth`. Requires a Makie backend.
 """
 function add_kpi_overlay!(args...; kwargs...)
     ext = _makie_ext()
     ext === nothing && _require_makie(:add_kpi_overlay!)
     return ext.add_kpi_overlay!(args...; kwargs...)
+end
+
+"""
+    add_zone_kpis!(ax, data::WaferData; mm_to_edge::Real, kpis=DEFAULT_KPIS, sigdigits=6,
+                   inner_position=:lt, ring_position=:rt, ring_color=:red, draw_ring=true,
+                   kwargs...)
+
+Split the wafer radially at `mm_to_edge` mm from the edge (the "donut" split — see
+[`zone_kpis`](@ref) for the exact boundary convention) and draw two [`add_kpi_overlay!`](@ref)
+boxes, one titled `"Inner"` for the centre disk and one titled `"Ring"` for the outer
+annulus, each computed only from that zone's points. `draw_ring=true` (default) also draws
+the boundary via [`add_exclusion_ring!`](@ref), coloured `ring_color` to match the ring box's
+outline. A zone with no points is skipped (with a warning) rather than drawing an empty box.
+`kwargs...` are forwarded to both `add_kpi_overlay!` calls. Requires a Makie backend.
+"""
+function add_zone_kpis!(args...; kwargs...)
+    ext = _makie_ext()
+    ext === nothing && _require_makie(:add_zone_kpis!)
+    return ext.add_zone_kpis!(args...; kwargs...)
 end
 
 # ── scalar plot wrappers ──────────────────────────────────────────────────────

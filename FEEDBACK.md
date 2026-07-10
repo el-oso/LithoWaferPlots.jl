@@ -7,7 +7,7 @@
 | ✅ | NaN crashes | PR #2: `WaferData`/`WaferVectorData` filter non-finite rows at construction |
 | ✅ | Boundary drawn twice on overlay | PR #2: `draw_wafer_boundary!`/`draw_fields!` now idempotent per-axis |
 | ❌ | Heatmap interpolation bad at large sizes | Related index bug fixed in PR #2; not independently verified |
-| ❌ | Donut plot (ring vs. inner, separate KPIs) | |
+| ✅ | Donut plot (ring vs. inner, separate KPIs) | New `zone_kpis`/`add_zone_kpis!(ax, data; mm_to_edge=...)`: radial inner/ring split with separate KPI overlays |
 | ✅ | Metrics inside axis | New `add_kpi_overlay!(ax, data; position=...)`: corner-anchored KPI box drawn on the plot itself |
 | ✅ | Show KPI subset inside wafer plot | `add_kpi_overlay!`'s `kpis=` accepts any subset (same mechanism `add_kpi_panel!` already had) |
 | ✅ | Dedicated AoG docs section | New `aog_compositing.md`: lot facets, heatmap+arrows, rings, KPI bars |

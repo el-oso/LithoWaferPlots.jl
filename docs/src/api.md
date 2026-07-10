@@ -38,6 +38,7 @@ DEFAULT_KPIS
 name
 compute
 format_value
+zone_kpis
 ```
 
 ## Geometry
@@ -86,6 +87,7 @@ wafer_facet
 add_colorbar!
 add_kpi_panel!
 add_kpi_overlay!
+add_zone_kpis!
 add_exclusion_ring!
 add_ring_legend!
 add_image_overlay!

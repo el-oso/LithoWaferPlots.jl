@@ -653,3 +653,50 @@ end
     @test add_kpi_overlay!(ax4, d_allnan) === nothing
     @test !any(c -> c isa Box, fig4.content)
 end
+
+@testitem "add_zone_kpis! draws two labeled overlays and a boundary ring" tags = [:rendering] begin
+    using CairoMakie
+
+    w = WaferSpec(300.0)   # r = 150
+    x = [0.0, 10.0, 140.0, 149.0]
+    y = [0.0, 0.0, 0.0, 0.0]
+    v = [1.0, 3.0, 10.0, 20.0]
+    d = WaferData(x, y, v, w, WaferField[])
+
+    fig, ax, side = wafer_figure()
+    waferheatmap!(ax, d)
+    @test add_zone_kpis!(ax, d; mm_to_edge = 50.0) === nothing   # boundary radius = 100
+
+    boxes = [c for c in fig.content if c isa Box]
+    labels = [c for c in fig.content if c isa Label]
+    @test length(boxes) == 2
+    @test any(l -> startswith(l.text[], "Inner"), labels)
+    @test any(l -> startswith(l.text[], "Ring"), labels)
+    @test any(pl -> pl isa Lines, ax.scene.plots)   # the exclusion-ring boundary
+
+    # draw_ring=false skips the boundary line but still draws both boxes
+    fig2, ax2, side2 = wafer_figure()
+    waferheatmap!(ax2, d)
+    add_zone_kpis!(ax2, d; mm_to_edge = 50.0, draw_ring = false)
+    @test !any(pl -> pl isa Lines, ax2.scene.plots)
+    @test count(c -> c isa Box, fig2.content) == 2
+
+    # an empty zone is skipped (warned), not drawn as an empty box
+    fig3, ax3, side3 = wafer_figure()
+    waferheatmap!(ax3, d)
+    @test_logs (:warn, r"ring zone has no points") add_zone_kpis!(ax3, d; mm_to_edge = 0.5, draw_ring = false)
+    @test count(c -> c isa Box, fig3.content) == 1
+
+    # mm_to_edge >= wafer radius errors before drawing anything
+    fig4, ax4, side4 = wafer_figure()
+    waferheatmap!(ax4, d)
+    @test_throws ErrorException add_zone_kpis!(ax4, d; mm_to_edge = 200.0)
+    @test !any(c -> c isa Box, fig4.content)
+
+    # custom positions/colors are accepted
+    fig5, ax5, side5 = wafer_figure()
+    waferheatmap!(ax5, d)
+    @test add_zone_kpis!(
+        ax5, d; mm_to_edge = 50.0, inner_position = :cb, ring_position = :ct, ring_color = :blue
+    ) === nothing
+end

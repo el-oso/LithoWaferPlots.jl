@@ -56,6 +56,29 @@ const DEFAULT_KPIS = AbstractKPI[
 ]
 
 """
+    zone_kpis(data::WaferData; mm_to_edge::Real, kpis=DEFAULT_KPIS)
+        -> (inner=Vector{Pair{String,Float64}}, ring=Vector{Pair{String,Float64}})
+
+Split `data` radially at `mm_to_edge` mm from the wafer edge (same convention as
+[`add_exclusion_ring!`](@ref): `boundary_radius = diameter_mm/2 - mm_to_edge`) and compute
+`kpis` separately for the centre disk (`inner`, radius `<= boundary_radius`) and the outer
+annulus (`ring`, radius `> boundary_radius`) — useful for comparing edge behaviour against
+centre behaviour, a common wafer-metrology split. A zone with no points returns an empty
+vector for that zone rather than erroring.
+"""
+function zone_kpis(data::WaferData; mm_to_edge::Real, kpis::AbstractVector{<:AbstractKPI} = DEFAULT_KPIS)
+    r_boundary = data.wafer.diameter_mm / 2.0 - mm_to_edge
+    r_boundary > 0 || error("mm_to_edge ($mm_to_edge mm) is larger than the wafer radius")
+    rad = hypot.(data.x, data.y)
+    inner_mask = rad .<= r_boundary
+    inner_vals = filter(isfinite, data.values[inner_mask])
+    ring_vals = filter(isfinite, data.values[.!inner_mask])
+    inner = isempty(inner_vals) ? Pair{String, Float64}[] : [name(k) => compute(k, inner_vals) for k in kpis]
+    ring = isempty(ring_vals) ? Pair{String, Float64}[] : [name(k) => compute(k, ring_vals) for k in kpis]
+    return (inner = inner, ring = ring)
+end
+
+"""
     format_value(kpi::AbstractKPI, v::Real) -> String
     format_value(kpi::AbstractKPI, v::Real, sigdigits::Integer) -> String
 

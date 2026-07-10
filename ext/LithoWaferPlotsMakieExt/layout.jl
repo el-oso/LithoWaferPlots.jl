@@ -511,7 +511,7 @@ end
 
 """
     add_kpi_overlay!(ax, data::WaferData; kpis=DEFAULT_KPIS, sigdigits=6, position=:rt,
-                      margin=8.0, fontsize=9.0f0, font="DejaVu Sans Mono",
+                      title="", margin=8.0, fontsize=9.0f0, font="DejaVu Sans Mono",
                       padding=(6.0,6.0,4.0,4.0), background_color=(:white,0.85),
                       strokecolor=:black, strokewidth=1.0f0)
 
@@ -521,12 +521,13 @@ in screen space (like a legend — it stays put on pan/zoom and on resize).
 `position` is one of `:lt :ct :rt :lc :center :rc :lb :cb :rb` (see [`add_scale_arrow!`](@ref)
 for the same convention), or an `(fx, fy)` fractional tuple. `kpis` may be any subset of
 `DEFAULT_KPIS` (or custom `AbstractKPI`s) to show only the metrics that matter for this plot.
-`font` must be monospaced for the columns to line up. Requires a Makie backend.
+`title` (empty by default) prepends a header line — e.g. to distinguish two overlays on
+the same axis. `font` must be monospaced for the columns to line up. Requires a Makie backend.
 """
 function add_kpi_overlay!(
         ax, data::WaferData;
         kpis::AbstractVector{<:AbstractKPI} = DEFAULT_KPIS, sigdigits::Integer = 6,
-        position = :rt, margin::Real = 8.0, fontsize::Real = 9.0f0,
+        position = :rt, title::AbstractString = "", margin::Real = 8.0, fontsize::Real = 9.0f0,
         font = "DejaVu Sans Mono", padding = (6.0, 6.0, 4.0, 4.0),
         background_color = (:white, 0.85), strokecolor = :black, strokewidth::Real = 1.0f0
     )
@@ -534,6 +535,7 @@ function add_kpi_overlay!(
     isempty(vals) && return nothing
 
     lines = _kpi_lines(vals, kpis, sigdigits)
+    isempty(title) || pushfirst!(lines, title)
     text = join(lines, "\n")
 
     # Text extent isn't known until an actual render pass, so the box is sized from
@@ -550,5 +552,51 @@ function add_kpi_overlay!(
 
     Box(ax.parent; bbox, color = background_color, strokecolor, strokewidth)
     Label(ax.parent; bbox, text, fontsize, font, padding, justification = :left, halign = :left, valign = :top)
+    return nothing
+end
+
+"""
+    add_zone_kpis!(ax, data::WaferData; mm_to_edge::Real, kpis=DEFAULT_KPIS, sigdigits=6,
+                   inner_position=:lt, ring_position=:rt, ring_color=:red, draw_ring=true,
+                   kwargs...)
+
+Split the wafer radially at `mm_to_edge` mm from the edge (see [`zone_kpis`](@ref) for the
+exact boundary convention) and draw two [`add_kpi_overlay!`](@ref) boxes — `"Inner"` for the
+centre disk, `"Ring"` for the outer annulus — each computed only from that zone's points.
+`draw_ring=true` also draws the boundary via [`add_exclusion_ring!`](@ref), coloured
+`ring_color`, matching the ring box's outline. A zone with no points is skipped (with a
+warning) rather than drawing an empty box. `kwargs...` are forwarded to both overlay calls.
+"""
+function add_zone_kpis!(
+        ax, data::WaferData;
+        mm_to_edge::Real, kpis::AbstractVector{<:AbstractKPI} = DEFAULT_KPIS, sigdigits::Integer = 6,
+        inner_position = :lt, ring_position = :rt, ring_color = :red, draw_ring::Bool = true,
+        kwargs...
+    )
+    r_boundary = data.wafer.diameter_mm / 2.0 - mm_to_edge
+    r_boundary > 0 || error("mm_to_edge ($mm_to_edge mm) is larger than the wafer radius")
+
+    draw_ring && add_exclusion_ring!(ax, data.wafer; mm_to_edge, color = ring_color)
+
+    rad = hypot.(data.x, data.y)
+    inner_mask = rad .<= r_boundary
+
+    if any(inner_mask)
+        inner_data = WaferData(data.x[inner_mask], data.y[inner_mask], data.values[inner_mask], data.wafer, data.fields)
+        add_kpi_overlay!(ax, inner_data; kpis, sigdigits, position = inner_position, title = "Inner", kwargs...)
+    else
+        @warn "add_zone_kpis!: inner zone has no points" maxlog = 1
+    end
+
+    if any(.!inner_mask)
+        ring_data = WaferData(data.x[.!inner_mask], data.y[.!inner_mask], data.values[.!inner_mask], data.wafer, data.fields)
+        add_kpi_overlay!(
+            ax, ring_data; kpis, sigdigits, position = ring_position, title = "Ring",
+            strokecolor = ring_color, kwargs...
+        )
+    else
+        @warn "add_zone_kpis!: ring zone has no points" maxlog = 1
+    end
+
     return nothing
 end

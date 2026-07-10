@@ -55,13 +55,42 @@ fig
 [`add_kpi_overlay!`](@ref) draws a small KPI box directly on the plot instead of the side
 panel — anchored to a corner in screen space (stays put on pan/zoom/resize, like a legend),
 and `kpis` can be any subset so only the metrics that matter for this particular plot show
-up. `title`/`fontsize`/`font` on [`add_kpi_panel!`](@ref) work the same way for the side panel.
+up. `title` prepends a header line to the box; `title`/`fontsize`/`font`/`title_fontsize`
+on [`add_kpi_panel!`](@ref) style the side panel the same way.
 
 ```@example gallery
 fig, ax, side = wafer_figure()
 p = waferscatter!(ax, data; markersize = 4.0f0)
 add_colorbar!(side, p; label = "Overlay (a.u.)")
-add_kpi_overlay!(ax, data; kpis = [KPIMean(), KPISigma(), KPIP99()], position = :lb)
+add_kpi_overlay!(ax, data; kpis = [KPIMean(), KPISigma(), KPIP99()],
+                 position = :lb, title = "Overlay stats")
+fig
+```
+
+---
+
+## Zone KPIs (inner vs. edge ring)
+
+Many wafer effects live at the edge: film-thickness roll-off, etch-rate loading, spin-coat
+edge bead. [`add_zone_kpis!`](@ref) splits the wafer radially at `mm_to_edge` mm from the
+edge — the same convention as [`add_exclusion_ring!`](@ref) — and shows one KPI box per
+zone: `Inner` for the centre disk, `Ring` for the outer annulus. The boundary ring and the
+`Ring` box's outline share `ring_color`, so it is obvious which box belongs to which zone.
+The data below has a healthy flat centre and an 8 nm roll-off in the last ~15 mm, so the
+two boxes report visibly different numbers. Use [`zone_kpis`](@ref) for the same split
+without a plot.
+
+```@example gallery
+θ = rand(6000) .* 2π
+r = sqrt.(rand(6000)) .* 148.0
+x = @. r * cos(θ); y = @. r * sin(θ)
+v = @. 100.0 - 8.0 * exp((r - 148.0) / 6.0) + 0.3 * $(randn(6000))  # edge roll-off
+data = WaferData((x = x, y = y, value = v), wafer)
+
+fig, ax, side = wafer_figure()
+p = waferheatmap!(ax, data; colormap = :viridis)
+add_colorbar!(side, p; label = "Thickness (nm)")
+add_zone_kpis!(ax, data; mm_to_edge = 15.0, kpis = [KPIMean(), KPISigma(), KPIMin()])
 fig
 ```
 

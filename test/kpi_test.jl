@@ -67,6 +67,37 @@ end
     @test format_value(KPIMean(), 123.456, 2) == "120.0"
 end
 
+@testitem "zone_kpis splits radially and pins the boundary convention" begin
+    using LithoWaferPlots
+
+    w = WaferSpec(300.0)   # r = 150
+    # 2 points strictly inside a 100mm-radius boundary, 2 strictly outside, 1 exactly on it
+    x = [0.0, 10.0, 140.0, 149.0, 100.0]
+    y = [0.0, 0.0, 0.0, 0.0, 0.0]
+    v = [1.0, 3.0, 10.0, 20.0, 5.0]
+    d = WaferData(x, y, v, w, WaferField[])
+
+    zk = zone_kpis(d; mm_to_edge = 50.0)   # boundary radius = 150 - 50 = 100
+    inner = Dict(zk.inner)
+    ring = Dict(zk.ring)
+    # inner: 0.0, 10.0, and the boundary point 100.0 (<=, matching inside_wafer's convention)
+    @test inner["Mean"] ≈ (1.0 + 3.0 + 5.0) / 3
+    # ring: 140.0 and 149.0 (> boundary)
+    @test ring["Mean"] ≈ (10.0 + 20.0) / 2
+
+    # mm_to_edge >= wafer radius errors, matching add_exclusion_ring!
+    @test_throws ErrorException zone_kpis(d; mm_to_edge = 200.0)
+
+    # a zone with no points returns an empty vector, not an error
+    zk2 = zone_kpis(d; mm_to_edge = 0.5)   # boundary radius = 149.5: everything is inner
+    @test isempty(zk2.ring)
+    @test !isempty(zk2.inner)
+
+    # kpis= accepts a subset
+    zk3 = zone_kpis(d; mm_to_edge = 50.0, kpis = [KPIMean(), KPIMax()])
+    @test length(zk3.inner) == 2 && length(zk3.ring) == 2
+end
+
 @testitem "sigdigits honours custom format_value (non-breaking)" begin
     using LithoWaferPlots
     # A custom KPI overriding only the 2-arg form (the documented 0.1.x way)

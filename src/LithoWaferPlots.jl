@@ -58,12 +58,13 @@ export AveragedField, stack_fields, FieldProfile, field_average_profiles, field_
 export average_wafers
 export ArrowScale, arrow_scale, arrow_scale_from
 export AbstractKPI, DEFAULT_KPIS, name, compute, format_value
+export zone_kpis
 export KPIMean, KPISigma, KPIMax, KPIMin, KPIMedian,
     KPIMeanPlus3Sigma, KPIMeanMinus3Sigma, KPIP99
 export ColorScale, normalize
 export divergence, vorticity
 # plotting stubs (implementations in Makie extension)
-export wafer_figure, wafer_cfd_figure, wafer_facet, add_colorbar!, add_kpi_panel!, add_kpi_overlay!
+export wafer_figure, wafer_cfd_figure, wafer_facet, add_colorbar!, add_kpi_panel!, add_kpi_overlay!, add_zone_kpis!
 export plot_averaged_field, field_facet, draw_field_numbers!
 export add_exclusion_ring!, add_ring_legend!
 export add_image_overlay!, add_logo!, add_watermark!, add_scale_arrow!

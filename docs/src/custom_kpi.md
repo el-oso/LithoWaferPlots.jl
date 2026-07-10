@@ -2,7 +2,9 @@
 
 The side panel produced by `add_kpi_panel!` is driven by a vector of `AbstractKPI`
 objects. Any struct that implements the two mandatory methods — `name` and `compute` —
-qualifies.
+qualifies. The same `kpis` vector is accepted everywhere KPIs are computed, including
+[`add_kpi_overlay!`](@ref), [`field_kpis`](@ref), and the inner/ring zone split
+([`zone_kpis`](@ref) / [`add_zone_kpis!`](@ref)).
 
 ## Minimal example: Range
 
