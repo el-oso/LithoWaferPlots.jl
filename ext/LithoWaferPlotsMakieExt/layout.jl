@@ -51,20 +51,16 @@ function add_colorbar!(side, plot_obj; label::String = "", kwargs...)
         return nothing
     end
 
-    # WaferHeatmap image mode: single Image child; build Colorbar from the recipe's
-    # WaferData input so limits reflect percentile-clipped range.
+    # Image-mode recipes (WaferHeatmap, WaferDivergence, WaferVorticity): a single Image
+    # child whose pixels are already-baked RGBA, so its own `colorrange` attribute (set by
+    # `_heatmap_image!` from the recipe's actually-resolved vmin/vmax — percentile-clipped,
+    # symmetric-about-zero, or explicit, whichever applies) is read back directly instead of
+    # recomputed from recipe-specific input shapes.
     image_idx = findfirst(p -> p isa Image, plot_obj.plots)
     if image_idx !== nothing
-        input_data = plot_obj[1][]
-        mask = inside_wafer(input_data.x, input_data.y, input_data.wafer)
-        vals = filter(isfinite, input_data.values[mask])
-        pc = haskey(plot_obj.attributes, :percentile_clip) ? plot_obj[:percentile_clip][] : 0.0
-        cs = ColorScale(vals; percentile_clip = pc)
+        lo, hi = plot_obj.plots[image_idx][:colorrange][]
         cmap = plot_obj[:colormap][]
-        Colorbar(
-            side[1, 1]; colormap = cmap, limits = (Float32(cs.vmin), Float32(cs.vmax)),
-            label, vertical = true, kwargs...
-        )
+        Colorbar(side[1, 1]; colormap = cmap, limits = (Float64(lo), Float64(hi)), label, vertical = true, kwargs...)
         return nothing
     end
 

@@ -161,8 +161,12 @@ function _heatmap_image!(p, data, x, y, vals, vmin::Float32, vmax::Float32)
         img[i, j] = RGBAf(col.r, col.g, col.b, col.alpha * edge_alpha)
     end
 
-    # Makie 0.22+ requires interval notation (start..stop) for image! axes.
-    image!(p, p.attributes, (-r) .. r, (-r) .. r, img)
+    # Makie 0.22+ requires interval notation (start..stop) for image! axes. `colorrange`
+    # is stored on the Image plot purely as metadata for `add_colorbar!` to read back
+    # (the raster itself is already-baked RGBA, so it plays no role in rendering) —
+    # passed last so it overrides whatever `p.attributes[:colorrange]` holds (possibly
+    # the `Makie.automatic` sentinel).
+    image!(p, p.attributes, (-r) .. r, (-r) .. r, img; colorrange = (vmin, vmax))
     return nothing
 end
 

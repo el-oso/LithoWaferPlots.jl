@@ -135,10 +135,19 @@ export WaferVorticity, wafervorticity, wafervorticity!
         LithoWaferPlots.waferdivergence!(ax2, vdata; grid_n = 16, marker = :circle)
         LithoWaferPlots.waferdivergence!(ax2, vdata; grid_n = 16, colorrange = (-1.0, 1.0))
         LithoWaferPlots.add_colorbar!(side2, pd)
+        # image mode: default grid_n is already dense enough to trigger :auto, but force
+        # both explicit branches (and the interpolate= passthrough) so they're cached too.
+        pd_img = LithoWaferPlots.waferdivergence!(ax2, vdata; imagemode = :image)
+        LithoWaferPlots.waferdivergence!(ax2, vdata; imagemode = :scatter)
+        LithoWaferPlots.waferdivergence!(ax2, vdata; imagemode = :image, interpolate = false)
+        LithoWaferPlots.add_colorbar!(side2, pd_img)
         LithoWaferPlots.wafervorticity!(ax2, vdata; grid_n = 16)
         LithoWaferPlots.wafervorticity!(ax2, vdata; markersize = 3.0f0)
         LithoWaferPlots.wafervorticity!(ax2, vdata; grid_n = 16, marker = :circle)
         LithoWaferPlots.wafervorticity!(ax2, vdata; grid_n = 16, colorrange = (-1.0, 1.0))
+        LithoWaferPlots.wafervorticity!(ax2, vdata; imagemode = :image)
+        LithoWaferPlots.wafervorticity!(ax2, vdata; imagemode = :scatter)
+        LithoWaferPlots.wafervorticity!(ax2, vdata; imagemode = :image, interpolate = false)
 
         # non-mutating standalone forms (`func` vs `func!`) — auto-create their own Scene,
         # part of the public API (Makie's `@recipe` generates both) but not otherwise

@@ -230,9 +230,11 @@ _resolved_colorrange(cr, cs::ColorScale) = cr === Makie.automatic ? _symmetric_c
 
 @recipe WaferDivergence (data,) begin
     Makie.documented_attributes(Scatter)...
+    Makie.filtered_attributes(Image; allow = (:interpolate,))...
     colormap = :RdBu
     markersize = 4.0f0
     marker = :rect
+    imagemode = :auto
     grid_n = 256
     k = 4
     boundary_color = :black
@@ -248,12 +250,18 @@ function Makie.plot!(p::WaferDivergence)
     d = p[:data][]
     wdat = divergence(d; grid_n = p[:grid_n][], k = p[:k][])
     cs = ColorScale(wdat.values)
+    vmin, vmax = _resolved_colorrange(p[:colorrange][], cs)
+    mode = p[:imagemode][]
+    use_image = mode === :image || (mode === :auto && length(wdat.x) >= IMAGE_THRESHOLD)
 
-    scatter!(
-        p, p.attributes, wdat.x, wdat.y;
-        color = Float32.(wdat.values),
-        colorrange = _resolved_colorrange(p[:colorrange][], cs)
-    )
+    if use_image
+        _heatmap_image!(p, wdat, wdat.x, wdat.y, wdat.values, vmin, vmax)
+    else
+        scatter!(
+            p, p.attributes, wdat.x, wdat.y;
+            color = Float32.(wdat.values), colorrange = (vmin, vmax)
+        )
+    end
 
     p[:draw_boundary][] && draw_wafer_boundary!(
         p, d.wafer;
@@ -275,9 +283,11 @@ end
 
 @recipe WaferVorticity (data,) begin
     Makie.documented_attributes(Scatter)...
+    Makie.filtered_attributes(Image; allow = (:interpolate,))...
     colormap = Reverse(:RdBu)
     markersize = 4.0f0
     marker = :rect
+    imagemode = :auto
     grid_n = 256
     k = 4
     boundary_color = :black
@@ -293,12 +303,18 @@ function Makie.plot!(p::WaferVorticity)
     d = p[:data][]
     wdat = vorticity(d; grid_n = p[:grid_n][], k = p[:k][])
     cs = ColorScale(wdat.values)
+    vmin, vmax = _resolved_colorrange(p[:colorrange][], cs)
+    mode = p[:imagemode][]
+    use_image = mode === :image || (mode === :auto && length(wdat.x) >= IMAGE_THRESHOLD)
 
-    scatter!(
-        p, p.attributes, wdat.x, wdat.y;
-        color = Float32.(wdat.values),
-        colorrange = _resolved_colorrange(p[:colorrange][], cs)
-    )
+    if use_image
+        _heatmap_image!(p, wdat, wdat.x, wdat.y, wdat.values, vmin, vmax)
+    else
+        scatter!(
+            p, p.attributes, wdat.x, wdat.y;
+            color = Float32.(wdat.values), colorrange = (vmin, vmax)
+        )
+    end
 
     p[:draw_boundary][] && draw_wafer_boundary!(
         p, d.wafer;

@@ -89,6 +89,38 @@ end
     @test any(a -> 0.0f0 < a < 1.0f0, alphas)
 end
 
+@testitem "WaferDivergence/WaferVorticity switch to image mode at the default (dense) grid_n and get the same edge fix" tags = [:rendering] begin
+    using CairoMakie
+    # divergence/vorticity always produce a dense grid_n×grid_n field regardless of the
+    # input point count, so at the default grid_n=256 they must land in image mode (like
+    # WaferHeatmap) and get the same true-radius, feathered edge — not the old scatter-rect
+    # mosaic that stopped short of the boundary.
+    w = WaferSpec(300.0)
+    xs = [x for x in -120.0:10.0:120.0 for y in -120.0:10.0:120.0]
+    ys = [y for x in -120.0:10.0:120.0 for y in -120.0:10.0:120.0]
+    d = WaferVectorData(xs, ys, -ys ./ 100, xs ./ 100, w, WaferField[])
+    fig, ax, side = wafer_figure()
+    pd = waferdivergence!(ax, d)
+    img = only(filter(pl -> pl isa Image, pd.plots))[3][]
+    @test !any(pl -> pl isa Scatter, pd.plots)
+
+    r = w.diameter_mm / 2.0
+    r_active = r - w.edge_exclusion_mm
+    grid_n = size(img, 1)
+    xs_grid = LinRange(-r, r, grid_n)
+    annulus = [
+        (i, j) for i in eachindex(xs_grid), j in eachindex(xs_grid)
+            if r_active < hypot(xs_grid[i], xs_grid[j]) < r
+    ]
+    @test !isempty(annulus)
+    @test all(ij -> img[ij[1], ij[2]].alpha > 0.0f0, annulus)
+
+    # add_colorbar!'s generic Image-mode branch must reflect the recipe's own resolved
+    # (symmetric-about-zero) colorrange, not error or silently fall through.
+    add_colorbar!(side, pd)
+    @test fig isa Figure
+end
+
 @testitem "WaferHeatmap respects an explicit colorrange" tags = [:rendering] begin
     using CairoMakie
 
