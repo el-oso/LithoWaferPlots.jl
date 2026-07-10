@@ -115,10 +115,18 @@ end
 function _heatmap_image!(p, data, x, y, vals, vmin::Float32, vmax::Float32)
     grid_n = p[:grid_n][]
     r = data.wafer.diameter_mm / 2.0
-    r_active2 = (r - data.wafer.edge_exclusion_mm)^2
     xs = LinRange(-r, r, grid_n)
     ys = LinRange(-r, r, grid_n)
+    cell = Float64(xs[2] - xs[1])
 
+    # Paint out to the true wafer edge, not the (smaller) edge-exclusion radius used to
+    # decide which measured points feed the interpolation — `x`/`y`/`vals` are already
+    # filtered to the active region by the caller, so this only changes how far the
+    # continuous IDW field is *drawn*, not which points are treated as real measurements.
+    # Filtering to the exclusion radius here left an unpainted annulus between the raster
+    # and the drawn wafer boundary, exposing the raster's own stair-stepped edge instead of
+    # having the boundary line sit on top of (and hide) it. The last `cell` mm of coverage
+    # is alpha-feathered so the circular cutoff itself is anti-aliased rather than jagged.
     cmap = Makie.to_colormap(p[:colormap][])
     pts = permutedims(hcat(Float64.(x), Float64.(y)))
     tree = KDTree(pts)
@@ -130,7 +138,8 @@ function _heatmap_image!(p, data, x, y, vals, vmin::Float32, vmax::Float32)
 
     img = fill(RGBAf(0.0f0, 0.0f0, 0.0f0, 0.0f0), grid_n, grid_n)
     for (j, yg) in enumerate(ys), (i, xg) in enumerate(xs)
-        xg^2 + yg^2 > r_active2 && continue
+        rad = hypot(xg, yg)
+        rad > r && continue
         q[1] = xg
         q[2] = yg
         knn!(idxs, dists, tree, q, k, true)
@@ -147,7 +156,9 @@ function _heatmap_image!(p, data, x, y, vals, vmin::Float32, vmax::Float32)
             acc / W
         end
         cn = clamp(Float32((v - vmin) / (vmax - vmin)), 0.0f0, 1.0f0)
-        img[i, j] = Makie.interpolated_getindex(cmap, cn)
+        col = Makie.interpolated_getindex(cmap, cn)
+        edge_alpha = clamp(Float32((r - rad) / cell), 0.0f0, 1.0f0)
+        img[i, j] = RGBAf(col.r, col.g, col.b, col.alpha * edge_alpha)
     end
 
     # Makie 0.22+ requires interval notation (start..stop) for image! axes.

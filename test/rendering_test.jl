@@ -51,6 +51,44 @@ end
     @test fig isa Figure
 end
 
+@testitem "WaferHeatmap image mode paints out to the true wafer edge, feathered" tags = [:rendering] begin
+    using CairoMakie
+    # Regression test: the raster used to stop at the (smaller) edge-exclusion radius,
+    # leaving an unpainted, jagged-edged gap between the raster and the drawn wafer
+    # boundary. It must now reach the true wafer radius, with the outermost ring of
+    # pixels partially transparent (feathered) rather than a hard cutoff.
+    w = WaferSpec(300.0)
+    xs = [x for x in -140.0:3.0:140.0 for y in -140.0:3.0:140.0 if x^2 + y^2 <= 148.0^2]
+    ys = [y for x in -140.0:3.0:140.0 for y in -140.0:3.0:140.0 if x^2 + y^2 <= 148.0^2]
+    vs = sin.(xs ./ 40) .+ cos.(ys ./ 40)
+    d = WaferData(xs, ys, vs, w, WaferField[])
+    fig, ax, side = wafer_figure()
+    p = waferheatmap!(ax, d; imagemode = :image, grid_n = 64)
+    img = only(filter(pl -> pl isa Image, p.plots))[3][]
+
+    r = w.diameter_mm / 2.0
+    xs_grid = LinRange(-r, r, 64)   # same construction as _heatmap_image!'s grid
+    r_active = r - w.edge_exclusion_mm
+
+    # every pixel whose centre lies strictly between the old (edge-exclusion) cutoff and
+    # the true edge must now be painted (nonzero alpha) instead of fully transparent.
+    # Scan the whole annulus rather than hand-picking one (i, j): the even grid has no
+    # pixel centre on either axis, so a hand-picked "closest to (149, 0)" pixel is the
+    # corner sample at x = 150.0, whose true radius hypot(150, 2.38) lies OUTSIDE the
+    # wafer and is correctly left transparent.
+    annulus = [
+        (i, j) for i in eachindex(xs_grid), j in eachindex(xs_grid)
+            if r_active < hypot(xs_grid[i], xs_grid[j]) < r
+    ]
+    @test !isempty(annulus)
+    @test all(ij -> img[ij[1], ij[2]].alpha > 0.0f0, annulus)
+
+    # the outermost painted ring must be partially transparent (feathered), not opaque —
+    # i.e. some pixel strictly inside the true radius has 0 < alpha < 1
+    alphas = [img[i, j].alpha for i in eachindex(xs_grid), j in eachindex(xs_grid)]
+    @test any(a -> 0.0f0 < a < 1.0f0, alphas)
+end
+
 @testitem "WaferHeatmap respects an explicit colorrange" tags = [:rendering] begin
     using CairoMakie
 
