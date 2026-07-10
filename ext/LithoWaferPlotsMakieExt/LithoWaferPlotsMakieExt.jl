@@ -119,6 +119,8 @@ export WaferVorticity, wafervorticity, wafervorticity!
         LithoWaferPlots.waferarrows!(ax2, vdata; max_arrows = 3)
         LithoWaferPlots.waferarrows!(ax2, vdata; max_arrows = 3, arrow_sample = :random)
         LithoWaferPlots.waferarrows!(ax2, vdata; linestyle = :dash, alpha = 0.7)
+        # arrowcolor accepting a per-point vector is a distinct code path from :magnitude
+        LithoWaferPlots.waferarrows!(ax2, vdata; arrowcolor = collect(1.0:length(vdata.x)), colormap = :plasma)
         p3 = LithoWaferPlots.waferarrows!(ax2, vdata; lengthscale = 8.0, arrowcolor = :magnitude, colormap = :viridis)
         LithoWaferPlots.waferstreamlines!(ax2, vdata; n_seeds = 2, max_steps = 5, grid_n = 16)
         LithoWaferPlots.waferstreamlines!(ax2, vdata; n_seeds = 2, max_steps = 5, color = :navy, linewidth = 1.2f0)
@@ -131,10 +133,12 @@ export WaferVorticity, wafervorticity, wafervorticity!
         LithoWaferPlots.waferdivergence!(ax2, vdata; colormap = :RdBu)
         LithoWaferPlots.waferdivergence!(ax2, vdata; colormap = :RdBu, markersize = 3.0f0)
         LithoWaferPlots.waferdivergence!(ax2, vdata; grid_n = 16, marker = :circle)
+        LithoWaferPlots.waferdivergence!(ax2, vdata; grid_n = 16, colorrange = (-1.0, 1.0))
         LithoWaferPlots.add_colorbar!(side2, pd)
         LithoWaferPlots.wafervorticity!(ax2, vdata; grid_n = 16)
         LithoWaferPlots.wafervorticity!(ax2, vdata; markersize = 3.0f0)
         LithoWaferPlots.wafervorticity!(ax2, vdata; grid_n = 16, marker = :circle)
+        LithoWaferPlots.wafervorticity!(ax2, vdata; grid_n = 16, colorrange = (-1.0, 1.0))
 
         # non-mutating standalone forms (`func` vs `func!`) — auto-create their own Scene,
         # part of the public API (Makie's `@recipe` generates both) but not otherwise

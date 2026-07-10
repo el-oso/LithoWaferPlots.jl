@@ -208,40 +208,64 @@ add_colorbar!(side, p; label = "Divergence (a.u.)")
 fig
 ```
 
-Extra example: overlay every arrow that produced this field on two panels side by side — raw
-`|v|` magnitude on the left, derived divergence on the right — to compare where the flow is
-*strong* against where it's actually *diverging*. Points with negligible magnitude (< 2% of
-the peak) are dropped before plotting rather than drawn as clutter at effectively zero length;
-both panels share the same arrow colormap (`:grays`) so neither panel's arrows can be mistaken
-for encoding the same scale as its own heatmap (`:viridis` left, `:RdBu` right).
+Extra example: two panels side by side. Left is a pure flow view — every arrow that produced
+this field, colored by `|v|` via `arrowcolor = :magnitude`. Right overlays the same flow on
+the divergence heatmap, but here each arrow is colored by the *local divergence at that grid
+point* (`arrowcolor` accepting an arbitrary per-point vector, not just `:magnitude`) rather
+than its own speed — so arrow colour and heatmap colour encode the exact same quantity. The
+arrows are placed on a coarse grid (not the original scatter positions) using
+`LithoWaferPlots._vector_to_grid` — the same private IDW interpolator `divergence`/`vorticity`
+use internally — with divergence computed on that same grid via the central-difference
+formula from `divergence`'s own docstring, so each arrow's direction and its color come from
+one consistent pass, by construction. The
+heatmap computes its own colour range first (at its natural, smooth resolution); the coarse
+arrow grid is then forced to that *same* range (not a separately-computed one) so the two
+encodings never disagree.
 
 ```@example gallery
 mag = hypot.(vdata.vx, vdata.vy)
-magdata = WaferData((x = vdata.x, y = vdata.y, value = mag), wafer)
-
-flowing = mag .> 0.02 * maximum(mag)
-vdata_flow = WaferVectorData(vdata.x[flowing], vdata.y[flowing], vdata.vx[flowing], vdata.vy[flowing], wafer, WaferField[])
 
 fig = Figure(size = (1400, 620))
 
 gl1 = fig[1, 1] = GridLayout()
-ax1 = Axis(gl1[1, 1]; aspect = DataAspect(), title = "|v| magnitude",
+ax1 = Axis(gl1[1, 1]; aspect = DataAspect(), title = "Flow (arrows only)",
     xgridvisible = false, ygridvisible = false, topspinevisible = false, rightspinevisible = false)
 side1 = gl1[1, 2] = GridLayout(; tellwidth = true)
 colsize!(gl1, 2, Relative(0.12))
-p1 = waferheatmap!(ax1, magdata; colormap = :viridis)
-waferarrows!(ax1, vdata_flow; lengthscale = 1.2, max_arrows = length(vdata_flow.x), arrowcolor = :magnitude, colormap = :grays,
-             draw_boundary = false, draw_fields = false)
+p1 = waferarrows!(ax1, vdata; lengthscale = 1.2, max_arrows = length(vdata.x), arrowcolor = :magnitude, colormap = :viridis)
 add_colorbar!(side1, p1; label = "|v| (a.u.)")
 
+# coarse grid arrows + per-cell divergence, aligned by construction
+grid_n = 22
+xs, ys, VX, VY = LithoWaferPlots._vector_to_grid(vdata; grid_n)
+dxg = xs[2] - xs[1]; dyg = ys[2] - ys[1]
+D = Matrix{Float64}(undef, grid_n, grid_n)
+for j in 1:grid_n, i in 1:grid_n
+    dvx_dx = i == 1 ? (VX[2, j] - VX[1, j]) / dxg :
+        i == grid_n ? (VX[end, j] - VX[end - 1, j]) / dxg :
+        (VX[i + 1, j] - VX[i - 1, j]) / (2dxg)
+    dvy_dy = j == 1 ? (VY[i, 2] - VY[i, 1]) / dyg :
+        j == grid_n ? (VY[i, end] - VY[i, end - 1]) / dyg :
+        (VY[i, j + 1] - VY[i, j - 1]) / (2dyg)
+    D[i, j] = dvx_dx + dvy_dy
+end
+gx = [xv for xv in xs for _ in ys]
+gy = [yv for _ in xs for yv in ys]
+gvx = vec(VX); gvy = vec(VY); gdiv = vec(D)
+active = .!isnan.(gvx) .& .!isnan.(gdiv)
+grid_vdata = WaferVectorData(gx[active], gy[active], gvx[active], gvy[active], wafer, WaferField[])
+div_at_arrow = gdiv[active]
+
 gl2 = fig[1, 2] = GridLayout()
-ax2 = Axis(gl2[1, 1]; aspect = DataAspect(), title = "Divergence",
+ax2 = Axis(gl2[1, 1]; aspect = DataAspect(), title = "Divergence + flow",
     xgridvisible = false, ygridvisible = false, topspinevisible = false, rightspinevisible = false)
 side2 = gl2[1, 2] = GridLayout(; tellwidth = true)
 colsize!(gl2, 2, Relative(0.12))
-p2 = waferdivergence!(ax2, vdata; colormap = :RdBu, markersize = 3.0f0)
-waferarrows!(ax2, vdata_flow; lengthscale = 1.2, max_arrows = length(vdata_flow.x), arrowcolor = :magnitude, colormap = :grays,
-             draw_boundary = false, draw_fields = false)
+p2 = waferdivergence!(ax2, vdata; colormap = :viridis)
+waferarrows!(
+    ax2, grid_vdata; lengthscale = 1.2, arrowcolor = Float32.(div_at_arrow), colormap = :viridis,
+    colorrange = p2.plots[1][:colorrange][], linewidth = 1.5f0, draw_boundary = false, draw_fields = false
+)
 add_colorbar!(side2, p2; label = "Divergence (a.u.)")
 
 fig

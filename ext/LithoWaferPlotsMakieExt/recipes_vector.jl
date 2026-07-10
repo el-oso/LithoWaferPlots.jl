@@ -7,8 +7,10 @@ WaferDivergence, WaferVorticity.
 
 @recipe WaferArrows (data,) begin
     Makie.documented_attributes(Lines)...
-    arrowcolor = :black            # color name, or :magnitude to color by |v| via colormap
-    colormap = :viridis            # used only when arrowcolor === :magnitude
+    arrowcolor = :black            # color name, :magnitude (color by |v|), or an
+    # AbstractVector{<:Real} with one value per data point
+    # (same order as data.x) to color by an external field
+    colormap = :viridis            # used when arrowcolor is :magnitude or a numeric vector
     linewidth = 1.0f0
     lengthscale = 1.0
     scale = nothing                # an ArrowScale overrides lengthscale (shared scale across plots)
@@ -28,9 +30,14 @@ end
 # Build a single NaN-separated polyline encoding every arrow as a shaft plus a
 # two-segment V arrowhead. Rendering all arrows in one `lines!` call keeps the GPU
 # allocation tiny compared with `arrows2d!`, which tessellates a mesh per arrow.
-function _arrow_segments(x, y, vx, vy, scale::Float64, head_frac::Float64, head_angle::Float64)
+# `colorvals`, when given, supplies one value per arrow (instead of |v|) — e.g. the
+# arrowcolor=<vector> path below, coloring each arrow by an externally computed field.
+function _arrow_segments(
+        x, y, vx, vy, scale::Float64, head_frac::Float64, head_angle::Float64,
+        colorvals::Union{Nothing, AbstractVector{Float32}} = nothing
+    )
     pts = Point2f[]
-    mags = Float32[]                  # parallel to pts: true |v| at each vertex (for color-by-magnitude)
+    mags = Float32[]                  # parallel to pts: per-vertex color value (|v|, or colorvals[i])
     sizehint!(pts, length(x) * 9)
     sizehint!(mags, length(x) * 9)
     ca = cos(head_angle)
@@ -43,7 +50,7 @@ function _arrow_segments(x, y, vx, vy, scale::Float64, head_frac::Float64, head_
         by = Float64(y[i])
         tx = bx + dx
         ty = by + dy
-        m = Float32(hypot(Float64(vx[i]), Float64(vy[i])))
+        m = colorvals === nothing ? Float32(hypot(Float64(vx[i]), Float64(vy[i]))) : colorvals[i]
         base = Point2f(bx, by)
         tip = Point2f(tx, ty)
         push!(pts, base, tip, nan)               # shaft
@@ -72,6 +79,12 @@ function Makie.plot!(p::WaferArrows)
     n = length(d.x)
     max_n = p[:max_arrows][]
 
+    ac = p[:arrowcolor][]
+    colorvec = ac isa AbstractVector{<:Real} ? Float32.(ac) : nothing
+    if colorvec !== nothing && length(colorvec) != n
+        error("arrowcolor vector must have length(data.x) == $n entries, got $(length(colorvec))")
+    end
+
     if n > max_n
         sample = p[:arrow_sample][]
         idx = if sample === :magnitude
@@ -83,6 +96,7 @@ function Makie.plot!(p::WaferArrows)
             error("arrow_sample must be :magnitude or :random, got $(repr(sample))")
         end
         x, y, vx, vy = d.x[idx], d.y[idx], d.vx[idx], d.vy[idx]
+        colorvec = colorvec === nothing ? nothing : colorvec[idx]
     else
         x, y, vx, vy = d.x, d.y, d.vx, d.vy
     end
@@ -90,12 +104,12 @@ function Makie.plot!(p::WaferArrows)
     scale = _resolved_lengthscale(p)
     head_frac = Float64(p[:head_frac][])
     head_angle = Float64(p[:head_angle][])
-    pts, mags = _arrow_segments(x, y, vx, vy, scale, head_frac, head_angle)
+    pts, mags = _arrow_segments(x, y, vx, vy, scale, head_frac, head_angle, colorvec)
     if !isempty(pts)
-        if p[:arrowcolor][] === :magnitude
+        if ac === :magnitude || colorvec !== nothing
             lines!(p, p.attributes, pts; color = mags)
         else
-            lines!(p, p.attributes, pts; color = p[:arrowcolor])
+            lines!(p, p.attributes, pts; color = ac)
         end
     end
 
@@ -201,7 +215,11 @@ end
 # friends) whose neutral colour sits at the midpoint of colorrange — raw (vmin, vmax) only
 # centers that midpoint on zero when the data happens to be symmetric. Force it explicitly
 # so "positive = one colour, negative = the other" is actually true of the rendered plot.
+# An explicitly provided colorrange (e.g. shared across a heatmap + arrow overlay encoding
+# the same quantity) overrides the range computed from this dataset alone — same override
+# pattern as WaferHeatmap's colorrange.
 _symmetric_colorrange(cs::ColorScale) = (m = Float32(max(abs(cs.vmin), abs(cs.vmax))); (-m, m))
+_resolved_colorrange(cr, cs::ColorScale) = cr === Makie.automatic ? _symmetric_colorrange(cs) : (Float32(cr[1]), Float32(cr[2]))
 
 @recipe WaferDivergence (data,) begin
     Makie.documented_attributes(Scatter)...
@@ -227,7 +245,7 @@ function Makie.plot!(p::WaferDivergence)
     scatter!(
         p, p.attributes, wdat.x, wdat.y;
         color = Float32.(wdat.values),
-        colorrange = _symmetric_colorrange(cs)
+        colorrange = _resolved_colorrange(p[:colorrange][], cs)
     )
 
     p[:draw_boundary][] && draw_wafer_boundary!(
@@ -272,7 +290,7 @@ function Makie.plot!(p::WaferVorticity)
     scatter!(
         p, p.attributes, wdat.x, wdat.y;
         color = Float32.(wdat.values),
-        colorrange = _symmetric_colorrange(cs)
+        colorrange = _resolved_colorrange(p[:colorrange][], cs)
     )
 
     p[:draw_boundary][] && draw_wafer_boundary!(

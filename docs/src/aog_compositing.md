@@ -226,9 +226,9 @@ function synth_wafer(wid; outlier = false)
     rr = sqrt.(rand(n)) .* 147.0
     x = @. rr * cos(θ)
     y = @. rr * sin(θ)
-    v = @. 100.0 + 2.5e-4 * (x^2 + y^2) + 0.3 * randn()           # radial bowl, nm
+    v = @. 2.0 + 2.78e-4 * (x^2 + y^2) + 0.3 * randn()            # radial bowl, ~0-10 nm overlay
     if outlier
-        v .+= @. 10.0 * exp(-((x + 60)^2 + (y - 50)^2) / 1200)    # large local excursion
+        v .+= @. 4.0 * exp(-((x + 60)^2 + (y - 50)^2) / 1200)     # large local excursion
     end
     vx = @. -y * 0.03 + x * 0.012 + 0.2 * randn()                 # rotation + expansion, nm
     vy = @. x * 0.03 + y * 0.012 + 0.2 * randn()
@@ -259,7 +259,7 @@ heat = data(df) * mapping(:x, :y, :value => "Overlay (nm)"; layout = :wafer_id) 
 arrows = data(df) * mapping(:x, :y, :vx, :vy; layout = :wafer_id) *
     visual(
     WArrows; wafer = wafer, lengthscale = 6.0, max_arrows = 700,
-    arrow_sample = :random, linewidth = 0.5, arrowcolor = :magnitude, colormap = :plasma,
+    arrow_sample = :random, linewidth = 0.5, arrowcolor = :magnitude, colormap = :RdBu,
     draw_boundary = false, draw_fields = false
 )
 refarrow = data(refdf) * mapping(:x, :y, :vx, :vy; layout = :wafer_id) *
@@ -272,7 +272,7 @@ reflabel = data(refdf) * mapping(:x, :y; text = :lbl => verbatim, layout = :wafe
 
 t_build = @elapsed fg = draw(
     heat + arrows + refarrow + reflabel,
-    scales(Color = (; colormap = :plasma));
+    scales(Color = (; colormap = :RdBu));
     axis = (aspect = DataAspect(), width = 230, height = 230)
 )
 t_render = @elapsed Makie.colorbuffer(fg.figure)

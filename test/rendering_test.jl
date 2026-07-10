@@ -241,6 +241,33 @@ end
     @test fig isa Figure && fig2 isa Figure
 end
 
+@testitem "WaferArrows accepts a per-point arrowcolor vector" tags = [:rendering] begin
+    using CairoMakie
+
+    w = WaferSpec(300.0)
+    xs = [x for x in -100.0:20.0:100.0 for y in -100.0:20.0:100.0]
+    ys = [y for x in -100.0:20.0:100.0 for y in -100.0:20.0:100.0]
+    n = length(xs)
+    d = WaferVectorData(xs, ys, -ys ./ 100, xs ./ 100, w, WaferField[])
+    colorvals = collect(1.0:n)
+
+    fig, ax, side = wafer_figure()
+    p = waferarrows!(ax, d; arrowcolor = colorvals, colormap = :plasma, draw_boundary = false, draw_fields = false)
+    ln = only(filter(pl -> pl isa Lines, p.plots))
+    @test eltype(ln[:color][]) <: Real
+    @test fig isa Figure
+
+    # a mismatched-length vector must error, not silently misalign
+    @test_throws ErrorException waferarrows!(ax, d; arrowcolor = colorvals[1:(end - 1)])
+
+    # subsampling: the vector must be subsampled in lockstep with the arrows it colors
+    p2 = waferarrows!(
+        ax, d; arrowcolor = colorvals, max_arrows = 5, arrow_sample = :random,
+        draw_boundary = false, draw_fields = false
+    )
+    @test only(filter(pl -> pl isa Lines, p2.plots)) isa Lines
+end
+
 @testitem "WaferDivergence/WaferVorticity colorrange is centered on zero" tags = [:rendering] begin
     using CairoMakie
     # A one-sided synthetic field has a genuinely asymmetric raw (min, max) — colorrange
@@ -266,6 +293,24 @@ end
     pv = wafervorticity!(ax2, d; grid_n = 32)
     lo2, hi2 = pv.plots[1][:colorrange][]
     @test lo2 ≈ -hi2 atol = 1.0e-4
+end
+
+@testitem "WaferDivergence/WaferVorticity respect an explicit colorrange" tags = [:rendering] begin
+    using CairoMakie
+    # An explicit colorrange (e.g. shared with an overlaid arrow layer encoding the same
+    # quantity) must override the auto-computed symmetric range, not be silently discarded.
+    w = WaferSpec(300.0)
+    x = [x for x in -100.0:20.0:100.0 for y in -100.0:20.0:100.0]
+    y = [y for x in -100.0:20.0:100.0 for y in -100.0:20.0:100.0]
+    d = WaferVectorData(x, y, -y ./ 100, x ./ 100, w, WaferField[])
+
+    fig, ax, side = wafer_figure()
+    pd = waferdivergence!(ax, d; grid_n = 32, colorrange = (-5.0, 5.0))
+    @test pd.plots[1][:colorrange][] == Makie.Vec2f(-5.0, 5.0)
+
+    fig2, ax2, side2 = wafer_figure()
+    pv = wafervorticity!(ax2, d; grid_n = 32, colorrange = (-3.0, 3.0))
+    @test pv.plots[1][:colorrange][] == Makie.Vec2f(-3.0, 3.0)
 end
 
 @testitem "Image overlays render without error" tags = [:rendering] begin
