@@ -19,7 +19,7 @@ Pkg.add("GLMakie")
 using LithoWaferPlots
 
 wafer = WaferSpec()                # defaults to 300mm, notch at 270° (bottom)
-wafer = WaferSpec(200.0, 90.0)     # 200mm, notch at 3 o'clock
+wafer = WaferSpec(200.0, 0.0)      # 200mm, notch at 3 o'clock (0°, standard math angle)
 ```
 
 ## Step 2 — Load measurement data
@@ -71,21 +71,12 @@ Any Makie attribute the underlying primitive supports (`marker`, `strokewidth`, 
 ## Step 4 — Add field overlays
 
 Pass a `fields` vector when constructing `WaferData` to overlay rectangular
-exposure fields on any plot type.
+exposure fields on any plot type. [`field_grid`](@ref) builds the grid and drops fields
+that don't overlap the wafer disk in one call:
 
 ```julia
-fw, fh = 26.0, 33.0
-r = wafer.diameter_mm / 2.0
-
-# 12 × 9 grid; keep only fields that at least partially overlap the wafer
-all_fields = vec([WaferField((ci - 0.5)*fw, (ri - 5)*fh, fw, fh, ci, ri)
-                  for ri in 1:9, ci in -5:6])
-fields = filter(all_fields) do f
-    hw, hh = fw/2, fh/2
-    nx = clamp(0.0, f.x_center_mm - hw, f.x_center_mm + hw)
-    ny = clamp(0.0, f.y_center_mm - hh, f.y_center_mm + hh)
-    nx^2 + ny^2 <= r^2
-end
+centers = [((ci - 0.5) * 26.0, (ri - 5) * 33.0) for ri in 1:9, ci in -5:6]   # 12 × 9 grid
+fields = field_grid(centers, (26.0, 33.0); wafer)
 
 data = WaferData(df, wafer; fields=fields)
 ```

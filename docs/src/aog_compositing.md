@@ -3,11 +3,12 @@
 [AlgebraOfGraphics.jl](https://aog.makie.org) (AoG) is a grammar-of-graphics layer on top of
 Makie. LithoWaferPlots doesn't depend on it, but the two compose well: [`wafer_facet`](@ref)
 covers the *spatial* multi-panel case (several wafer maps side by side, sharing a colour
-scale) with the full wafer-map treatment — exposure fields, KPI panels, the optimized heatmap
-paths, and the notch. AoG covers *statistical* views next to those maps — bar/violin
-comparisons, radial scatter, lot-over-lot summaries — that would otherwise need hand-rolled
-axes. Use `draw!(fig[r, c], layer)` to drop an AoG panel into the same `Figure` as an ordinary
-`waferheatmap!`/`waferarrows!` panel.
+scale and the boundary/notch) — it forces scatter-mode rendering (not the image-raster path)
+so it can patch each panel's shared `colorrange` after plotting, and draws neither exposure
+fields nor a KPI panel; add those separately per panel if needed. AoG covers *statistical*
+views next to those maps — bar/violin comparisons, radial scatter, lot-over-lot summaries —
+that would otherwise need hand-rolled axes. Use `draw!(fig[r, c], layer)` to drop an AoG panel
+into the same `Figure` as an ordinary `waferheatmap!`/`waferarrows!` panel.
 
 Every plot below is rendered live during the documentation build from the exact code shown
 above it.

@@ -110,10 +110,17 @@ end
 
 """
     add_scale_arrow!(ax, length_data; label="", position=:rb, kwargs...)
+    add_scale_arrow!(ax, arrows_plot; ref_magnitude=nothing, label=nothing, position=:rb, kwargs...)
 
 Draw a horizontal reference arrow `length_data` long in data (mm) coordinates on a wafer
 `Axis`, with `label` centred above it. Shares the `lengthscale` of `waferarrows!`: pass
 `length_data = ref * lengthscale` and `label = "\$ref nm"` so the arrow reads as a scale.
+
+The second form takes the plot object returned by `waferarrows!` directly and reads its
+actually-resolved `lengthscale` off it — safer than computing `ref * lengthscale` by hand
+when the plot's scale was itself auto-picked (e.g. via an `ArrowScale`). `ref_magnitude`
+defaults to a "nice" round number near the median arrow magnitude; pass it explicitly to
+match a specific reference.
 
 Keywords: `label`, `position` (`:rb` default), `color`, `linewidth`, `head_frac`,
 `head_angle`, `fontsize`, `margin`, `textcolor`. Requires a Makie backend.
@@ -271,10 +278,12 @@ end
     waferheatmap(data::WaferData; kwargs...) -> (Figure, Axis, plot)
     waferheatmap!(ax, data::WaferData; kwargs...) -> plot
 
-Heatmap-style plot using rectangular scatter markers.
-Use `percentile_clip` to reduce outlier influence on the color scale.
-Pass `colorrange = (lo, hi)` to force a shared color scale (e.g. across wafers);
-it overrides the range computed from the data in both scatter and image modes.
+Heatmap-style plot. `imagemode` (`:auto`, default) renders rectangular scatter markers for
+small datasets (< 5 000 points) and switches to an interpolated `image!` texture
+(anti-aliased out to the true wafer edge) above that; force either mode with
+`imagemode = :scatter` / `:image`. Use `percentile_clip` to reduce outlier influence on
+the color scale. Pass `colorrange = (lo, hi)` to force a shared color scale (e.g. across
+wafers); it overrides the range computed from the data in both modes.
 """
 function waferheatmap!(args...; kwargs...)
     ext = _makie_ext()
@@ -286,10 +295,12 @@ end
     waferheatmap(data::WaferData; kwargs...) -> (Figure, Axis, plot)
     waferheatmap!(ax, data::WaferData; kwargs...) -> plot
 
-Heatmap-style plot using rectangular scatter markers.
-Use `percentile_clip` to reduce outlier influence on the color scale.
-Pass `colorrange = (lo, hi)` to force a shared color scale (e.g. across wafers);
-it overrides the range computed from the data in both scatter and image modes.
+Heatmap-style plot. `imagemode` (`:auto`, default) renders rectangular scatter markers for
+small datasets (< 5 000 points) and switches to an interpolated `image!` texture
+(anti-aliased out to the true wafer edge) above that; force either mode with
+`imagemode = :scatter` / `:image`. Use `percentile_clip` to reduce outlier influence on
+the color scale. Pass `colorrange = (lo, hi)` to force a shared color scale (e.g. across
+wafers); it overrides the range computed from the data in both modes.
 """
 function waferheatmap(args...; kwargs...)
     ext = _makie_ext()
@@ -382,7 +393,10 @@ end
     waferdivergence!(ax, data::WaferVectorData; grid_n=256, k=4, kwargs...) -> plot
 
 Divergence (∂vx/∂x + ∂vy/∂y) of the vector field, displayed as a scalar heatmap.
-`k` is the IDW neighbour count (lower = faster, less smooth).
+`k` is the IDW neighbour count (lower = faster, less smooth). Always computed on a dense
+`grid_n × grid_n` grid, so `imagemode` (`:auto`, default) picks the interpolated `image!`
+texture path (same true-edge anti-aliasing as `waferheatmap!`) except at very small
+`grid_n`; force either mode with `imagemode = :scatter` / `:image`.
 """
 function waferdivergence!(args...; kwargs...)
     ext = _makie_ext()
@@ -395,7 +409,10 @@ end
     waferdivergence!(ax, data::WaferVectorData; grid_n=256, k=4, kwargs...) -> plot
 
 Divergence (∂vx/∂x + ∂vy/∂y) of the vector field, displayed as a scalar heatmap.
-`k` is the IDW neighbour count (lower = faster, less smooth).
+`k` is the IDW neighbour count (lower = faster, less smooth). Always computed on a dense
+`grid_n × grid_n` grid, so `imagemode` (`:auto`, default) picks the interpolated `image!`
+texture path (same true-edge anti-aliasing as `waferheatmap!`) except at very small
+`grid_n`; force either mode with `imagemode = :scatter` / `:image`.
 """
 function waferdivergence(args...; kwargs...)
     ext = _makie_ext()
@@ -408,7 +425,10 @@ end
     wafervorticity!(ax, data::WaferVectorData; grid_n=256, k=4, kwargs...) -> plot
 
 Vorticity (∂vy/∂x − ∂vx/∂y) of the vector field, displayed as a scalar heatmap.
-`k` is the IDW neighbour count (lower = faster, less smooth).
+`k` is the IDW neighbour count (lower = faster, less smooth). Always computed on a dense
+`grid_n × grid_n` grid, so `imagemode` (`:auto`, default) picks the interpolated `image!`
+texture path (same true-edge anti-aliasing as `waferheatmap!`) except at very small
+`grid_n`; force either mode with `imagemode = :scatter` / `:image`.
 """
 function wafervorticity!(args...; kwargs...)
     ext = _makie_ext()
@@ -421,7 +441,10 @@ end
     wafervorticity!(ax, data::WaferVectorData; grid_n=256, k=4, kwargs...) -> plot
 
 Vorticity (∂vy/∂x − ∂vx/∂y) of the vector field, displayed as a scalar heatmap.
-`k` is the IDW neighbour count (lower = faster, less smooth).
+`k` is the IDW neighbour count (lower = faster, less smooth). Always computed on a dense
+`grid_n × grid_n` grid, so `imagemode` (`:auto`, default) picks the interpolated `image!`
+texture path (same true-edge anti-aliasing as `waferheatmap!`) except at very small
+`grid_n`; force either mode with `imagemode = :scatter` / `:image`.
 """
 function wafervorticity(args...; kwargs...)
     ext = _makie_ext()

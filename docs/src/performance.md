@@ -147,9 +147,12 @@ All plot types must render **300 000 points in < 0.3 s** (median wall time, GLMa
 
 ## Running benchmarks (legacy scripts)
 
+`compute_bench.jl` is headless-safe (no display needed); `render_bench.jl` requires GLMakie
+and a display — see [GPU rendering (GLMakie)](@ref) above.
+
 ```julia
 julia --project=benchmarks benchmarks/compute_bench.jl
-julia --project=benchmarks benchmarks/render_bench.jl   # requires GLMakie + display
+julia --project=benchmarks benchmarks/render_bench.jl
 ```
 
 ## Key design decisions

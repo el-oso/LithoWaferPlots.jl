@@ -161,7 +161,7 @@ vx2, vy2 = src(-50.0, -50.0, -1.0)
 vdata = WaferVectorData((x = x, y = y, vx = vx1 .+ vx2, vy = vy1 .+ vy2), wafer)
 
 fig, ax, side = wafer_figure()
-p = waferdivergence!(ax, vdata; colormap = :RdBu, markersize = 3.0f0)
+p = waferdivergence!(ax, vdata; colormap = :RdBu)
 waferstreamlines!(ax, vdata; n_seeds = 12, max_steps = 80, color = :white, linewidth = 1.2f0)
 add_colorbar!(side, p; label = "Divergence (a.u.)")
 fig
@@ -175,7 +175,7 @@ speed = @. exp(-(x^2 + y^2) / 5000.0)
 vdata = WaferVectorData((x = x, y = y, vx = -y .* speed ./ 40, vy = x .* speed ./ 40), wafer)
 
 fig, ax, side = wafer_figure()
-p = wafervorticity!(ax, vdata; markersize = 3.0f0)
+p = wafervorticity!(ax, vdata)
 waferstreamlines!(ax, vdata; n_seeds = 12, max_steps = 80, color = :white, linewidth = 1.2f0)
 add_colorbar!(side, p; label = "Vorticity (a.u.)")
 fig
@@ -189,7 +189,11 @@ below.)
 ## 7. Divergence
 
 ∇·**v** = ∂vx/∂x + ∂vy/∂y, computed by IDW interpolation to a regular grid then central finite
-differences. A diverging colormap (`:RdBu`) centres the colour scale on zero.
+differences. A diverging colormap (`:RdBu`) centres the colour scale on zero. Like
+[`waferheatmap!`](@ref), this always computes a dense `grid_n × grid_n` field, so at the
+default `grid_n = 256` it renders through the same anti-aliased `image!` path — the
+`markersize` below has no visual effect at that resolution; override with `imagemode =
+:scatter` (or a small `grid_n`) to get rectangular markers instead.
 
 ```@example gallery
 # a source at (+60, +40) and a sink at (−50, −50)
@@ -203,7 +207,7 @@ vx2, vy2 = src(-50.0, -50.0, -1.0)
 vdata = WaferVectorData((x = x, y = y, vx = vx1 .+ vx2, vy = vy1 .+ vy2), wafer)
 
 fig, ax, side = wafer_figure()
-p = waferdivergence!(ax, vdata; colormap = :RdBu, markersize = 3.0f0)
+p = waferdivergence!(ax, vdata; colormap = :RdBu)
 add_colorbar!(side, p; label = "Divergence (a.u.)")
 fig
 ```
@@ -276,7 +280,8 @@ fig
 ## 8. Vorticity
 
 ∇×**v** = ∂vy/∂x − ∂vx/∂y. Positive values (red) indicate counterclockwise rotation; negative
-(blue) indicate clockwise.
+(blue) indicate clockwise. Like [`waferdivergence!`](@ref) above, this renders through the
+same dense-data `image!` path as `waferheatmap!` by default (`imagemode = :auto`).
 
 ```@example gallery
 # differential rotation: fast core, slow rim
@@ -287,7 +292,7 @@ speed = @. exp(-(x^2 + y^2) / 5000.0)
 vdata = WaferVectorData((x = x, y = y, vx = -y .* speed ./ 40, vy = x .* speed ./ 40), wafer)
 
 fig, ax, side = wafer_figure()
-p = wafervorticity!(ax, vdata; markersize = 3.0f0)
+p = wafervorticity!(ax, vdata)
 add_colorbar!(side, p; label = "Vorticity (a.u.)")
 fig
 ```
@@ -306,7 +311,7 @@ flowing = mag .> 0.02 * maximum(mag)
 vdata_flow = WaferVectorData(vdata.x[flowing], vdata.y[flowing], vdata.vx[flowing], vdata.vy[flowing], wafer, WaferField[])
 
 fig, ax, side = wafer_figure()
-p = wafervorticity!(ax, vdata; markersize = 3.0f0)
+p = wafervorticity!(ax, vdata)
 waferarrows!(
     ax, vdata_flow; lengthscale = 35.0, max_arrows = 1_000, arrow_sample = :random,
     arrowcolor = :magnitude, colormap = Reverse(:RdBu)

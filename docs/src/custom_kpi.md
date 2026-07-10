@@ -8,7 +8,7 @@ qualifies.
 
 ```julia
 using LithoWaferPlots
-using TypeContracts: implements
+using TypeContracts: @verify
 
 struct KPIRange <: AbstractKPI end
 
@@ -18,7 +18,7 @@ function LithoWaferPlots.compute(::KPIRange, v::AbstractVector{<:Real})::Float64
     maximum(v) - minimum(v)
 end
 
-@assert implements(KPIRange, AbstractKPI)   # verify at load time
+@verify KPIRange   # verify the contract at load time
 ```
 
 Pass it alongside the built-in defaults:
@@ -39,6 +39,10 @@ Or replace the defaults entirely:
 ```julia
 add_kpi_panel!(side, data; kpis = [KPIMean(), KPISigma(), KPIRange()])
 ```
+
+`DEFAULT_KPIS` is `[KPIMean, KPISigma, KPIMax, KPIMin, KPIMeanPlus3Sigma,
+KPIMeanMinus3Sigma]`. Two more built-ins exist but aren't in the default list — add them
+explicitly if needed: `KPIMedian` and `KPIP99` (99th percentile).
 
 ## Custom formatting: Non-Uniformity (NU)
 
@@ -62,14 +66,13 @@ function LithoWaferPlots.format_value(::KPINonUniformity, v::Real)::String
     @sprintf("%.2f", v) * " %"
 end
 
-@assert implements(KPINonUniformity, AbstractKPI)
+@verify KPINonUniformity
 ```
 
 Full plot:
 
 ```julia
 using LithoWaferPlots, CairoMakie, Printf, Statistics
-using TypeContracts: implements
 
 data = WaferData((x = x, y = y, value = thickness))
 
