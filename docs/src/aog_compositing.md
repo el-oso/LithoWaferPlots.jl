@@ -236,11 +236,14 @@ function synth_wafer(wid; outlier = false)
 end
 df = reduce(vcat, [synth_wafer("Wafer $i"; outlier = i == 4) for i in 1:6])
 
-# one reference arrow + label per facet: a 5 nm magnitude yardstick
+# one reference arrow + label per facet: a 3 nm magnitude yardstick, close to this data's
+# actual median |v| (~3.2 nm) rather than a round number picked without checking the data —
+# a reference much larger than most of the arrows it's meant to calibrate reads as "wrong
+# scale" even when the underlying lengthscale math is entirely consistent.
 refdf = DataFrame(
     x = fill(-145.0, 6), y = fill(-145.0, 6),
-    vx = fill(5.0, 6), vy = fill(0.0, 6),
-    lbl = fill("5 nm", 6), wafer_id = unique(df.wafer_id)
+    vx = fill(3.0, 6), vy = fill(0.0, 6),
+    lbl = fill("3 nm", 6), wafer_id = unique(df.wafer_id)
 )
 nothing # hide
 ```
@@ -251,7 +254,7 @@ The plot itself is pure AoG algebra — four layers added together, faceted by `
 (all 300 000 would blanket the heatmaps solid black — the same density lesson as the gallery's
 divergence/vorticity overlays), and that stays a `visual(…)` attribute, not a data-side hack.
 The reference arrow rides through the same `WaferArrows` visual with the same `lengthscale`,
-so its drawn length is guaranteed to be an honest 5 nm yardstick.
+so its drawn length is guaranteed to be an honest 3 nm yardstick.
 
 ```@example aog
 heat = data(df) * mapping(:x, :y, :value => "Overlay (nm)"; layout = :wafer_id) *
@@ -264,7 +267,7 @@ arrows = data(df) * mapping(:x, :y, :vx, :vy; layout = :wafer_id) *
 )
 refarrow = data(refdf) * mapping(:x, :y, :vx, :vy; layout = :wafer_id) *
     visual(
-    WArrows; wafer = wafer, lengthscale = 6.0, linewidth = 1.5,
+    WArrows; wafer = wafer, lengthscale = 6.0, linewidth = 1.0,
     arrowcolor = :firebrick, draw_boundary = false, draw_fields = false
 )
 reflabel = data(refdf) * mapping(:x, :y; text = :lbl => verbatim, layout = :wafer_id) *

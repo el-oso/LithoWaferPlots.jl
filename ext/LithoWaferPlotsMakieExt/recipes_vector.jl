@@ -74,10 +74,28 @@ end
 
 _resolved_lengthscale(p::WaferArrows) = (sc = p[:scale][]; sc isa ArrowScale ? sc.lengthscale : Float64(p[:lengthscale][]))
 
+# Shared with add_scale_arrow!(ax, ::WaferArrows) so its auto-picked reference magnitude is
+# computed over the same subset of points this plot actually draws, not the full pre-
+# subsampling input — a mismatch here previously made the auto reference arrow up to ~8x
+# smaller than the arrows shown whenever arrow_sample=:magnitude subsampling kicked in
+# (magnitude-biased subsampling keeps the largest |v| points; a median over the untouched
+# full population is not representative of what's left after that selection).
+function _subsample_idx(d, max_n::Int, sample::Symbol)
+    n = length(d.x)
+    n <= max_n && return Colon()
+    if sample === :magnitude
+        mag = @. hypot(d.vx, d.vy)
+        return partialsortperm(mag, 1:max_n; rev = true)
+    elseif sample === :random
+        return randperm(n)[1:max_n]   # order irrelevant for arrows — no sort needed
+    else
+        error("arrow_sample must be :magnitude or :random, got $(repr(sample))")
+    end
+end
+
 function Makie.plot!(p::WaferArrows)
     d = p[:data][]
     n = length(d.x)
-    max_n = p[:max_arrows][]
 
     ac = p[:arrowcolor][]
     colorvec = ac isa AbstractVector{<:Real} ? Float32.(ac) : nothing
@@ -85,21 +103,9 @@ function Makie.plot!(p::WaferArrows)
         error("arrowcolor vector must have length(data.x) == $n entries, got $(length(colorvec))")
     end
 
-    if n > max_n
-        sample = p[:arrow_sample][]
-        idx = if sample === :magnitude
-            mag = @. hypot(d.vx, d.vy)
-            partialsortperm(mag, 1:max_n; rev = true)
-        elseif sample === :random
-            randperm(n)[1:max_n]   # order irrelevant for arrows — no sort needed
-        else
-            error("arrow_sample must be :magnitude or :random, got $(repr(sample))")
-        end
-        x, y, vx, vy = d.x[idx], d.y[idx], d.vx[idx], d.vy[idx]
-        colorvec = colorvec === nothing ? nothing : colorvec[idx]
-    else
-        x, y, vx, vy = d.x, d.y, d.vx, d.vy
-    end
+    idx = _subsample_idx(d, p[:max_arrows][], p[:arrow_sample][])
+    x, y, vx, vy = d.x[idx], d.y[idx], d.vx[idx], d.vy[idx]
+    colorvec = colorvec === nothing ? nothing : colorvec[idx]
 
     scale = _resolved_lengthscale(p)
     head_frac = Float64(p[:head_frac][])
@@ -147,7 +153,8 @@ function add_scale_arrow!(
 
     ls = _resolved_lengthscale(arrows_plot)
     d = arrows_plot[:data][]
-    refmag = ref_magnitude === nothing ? _nice_magnitude(median(hypot.(d.vx, d.vy))) : Float64(ref_magnitude)
+    idx = _subsample_idx(d, arrows_plot[:max_arrows][], arrows_plot[:arrow_sample][])
+    refmag = ref_magnitude === nothing ? _nice_magnitude(median(hypot.(d.vx[idx], d.vy[idx]))) : Float64(ref_magnitude)
     refmag > 0 ||
         error("add_scale_arrow!: could not auto-pick a reference magnitude (vector field is all-zero); pass ref_magnitude explicitly")
     lbl = label === nothing ? string(refmag) : String(label)

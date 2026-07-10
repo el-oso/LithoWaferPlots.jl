@@ -143,7 +143,8 @@ Keywords:
 - `label`: text drawn above the arrow (e.g. `"50 nm"`); empty = no text.
 - `position`: `:lt :ct :rt :lc :center :rc :lb :cb :rb` (default `:rb`, bottom-right).
 - `color`: arrow colour (default `:black`).
-- `linewidth`: shaft/head width (default `1.5`).
+- `linewidth`: shaft/head width (default `1.0`, matching `waferarrows!`'s own default so the
+  reference arrow isn't systematically thicker-looking than the arrows it's calibrating).
 - `head_frac`: arrowhead length as a fraction of `length_data` (default `0.25`).
 - `head_angle`: half-angle of the arrowhead in radians (default `0.45`).
 - `fontsize`: label font size (default `11`).
@@ -157,7 +158,7 @@ function add_scale_arrow!(
         label::AbstractString = "",
         position = :rb,
         color = :black,
-        linewidth = 1.5f0,
+        linewidth = 1.0f0,
         head_frac::Real = 0.25,
         head_angle::Real = 0.45,
         fontsize = 11.0f0,

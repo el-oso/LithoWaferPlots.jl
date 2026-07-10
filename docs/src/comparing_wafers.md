@@ -82,12 +82,12 @@ nothing # hide
 `waferarrows!` draws into any `Axis`, so a lot grid is a plain loop over a `GridLayout`. Fixed
 square panels (`width`/`height`) plus `resize_to_layout!` give tight, equally-scaled small
 multiples; pinning identical `limits!` on every panel keeps the wafers the same size and makes
-the arrow lengths directly comparable. The `40 nm` scale arrow sits in the corner of the last
+the arrow lengths directly comparable. The `20 nm` scale arrow sits in the corner of the last
 panel — see [The scale arrow](@ref) below.
 
 ```@example fingerprint
 const LS = 0.5     # nm → mm for the arrows (shared by every panel and the scale arrow)
-const REF = 40.0   # nm reference length for the scale arrow
+const REF = 20.0   # nm reference length for the scale arrow
 
 function fingerprint_grid(builder, cs, rows, cols, idx; title)
     fig = Figure()
@@ -138,9 +138,9 @@ fingerprint_grid(fingerprint_gradient, coeffs, 2, 3, 7:12; title = "Wafers 7–1
 
 Arrows are drawn in data (mm) coordinates scaled by `lengthscale`, so a vector of magnitude
 `m` nm appears `m * lengthscale` mm long. [`add_scale_arrow!`](@ref) draws a reference of
-`REF * LS` mm labelled `"40 nm"`; because every panel shares the same `lengthscale`, that one
+`REF * LS` mm labelled `"20 nm"`; because every panel shares the same `lengthscale`, that one
 reference calibrates all of them. Drop it into any wafer `Axis`:
 
 ```julia
-add_scale_arrow!(ax, 40.0 * LS; label = "40 nm", position = :rb)
+add_scale_arrow!(ax, 20.0 * LS; label = "20 nm", position = :rb)
 ```

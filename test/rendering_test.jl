@@ -414,6 +414,41 @@ end
     @test fig2 isa Figure
 end
 
+@testitem "add_scale_arrow!'s auto ref_magnitude uses the actually-drawn (subsampled) arrows" tags = [:rendering] begin
+    using CairoMakie, Statistics
+    # Regression test: with arrow_sample=:magnitude subsampling active, the auto-picked
+    # reference used to be computed over the FULL pre-subsampling population — heavily
+    # biased toward small values relative to what's actually drawn (magnitude-based
+    # subsampling keeps only the largest |v| points), making the reference arrow much
+    # smaller than the arrows it's meant to calibrate. It must instead reflect the subset
+    # that ends up on screen.
+    w = WaferSpec(300.0)
+    n = 2000
+    xs = collect(range(-140.0, 140.0; length = n))
+    ys = zeros(n)
+    # 90% tiny magnitude, 10% large — median over ALL points is tiny (dominated by the
+    # majority), but the top max_arrows=100 by magnitude (what :magnitude subsampling
+    # keeps) are all drawn from the large minority
+    vx = [i <= round(Int, 0.9n) ? 0.01 : 10.0 for i in 1:n]
+    vy = zeros(n)
+    d = WaferVectorData(xs, ys, vx, vy, w, WaferField[])
+
+    fig, ax, side = wafer_figure()
+    p = waferarrows!(ax, d; max_arrows = 100)   # forces subsampling; default arrow_sample=:magnitude
+    add_scale_arrow!(ax, p)
+    txt = only(filter(pl -> pl isa Makie.Text, ax.scene.plots))
+    refmag = parse(Float64, only(txt[:text][]))
+
+    ext = Base.get_extension(LithoWaferPlots, :LithoWaferPlotsMakieExt)
+    idx = ext._subsample_idx(d, 100, :magnitude)
+    displayed_median = median(hypot.(d.vx[idx], d.vy[idx]))
+    full_median = median(hypot.(d.vx, d.vy))
+
+    @test full_median < 1.0            # sanity: the naive full-population median is tiny
+    @test refmag > 5.0                 # the fixed reference reflects the displayed (large) subset
+    @test isapprox(refmag, displayed_median; rtol = 0.5)
+end
+
 @testitem "plot_averaged_field and field_facet render" tags = [:rendering] begin
     using CairoMakie
     wafer = WaferSpec(300.0)
