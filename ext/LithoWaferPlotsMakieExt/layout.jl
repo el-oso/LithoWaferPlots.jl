@@ -460,41 +460,95 @@ function field_facet(
     return fig
 end
 
+# Fixed-width name column (12 chars) + value, one line per KPI. Shared by add_kpi_panel!
+# (side panel) and add_kpi_overlay! (in-axis box) — both render it in a monospaced font so
+# the columns actually line up.
+function _kpi_lines(vals, kpis, sigdigits::Integer)
+    return [rpad(name(k), 12) * format_value(k, compute(k, vals), sigdigits) for k in kpis]
+end
+
 """
-    add_kpi_panel!(side, data::WaferData; kpis=DEFAULT_KPIS, sigdigits=6)
+    add_kpi_panel!(side, data::WaferData; kpis=DEFAULT_KPIS, sigdigits=6,
+                   title="KPIs", fontsize=9.0f0, font="DejaVu Sans Mono", title_fontsize=fontsize+2)
 
 Compute KPIs and render a label grid in the bottom slot of the side panel.
 Each KPI gets its own row with name on the left and value on the right.
 Uses `Label` blocks (not `text!`) so content never clips to an Axis frame.
 `sigdigits` sets the displayed significant figures (forwarded to `format_value`).
+
+`font` must be a monospaced font for the name/value columns to line up (default
+`"DejaVu Sans Mono"`, bundled with Makie). Pass `title=""` to omit the title row.
 """
 function add_kpi_panel!(
         side, data::WaferData;
-        kpis::AbstractVector{<:AbstractKPI} = DEFAULT_KPIS, sigdigits::Integer = 6
+        kpis::AbstractVector{<:AbstractKPI} = DEFAULT_KPIS, sigdigits::Integer = 6,
+        title::AbstractString = "KPIs", fontsize::Real = 9.0f0,
+        font = "DejaVu Sans Mono", title_fontsize::Real = fontsize + 2.0f0
     )
     vals = filter(isfinite, data.values)
     isempty(vals) && return nothing
 
     kpi_gl = side[2, 1] = GridLayout()
+    row = 1
 
-    Label(
-        kpi_gl[1, 1]; text = "KPIs",
-        fontsize = 11.0f0, font = :bold, halign = :center, tellwidth = false
-    )
-
-    for (i, k) in enumerate(kpis)
-        nm = name(k)
-        val = format_value(k, compute(k, vals), sigdigits)
-        # Fixed-width name column (12 chars) + value in a single monospaced label
-        line = rpad(nm, 12) * val
+    if !isempty(title)
         Label(
-            kpi_gl[i + 1, 1]; text = line,
-            fontsize = 9.0f0, halign = :left, tellwidth = false,
-            font = "DejaVu Sans Mono"
+            kpi_gl[row, 1]; text = title,
+            fontsize = title_fontsize, font = :bold, halign = :center, tellwidth = false
         )
+        row += 1
+    end
+
+    for line in _kpi_lines(vals, kpis, sigdigits)
+        Label(kpi_gl[row, 1]; text = line, fontsize, halign = :left, tellwidth = false, font)
+        row += 1
     end
 
     rowgap!(kpi_gl, 1)
     rowsize!(side, 2, Auto())
+    return nothing
+end
+
+"""
+    add_kpi_overlay!(ax, data::WaferData; kpis=DEFAULT_KPIS, sigdigits=6, position=:rt,
+                      margin=8.0, fontsize=9.0f0, font="DejaVu Sans Mono",
+                      padding=(6.0,6.0,4.0,4.0), background_color=(:white,0.85),
+                      strokecolor=:black, strokewidth=1.0f0)
+
+Draw a small KPI summary box directly inside the wafer `Axis`, anchored to a corner/edge
+in screen space (like a legend — it stays put on pan/zoom and on resize).
+
+`position` is one of `:lt :ct :rt :lc :center :rc :lb :cb :rb` (see [`add_scale_arrow!`](@ref)
+for the same convention), or an `(fx, fy)` fractional tuple. `kpis` may be any subset of
+`DEFAULT_KPIS` (or custom `AbstractKPI`s) to show only the metrics that matter for this plot.
+`font` must be monospaced for the columns to line up. Requires a Makie backend.
+"""
+function add_kpi_overlay!(
+        ax, data::WaferData;
+        kpis::AbstractVector{<:AbstractKPI} = DEFAULT_KPIS, sigdigits::Integer = 6,
+        position = :rt, margin::Real = 8.0, fontsize::Real = 9.0f0,
+        font = "DejaVu Sans Mono", padding = (6.0, 6.0, 4.0, 4.0),
+        background_color = (:white, 0.85), strokecolor = :black, strokewidth::Real = 1.0f0
+    )
+    vals = filter(isfinite, data.values)
+    isempty(vals) && return nothing
+
+    lines = _kpi_lines(vals, kpis, sigdigits)
+    text = join(lines, "\n")
+
+    # Text extent isn't known until an actual render pass, so the box is sized from
+    # monospace character metrics instead (0.62×fontsize per column, 1.35×fontsize per
+    # row are standard approximations for DejaVu Sans Mono and similar fonts).
+    bw = 0.62 * fontsize * maximum(length, lines) + padding[1] + padding[2]
+    bh = 1.35 * fontsize * length(lines) + padding[3] + padding[4]
+
+    bbox = lift(ax.scene.viewport) do vp
+        W, H = Float64(vp.widths[1]), Float64(vp.widths[2])
+        x0, y0 = _overlay_origin(position, W, H, bw, bh, Float64(margin))
+        return Rect2f(x0, y0, bw, bh)
+    end
+
+    Box(ax.parent; bbox, color = background_color, strokecolor, strokewidth)
+    Label(ax.parent; bbox, text, fontsize, font, padding, justification = :left, halign = :left, valign = :top)
     return nothing
 end

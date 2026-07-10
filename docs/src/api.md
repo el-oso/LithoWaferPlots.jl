@@ -85,6 +85,7 @@ wafer_cfd_figure
 wafer_facet
 add_colorbar!
 add_kpi_panel!
+add_kpi_overlay!
 add_exclusion_ring!
 add_ring_legend!
 add_image_overlay!

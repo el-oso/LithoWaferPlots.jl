@@ -50,6 +50,21 @@ add_kpi_panel!(side, data)
 fig
 ```
 
+## KPI overlay (inside the axis)
+
+[`add_kpi_overlay!`](@ref) draws a small KPI box directly on the plot instead of the side
+panel — anchored to a corner in screen space (stays put on pan/zoom/resize, like a legend),
+and `kpis` can be any subset so only the metrics that matter for this particular plot show
+up. `title`/`fontsize`/`font` on [`add_kpi_panel!`](@ref) work the same way for the side panel.
+
+```@example gallery
+fig, ax, side = wafer_figure()
+p = waferscatter!(ax, data; markersize = 4.0f0)
+add_colorbar!(side, p; label = "Overlay (a.u.)")
+add_kpi_overlay!(ax, data; kpis = [KPIMean(), KPISigma(), KPIP99()], position = :lb)
+fig
+```
+
 ---
 
 ## 2. Heatmap

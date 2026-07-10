@@ -590,3 +590,66 @@ end
     @test_throws ErrorException add_scale_arrow!(ax, -1.0)
     @test fig isa Figure
 end
+
+@testitem "add_kpi_panel! font/style/title are configurable" tags = [:rendering] begin
+    using CairoMakie
+
+    w = WaferSpec(300.0)
+    tbl = (x = randn(200) .* 100, y = randn(200) .* 100, value = rand(200))
+    d = WaferData(tbl, w)
+
+    fig, ax, side = wafer_figure()
+    p = waferheatmap!(ax, d)
+    @test add_kpi_panel!(
+        side, d;
+        title = "Stats", fontsize = 12.0f0, font = "DejaVu Sans", title_fontsize = 16.0f0
+    ) === nothing
+    labels = [c for c in fig.content if c isa Label]
+    @test any(l -> l.text[] == "Stats", labels)
+    @test any(l -> l.fontsize[] == 16.0f0, labels)   # the title
+    @test count(l -> l.fontsize[] == 12.0f0, labels) == length(DEFAULT_KPIS)  # the body rows
+
+    # title="" omits the title row entirely
+    fig2, ax2, side2 = wafer_figure()
+    waferheatmap!(ax2, d)
+    add_kpi_panel!(side2, d; title = "")
+    labels2 = [c for c in fig2.content if c isa Label]
+    @test length(labels2) == length(DEFAULT_KPIS)
+end
+
+@testitem "add_kpi_overlay! renders inside the axis, subset and position work" tags = [:rendering] begin
+    using CairoMakie
+
+    w = WaferSpec(300.0)
+    tbl = (x = randn(200) .* 100, y = randn(200) .* 100, value = rand(200))
+    d = WaferData(tbl, w)
+
+    fig, ax, side = wafer_figure()
+    waferheatmap!(ax, d)
+    @test add_kpi_overlay!(ax, d) === nothing
+    @test any(c -> c isa Box, fig.content)
+    @test any(c -> c isa Label, fig.content)
+
+    # a subset of KPIs shows only that many lines
+    fig2, ax2, side2 = wafer_figure()
+    waferheatmap!(ax2, d)
+    add_kpi_overlay!(ax2, d; kpis = [KPIMean(), KPISigma()], position = :lb, sigdigits = 3)
+    lbl = only(c for c in fig2.content if c isa Label)
+    @test count('\n', lbl.text[]) == 1   # 2 lines => 1 newline
+
+    # every position symbol renders without error, including the (fx, fy) tuple form
+    for pos in (:lt, :ct, :rt, :lc, :center, :rc, :lb, :cb, :rb, (0.3, 0.7))
+        fig3, ax3, side3 = wafer_figure()
+        waferheatmap!(ax3, d)
+        @test add_kpi_overlay!(ax3, d; position = pos) === nothing
+    end
+
+    # all-non-finite data is a graceful no-op, matching add_kpi_panel!'s behaviour
+    # (WaferData already drops non-finite rows at construction, so this is empty by the
+    # time add_kpi_overlay! sees it; no plot is needed on ax to exercise this path)
+    fig4, ax4, side4 = wafer_figure()
+    d_allnan = @test_logs (:warn, r"WaferData") WaferData([0.0, 10.0], [0.0, 0.0], [NaN, NaN], w, WaferField[])
+    @test isempty(d_allnan.values)
+    @test add_kpi_overlay!(ax4, d_allnan) === nothing
+    @test !any(c -> c isa Box, fig4.content)
+end

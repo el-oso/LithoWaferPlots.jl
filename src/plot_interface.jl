@@ -237,15 +237,35 @@ function add_colorbar!(args...; kwargs...)
 end
 
 """
-    add_kpi_panel!(side, data::WaferData; kpis=DEFAULT_KPIS)
+    add_kpi_panel!(side, data::WaferData; kpis=DEFAULT_KPIS, sigdigits=6,
+                   title="KPIs", fontsize=9.0f0, font="DejaVu Sans Mono", title_fontsize=fontsize+2)
 
 Compute and display KPIs in the bottom slot of the side panel.
 Pass a custom `kpis` vector of `AbstractKPI` objects to override the defaults.
+`title`, `fontsize`, `font`, and `title_fontsize` control the panel's text style;
+`font` must be monospaced for the name/value columns to line up.
 """
 function add_kpi_panel!(args...; kwargs...)
     ext = _makie_ext()
     ext === nothing && _require_makie(:add_kpi_panel!)
     return ext.add_kpi_panel!(args...; kwargs...)
+end
+
+"""
+    add_kpi_overlay!(ax, data::WaferData; kpis=DEFAULT_KPIS, sigdigits=6, position=:rt, kwargs...)
+
+Draw a small KPI summary box directly inside the wafer `Axis`, anchored to a corner (screen
+space — stays put on pan/zoom/resize, like a legend). `kpis` may be any subset of
+`DEFAULT_KPIS`, so a plot can surface just the one or two metrics that matter for it instead
+of the full side panel. `position` follows [`add_scale_arrow!`](@ref)'s convention (`:lt :ct
+:rt :lc :center :rc :lb :cb :rb`, or an `(fx, fy)` tuple). Other keywords: `margin`,
+`fontsize`, `font` (must be monospaced), `padding`, `background_color`, `strokecolor`,
+`strokewidth`. Requires a Makie backend.
+"""
+function add_kpi_overlay!(args...; kwargs...)
+    ext = _makie_ext()
+    ext === nothing && _require_makie(:add_kpi_overlay!)
+    return ext.add_kpi_overlay!(args...; kwargs...)
 end
 
 # ── scalar plot wrappers ──────────────────────────────────────────────────────
