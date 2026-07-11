@@ -300,7 +300,7 @@ ax1 = Axis(gl1[1, 1]; aspect = DataAspect(), title = "Flow (arrows only)",
     xgridvisible = false, ygridvisible = false, topspinevisible = false, rightspinevisible = false)
 side1 = gl1[1, 2] = GridLayout(; tellwidth = true)
 colsize!(gl1, 2, Relative(0.12))
-p1 = waferarrows!(ax1, vdata; lengthscale = 1.2, max_arrows = length(vdata.x), arrowcolor = :magnitude, colormap = :viridis)
+p1 = waferarrows!(ax1, vdata; lengthscale = 1.2, max_arrows = length(vdata.x), arrowcolor = :magnitude, colormap = :jet)
 add_colorbar!(side1, p1; label = "|v| (a.u.)")
 
 # coarse grid arrows + per-cell divergence, aligned by construction
@@ -329,9 +329,9 @@ ax2 = Axis(gl2[1, 1]; aspect = DataAspect(), title = "Divergence + flow",
     xgridvisible = false, ygridvisible = false, topspinevisible = false, rightspinevisible = false)
 side2 = gl2[1, 2] = GridLayout(; tellwidth = true)
 colsize!(gl2, 2, Relative(0.12))
-p2 = waferdivergence!(ax2, vdata; colormap = :viridis)
+p2 = waferdivergence!(ax2, vdata; colormap = :jet)
 waferarrows!(
-    ax2, grid_vdata; lengthscale = 1.2, arrowcolor = Float32.(div_at_arrow), colormap = :viridis,
+    ax2, grid_vdata; lengthscale = 1.2, arrowcolor = Float32.(div_at_arrow), colormap = :jet,
     colorrange = p2.plots[1][:colorrange][], linewidth = 1.5f0, draw_boundary = false, draw_fields = false
 )
 add_colorbar!(side2, p2; label = "Divergence (a.u.)")
