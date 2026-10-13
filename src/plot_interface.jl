@@ -162,6 +162,7 @@ Create a grid of wafer maps from grouped tabular data.
 Keywords:
 - `by::Symbol`: column whose unique values become facet panels (required)
 - `x::Symbol = :x`, `y::Symbol = :y`, `value::Symbol = :value`: data columns
+- `fields::Vector{WaferField} = WaferField[]`: exposure fields drawn on every panel
 - `plot_type::Symbol = :heatmap`: `:scatter`, `:heatmap`, or `:contour`
 - `colormap`: colormap for all panels (default `:inferno`)
 - `colorrange`: `nothing` for per-panel auto-scaling, or `(lo, hi)` for a shared colorbar

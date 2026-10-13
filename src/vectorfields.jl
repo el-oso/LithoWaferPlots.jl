@@ -80,6 +80,17 @@ function _vector_to_grid(data::WaferVectorData; grid_n::Int = 256, k::Int = 4, a
     return xs, ys, VX, VY
 end
 
+# Flatten grid values `M[i, j]` at `(xs[i], ys[j])` into a WaferData, dropping NaN cells.
+# Coordinates come from `CartesianIndices(M)` so they follow `vec(M)`'s column-major order.
+function _grid_to_wafer_data(xs, ys, M::AbstractMatrix, data::WaferVectorData)
+    axes(M) == (eachindex(xs), eachindex(ys)) ||
+        throw(DimensionMismatch("grid values $(axes(M)) do not match coordinates $((eachindex(xs), eachindex(ys)))"))
+    cells = filter(I -> !isnan(M[I]), vec(CartesianIndices(M)))
+    gx = [xs[I[1]] for I in cells]
+    gy = [ys[I[2]] for I in cells]
+    return WaferData(gx, gy, M[cells], data.wafer, data.fields)
+end
+
 """
     divergence(data::WaferVectorData; grid_n::Int=256, k::Int=4) -> WaferData{Float64}
 
@@ -103,11 +114,7 @@ function divergence(data::WaferVectorData; grid_n::Int = 256, k::Int = 4)
         D[i, j] = dvx_dx + dvy_dy
     end
 
-    gx = [x for x in xs for _ in ys]
-    gy = [y for _ in xs for y in ys]
-    vals = vec(D)
-    mask = .!isnan.(vals)
-    return WaferData(gx[mask], gy[mask], vals[mask], data.wafer, data.fields)
+    return _grid_to_wafer_data(xs, ys, D, data)
 end
 
 """
@@ -133,9 +140,5 @@ function vorticity(data::WaferVectorData; grid_n::Int = 256, k::Int = 4)
         W[i, j] = dvy_dx - dvx_dy
     end
 
-    gx = [x for x in xs for _ in ys]
-    gy = [y for _ in xs for y in ys]
-    vals = vec(W)
-    mask = .!isnan.(vals)
-    return WaferData(gx[mask], gy[mask], vals[mask], data.wafer, data.fields)
+    return _grid_to_wafer_data(xs, ys, W, data)
 end

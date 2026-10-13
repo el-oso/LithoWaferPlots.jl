@@ -113,8 +113,12 @@ function add_colorbar!(side, plot_obj; label::String = "", kwargs...)
         return nothing
     end
 
-    # Fallback for any other recipe.
-    Colorbar(side[1, 1], plot_obj; label, vertical = true, kwargs...)
+    # Any other recipe (e.g. WaferArrows): the first child that is neither a field `Poly`
+    # nor the boundary line carries the data colormap. Passing the whole recipe makes
+    # Makie search every child, and the field polygons count as extra colormaps.
+    data_idx = findfirst(c -> !(c isa Poly) && !haskey(_BOUNDARY_MARKS, c), plot_obj.plots)
+    target = isnothing(data_idx) ? plot_obj : plot_obj.plots[data_idx]
+    Colorbar(side[1, 1], target; label, vertical = true, kwargs...)
     return nothing
 end
 
@@ -266,6 +270,7 @@ Keywords:
 - `x::Symbol = :x`: x-coordinate column
 - `y::Symbol = :y`: y-coordinate column
 - `value::Symbol = :value`: measurement column
+- `fields::Vector{WaferField} = WaferField[]`: exposure fields drawn on every panel
 - `plot_type::Symbol = :heatmap`: `:scatter`, `:heatmap`, or `:contour`
 - `colormap`: colormap for all panels (default `:inferno`)
 - `colorrange`: `nothing` for per-panel auto-scaling, or `(lo, hi)` for a shared
@@ -282,6 +287,7 @@ function wafer_facet(
         x::Symbol = :x,
         y::Symbol = :y,
         value::Symbol = :value,
+        fields::Vector{WaferField} = WaferField[],
         plot_type::Symbol = :heatmap,
         colormap = :inferno,
         colorrange = nothing,
@@ -326,7 +332,7 @@ function wafer_facet(
 
         mask = isequal.(by_col, g)
         sub = (x = x_col[mask], y = y_col[mask], value = v_col[mask])
-        wdata = WaferData(sub, wafer)
+        wdata = WaferData(sub, wafer; fields)
 
         p = plot_fn!(ax, wdata; colormap)
 

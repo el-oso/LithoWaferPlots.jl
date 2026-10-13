@@ -727,3 +727,25 @@ end
     @test fap.figure.scene.viewport[].widths == [500, 400]
     @test_throws "plot_type must be :heatmap, :scatter, or :contour" wafer_figure(d; plot_type = :bogus)
 end
+
+@testitem "wafer_facet draws fields on every panel" tags = [:rendering] begin
+    using CairoMakie
+    n = 400
+    tbl = (x = randn(n) .* 60, y = randn(n) .* 60, value = randn(n), lot = repeat(["A", "B"], n ÷ 2))
+    fields = field_grid([((c - 0.5) * 26.0, (r - 5) * 33.0) for r in 1:9, c in -5:6], (26.0, 33.0); wafer = WaferSpec())
+    has_fields(ax) = any(p -> any(c -> c isa Poly, p.plots), ax.scene.plots)   # Poly is a recipe child
+    axes_of(fig) = filter(c -> c isa Axis, fig.content)
+    @test all(has_fields, axes_of(wafer_facet(tbl, WaferSpec(); by = :lot, fields)))
+    @test !any(has_fields, axes_of(wafer_facet(tbl, WaferSpec(); by = :lot)))
+end
+
+@testitem "add_colorbar! works on arrows drawn with fields" tags = [:rendering] begin
+    using CairoMakie
+    x, y = randn(300) .* 60, randn(300) .* 60
+    fields = field_grid([((c - 0.5) * 26.0, (r - 5) * 33.0) for r in 1:9, c in -5:6], (26.0, 33.0); wafer = WaferSpec())
+    vd = WaferVectorData(x, y, -y ./ 80, x ./ 80; fields)
+    fig, ax, side = wafer_figure()
+    p = waferarrows!(ax, vd; arrowcolor = :magnitude)
+    add_colorbar!(side, p; label = "|v|")
+    @test only(filter(c -> c isa Colorbar, fig.content)).label[] == "|v|"
+end
