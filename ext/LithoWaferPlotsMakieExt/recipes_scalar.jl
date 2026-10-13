@@ -146,8 +146,8 @@ function _heatmap_image!(p, data, x, y, vals, vmin::Float32, vmax::Float32)
         v = @inbounds if dists[1] < 1.0e-10
             Float64(vals[idxs[1]])
         else
-            W = 0.0
-            acc = 0.0
+            W = zero(eltype(dists))
+            acc = zero(eltype(dists))
             for n in 1:k
                 wgt = inv(dists[n] * dists[n])
                 W += wgt
@@ -192,43 +192,45 @@ function Makie.plot!(p::WaferContour)
     grid_n = p[:grid_n][]
     r = data.wafer.diameter_mm / 2.0
 
-    # interpolate to regular grid
-    xs = LinRange(-r, r, grid_n)
-    ys = LinRange(-r, r, grid_n)
-    pts = permutedims(hcat(data.x, data.y))
-    tree = KDTree(pts)
-    r_active2 = (r - data.wafer.edge_exclusion_mm)^2
+    # Interpolate onto a polar grid covering exactly the active disk. A square grid would
+    # need NaN outside the wafer, and NaN vertices make Makie 0.24.15's contour tracing
+    # throw. The point count roughly matches the in-wafer part of a `grid_n`-wide square
+    # grid; radial spacing equals that grid's, angular spacing is ~2x coarser at the rim.
+    r_active = r - data.wafer.edge_exclusion_mm
+    ρs = LinRange(0.0, r_active, cld(grid_n, 2) + 1)
+    θs = LinRange(0.0, 2π, ceil(Int, π * grid_n / 2) + 1)
+    X = [ρ * cos(θ) for ρ in ρs, θ in θs]
+    Y = [ρ * sin(θ) for ρ in ρs, θ in θs]
 
+    # Inverse-distance-squared weighting of the 4 nearest measurements. Per-point `knn!`
+    # into reused buffers: the batched `knn` is no faster here and allocates two small
+    # vectors per grid point.
+    tree = KDTree(permutedims(hcat(data.x, data.y)))
     k = 4
     idxs = Vector{Int}(undef, k)
     dists = Vector{Float64}(undef, k)
     q = Vector{Float64}(undef, 2)
-
     vals_src = data.values
-    Z = Matrix{Float32}(undef, grid_n, grid_n)
-    for (j, y) in enumerate(ys), (i, x) in enumerate(xs)
-        if x^2 + y^2 <= r_active2
-            q[1] = x
-            q[2] = y
-            knn!(idxs, dists, tree, q, k, true)
-            @inbounds if dists[1] < 1.0e-10
-                Z[i, j] = Float32(vals_src[idxs[1]])
-            else
-                W = 0.0
-                acc = 0.0
-                for n in 1:k
-                    wgt = inv(dists[n] * dists[n])
-                    W += wgt
-                    acc += wgt * Float64(vals_src[idxs[n]])
-                end
-                Z[i, j] = Float32(acc / W)
-            end
+    Z = similar(X, Float32)
+    for I in eachindex(X, Y, Z)
+        q[1] = X[I]
+        q[2] = Y[I]
+        knn!(idxs, dists, tree, q, k, true)
+        if first(dists) < 1.0e-10
+            Z[I] = Float32(vals_src[first(idxs)])
         else
-            Z[i, j] = NaN32
+            W = zero(eltype(dists))
+            acc = zero(eltype(dists))
+            for n in eachindex(idxs, dists)
+                wgt = inv(dists[n]^2)
+                W += wgt
+                acc += wgt * vals_src[idxs[n]]
+            end
+            Z[I] = Float32(acc / W)
         end
     end
 
-    contour!(p, p.attributes, xs, ys, Z)
+    contour!(p, p.attributes, X, Y, Z)
 
     p[:draw_boundary][] && draw_wafer_boundary!(
         p, data.wafer;

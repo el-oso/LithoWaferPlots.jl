@@ -24,9 +24,9 @@ function _idw_interpolate(
     knn!(idxs, dists, tree, q, k, true)
     @inbounds begin
         dists[1] < 1.0e-10 && return src_vx[idxs[1]], src_vy[idxs[1]]
-        W = 0.0
-        ax = 0.0
-        ay = 0.0
+        W = zero(eltype(dists))
+        ax = zero(eltype(dists))
+        ay = zero(eltype(dists))
         for n in 1:k
             wgt = power == 2.0 ? inv(dists[n] * dists[n]) : dists[n]^(-power)
             W += wgt

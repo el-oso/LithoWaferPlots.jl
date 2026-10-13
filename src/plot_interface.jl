@@ -362,7 +362,8 @@ end
     wafercontour(data::WaferData; levels=10, grid_n=256, kwargs...) -> (Figure, Axis, plot)
     wafercontour!(ax, data::WaferData; levels=10, grid_n=256, kwargs...) -> plot
 
-Contour plot. Data is interpolated to a regular `grid_n×grid_n` grid first.
+Contour plot. Data is interpolated first, by inverse-distance weighting, onto a polar grid
+over the active disk; `grid_n` sets its resolution.
 """
 function wafercontour!(args...; kwargs...)
     ext = _makie_ext()
@@ -374,7 +375,8 @@ end
     wafercontour(data::WaferData; levels=10, grid_n=256, kwargs...) -> (Figure, Axis, plot)
     wafercontour!(ax, data::WaferData; levels=10, grid_n=256, kwargs...) -> plot
 
-Contour plot. Data is interpolated to a regular `grid_n×grid_n` grid first.
+Contour plot. Data is interpolated first, by inverse-distance weighting, onto a polar grid
+over the active disk; `grid_n` sets its resolution.
 """
 function wafercontour(args...; kwargs...)
     ext = _makie_ext()

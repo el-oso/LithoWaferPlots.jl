@@ -135,8 +135,8 @@ wafer_figure(data; label = "Thickness (nm)", colormap = :plasma,
 
 ## 7. Contour
 
-Scattered data is interpolated to a regular grid via IDW before contouring. Adjust `grid_n`
-(default 256) and `levels` as needed.
+Scattered data is interpolated onto a polar grid over the active disk via IDW before
+contouring. Adjust `grid_n` (default 256) and `levels` as needed.
 
 ```@example gallery
 xs = range(-148.0, 148.0; step = 5.0); ys = range(-148.0, 148.0; step = 5.0)
