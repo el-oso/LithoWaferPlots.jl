@@ -38,10 +38,7 @@ using CairoMakie          # any Makie backend
 # A Tables.jl source (DataFrame, CSV.File, …) works too: WaferData(df)
 data = WaferData(meas_x, meas_y, meas_v)
 
-fig, ax, side = wafer_figure()
-p = waferheatmap!(ax, data; colormap=:plasma)
-add_colorbar!(side, p; label="Thickness (nm)")
-add_kpi_panel!(side, data)
+fig, ax, p = wafer_figure(data; label="Thickness (nm)", colormap=:plasma)
 save("wafer.png", fig)
 ```
 

@@ -217,6 +217,15 @@ end
 Create a Figure with the standard wafer layout: main wafer Axis on the left,
 side panel (colorbar + KPI panel) on the right.
 
+    wafer_figure(data::WaferData; plot_type=:heatmap, label="", kpis=DEFAULT_KPIS,
+                 resolution=(900, 650), figure=(;), plot_kwargs...) -> FigureAxisPlot
+
+Plot `data` in that layout with a colorbar and a KPI panel in one call.
+`plot_type` is `:heatmap`, `:scatter`, or `:contour`; `label` titles the colorbar;
+`kpis = nothing` omits the KPI panel. `figure` is passed to `Figure`, and the remaining
+keywords to the plot recipe. The result displays as the figure and destructures as
+`fig, ax, p = wafer_figure(data)`.
+
 Requires a Makie backend: `using CairoMakie` or `using GLMakie`.
 """
 function wafer_figure(args...; kwargs...)

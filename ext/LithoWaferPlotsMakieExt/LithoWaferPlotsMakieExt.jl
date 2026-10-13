@@ -55,6 +55,11 @@ export WaferVorticity, wafervorticity, wafervorticity!
         # matches the default, so this is the same wafer, just via the omitted-arg method)
         WaferData((x = x, y = y, value = v); fields = fields)
         WaferVectorData((x = x, y = y, vx = vx, vy = vy); fields = fields)
+        # plain-vector constructors, with and without keywords
+        WaferData(x, y, v)
+        WaferData(x, y, v; fields)
+        WaferVectorData(x, y, vx, vy)
+        WaferVectorData(x, y, vx, vy; fields)
         rgba = [RGBAf(0.2, 0.4, 0.8, 0.5) for _ in 1:4, _ in 1:4]
 
         # Every public plotting function below is called through its fully-qualified
@@ -116,6 +121,11 @@ export WaferVorticity, wafervorticity, wafervorticity!
         Makie.FileIO.save(logo_path, rgba)
         LithoWaferPlots.add_logo!(ax, logo_path; position = :rt, scale = 0.18)
         LithoWaferPlots.add_watermark!(ax, logo_path; opacity = 0.1, scale = 0.55)
+
+        # one-call scalar figure, plus the non-mutating recipe form's own axis
+        LithoWaferPlots.wafer_figure(sdata)
+        LithoWaferPlots.wafer_figure(sdata; plot_type = :scatter, label = "a.u.", colormap = :plasma)
+        LithoWaferPlots.waferheatmap(sdata)
 
         # vector recipes (also covers divergence/vorticity/streamline compute paths)
         fig2, ax2, side2 = LithoWaferPlots.wafer_figure()

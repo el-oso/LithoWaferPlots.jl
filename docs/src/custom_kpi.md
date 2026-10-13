@@ -30,10 +30,7 @@ using CairoMakie
 
 my_kpis = [DEFAULT_KPIS..., KPIRange()]
 
-fig, ax, side = wafer_figure()
-p = waferheatmap!(ax, data; colormap = :plasma)
-add_colorbar!(side, p; label = "Thickness (nm)")
-add_kpi_panel!(side, data; kpis = my_kpis)
+fig, ax, p = wafer_figure(data; label = "Thickness (nm)", kpis = my_kpis, colormap = :plasma)
 ```
 
 Or replace the defaults entirely:
@@ -80,10 +77,7 @@ data = WaferData((x = x, y = y, value = thickness))
 
 fab_kpis = [KPIMean(), KPISigma(), KPINonUniformity(), KPIRange()]
 
-fig, ax, side = wafer_figure()
-p = waferheatmap!(ax, data; colormap = :plasma)
-add_colorbar!(side, p; label = "Thickness (nm)")
-add_kpi_panel!(side, data; kpis = fab_kpis)
+fig, ax, p = wafer_figure(data; label = "Thickness (nm)", kpis = fab_kpis, colormap = :plasma)
 
 save("thickness.png", fig)
 ```

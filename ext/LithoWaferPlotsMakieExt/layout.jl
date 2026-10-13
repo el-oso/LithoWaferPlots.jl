@@ -40,6 +40,36 @@ function wafer_figure(; resolution = (900, 650), figure_kwargs...)
     return fig, ax, side
 end
 
+function _scalar_recipe(plot_type::Symbol)
+    plot_type === :heatmap && return waferheatmap!
+    plot_type === :scatter && return waferscatter!
+    plot_type === :contour && return wafercontour!
+    error("plot_type must be :heatmap, :scatter, or :contour, got :$plot_type")
+end
+
+"""
+    wafer_figure(data::WaferData; plot_type=:heatmap, label="", kpis=DEFAULT_KPIS,
+                 resolution=(900, 650), figure=(;), plot_kwargs...) -> FigureAxisPlot
+
+Plot `data` in the standard wafer layout with a colorbar and a KPI panel.
+`plot_type` is `:heatmap`, `:scatter`, or `:contour`; `label` titles the colorbar;
+`kpis = nothing` omits the KPI panel. `figure` is passed to `Figure`, and the remaining
+keywords to the plot recipe.
+
+The result displays as the figure and destructures as `fig, ax, p = wafer_figure(data)`.
+"""
+function wafer_figure(
+        data::WaferData; plot_type::Symbol = :heatmap, label::String = "",
+        kpis = DEFAULT_KPIS, resolution = (900, 650), figure = (;), plot_kwargs...
+    )
+    recipe! = _scalar_recipe(plot_type)
+    fig, ax, side = wafer_figure(; resolution, figure...)
+    p = recipe!(ax, data; plot_kwargs...)
+    add_colorbar!(side, p; label)
+    isnothing(kpis) || add_kpi_panel!(side, data; kpis)
+    return Makie.FigureAxisPlot(fig, ax, p)
+end
+
 """
     add_colorbar!(side, plot_obj; label="", kwargs...)
 
@@ -277,15 +307,10 @@ function wafer_facet(
     fig = Figure(; size = sz, figure_kwargs...)
     gl = fig[1, 1] = GridLayout()
 
-    plot_fn! = if plot_type === :heatmap
-        (ax, wd; kw...) -> waferheatmap!(ax, wd; imagemode = :scatter, kw...)
-    elseif plot_type === :scatter
-        (ax, wd; kw...) -> waferscatter!(ax, wd; kw...)
-    elseif plot_type === :contour
-        (ax, wd; kw...) -> wafercontour!(ax, wd; kw...)
-    else
-        error("plot_type must be :heatmap, :scatter, or :contour, got :$plot_type")
-    end
+    recipe! = _scalar_recipe(plot_type)
+    # Scatter mode keeps a Scatter child whose colorrange can be patched below.
+    plot_fn! = plot_type === :heatmap ?
+        (ax, wd; kw...) -> recipe!(ax, wd; imagemode = :scatter, kw...) : recipe!
 
     for (k, g) in enumerate(groups)
         row, col = fldmod1(k, ncols)

@@ -710,3 +710,20 @@ end
         @test fap.axis.xlabel[] == "x (mm)"
     end
 end
+
+@testitem "wafer_figure(data) builds plot, colorbar, and KPI panel in one call" tags = [:rendering] begin
+    using CairoMakie
+    x, y = randn(500) .* 100, randn(500) .* 100
+    d = WaferData(x, y, x .+ y)
+    for pt in (:heatmap, :scatter, :contour)
+        fig, ax, p = wafer_figure(d; plot_type = pt, label = "nm", colormap = :plasma)
+        @test only(filter(c -> c isa Colorbar, fig.content)).label[] == "nm"
+        @test any(c -> c isa Label && c.text[] == "KPIs", fig.content)
+        @test ax.aspect[] == DataAspect()
+        @test p.colormap[] === :plasma
+    end
+    fap = wafer_figure(d; kpis = nothing, figure = (; size = (500, 400)))
+    @test !any(c -> c isa Label && c.text[] == "KPIs", fap.figure.content)
+    @test fap.figure.scene.viewport[].widths == [500, 400]
+    @test_throws "plot_type must be :heatmap, :scatter, or :contour" wafer_figure(d; plot_type = :bogus)
+end

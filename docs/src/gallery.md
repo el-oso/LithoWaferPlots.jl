@@ -43,11 +43,7 @@ x = @. r * cos(θ); y = @. r * sin(θ)
 v = @. 2.5 * exp(-((x - 60)^2 + (y + 40)^2) / 4000) + 0.15 * $(randn(8000))
 data = WaferData(x, y, v)
 
-fig, ax, side = wafer_figure()
-p = waferscatter!(ax, data; markersize = 4.0f0)
-add_colorbar!(side, p; label = "Overlay (a.u.)")
-add_kpi_panel!(side, data)
-fig
+wafer_figure(data; plot_type = :scatter, label = "Overlay (a.u.)", markersize = 4.0f0)
 ```
 
 ## 3. KPI overlay (inside the axis)
@@ -109,11 +105,7 @@ x = first.(pts); y = last.(pts)
 v = @. sin(x / 40) * cos(y / 40) + 0.5 * exp(-(x^2 + y^2) / 8000) + 0.08 * $(randn(length(x)))
 data = WaferData(x, y, v)
 
-fig, ax, side = wafer_figure()
-p = waferheatmap!(ax, data; colormap = :plasma)
-add_colorbar!(side, p; label = "Thickness (nm)")
-add_kpi_panel!(side, data)
-fig
+wafer_figure(data; label = "Thickness (nm)", colormap = :plasma)
 ```
 
 ---
@@ -134,13 +126,9 @@ x = first.(pts); y = last.(pts)
 v = @. sin(x / 40) * cos(y / 40) + 0.08 * $(randn(length(x)))
 data = WaferData(x, y, v; fields)
 
-fig, ax, side = wafer_figure()
-p = waferheatmap!(ax, data; colormap = :plasma,
-                  field_color = (:black, 0.0),
-                  field_strokecolor = :black, field_strokewidth = 1.8f0)
-add_colorbar!(side, p; label = "Thickness (nm)")
-add_kpi_panel!(side, data)
-fig
+wafer_figure(data; label = "Thickness (nm)", colormap = :plasma,
+    field_color = (:black, 0.0),
+    field_strokecolor = :black, field_strokewidth = 1.8f0)
 ```
 
 ---
@@ -406,12 +394,9 @@ yieldval(cx, cy) = clamp(clamp(1 - (cx^2 + cy^2) / (0.85 * rmax^2), 0, 1) + 0.12
 data = WaferData((x = first.(dies), y = last.(dies),
                   value = [yieldval(d...) for d in dies]); fields)
 
-fig, ax, side = wafer_figure()
-p = waferheatmap!(ax, data; markersize = 14.0f0, colormap = :RdYlGn,
-                  field_color = (:black, 0.0),
-                  field_strokecolor = :gray50, field_strokewidth = 0.7f0)
-add_colorbar!(side, p; label = "Yield")
-add_kpi_panel!(side, data)
+fig, ax, p = wafer_figure(data; label = "Yield", markersize = 14.0f0, colormap = :RdYlGn,
+    field_color = (:black, 0.0),
+    field_strokecolor = :gray50, field_strokewidth = 0.7f0)
 add_exclusion_ring!(ax, wafer; mm_to_edge = 2.0, label = "2 mm EE",
                     color = :black, linestyle = :dash, dim_outside = true, dim_alpha = 0.4)
 add_ring_legend!(ax; position = :lb)
@@ -432,10 +417,7 @@ pts = [(x, y) for x in xs, y in ys if x^2 + y^2 <= 148.0^2]
 x = first.(pts); y = last.(pts)
 data = WaferData(x, y, @.(sin(x / 40) * cos(y / 40)))
 
-fig, ax, side = wafer_figure()
-p = waferheatmap!(ax, data; colormap = :plasma)
-add_colorbar!(side, p; label = "Thickness (nm)")
-add_kpi_panel!(side, data)
+fig, ax, p = wafer_figure(data; label = "Thickness (nm)", colormap = :plasma)
 
 # inner ring — dashed white line only
 add_exclusion_ring!(ax, wafer; mm_to_edge = 2.0,

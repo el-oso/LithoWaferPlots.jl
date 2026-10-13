@@ -67,14 +67,20 @@ using GLMakie
 waferheatmap(data)
 ```
 
-[`wafer_figure`](@ref) adds a side panel for a colorbar and KPIs:
+[`wafer_figure`](@ref) adds a side panel for a colorbar and KPIs. `plot_type` picks
+`:heatmap` (default), `:scatter`, or `:contour`, and other keywords go to the plot:
+
+```julia
+fig, ax, p = wafer_figure(data; label = "Overlay (a.u.)", colormap = :plasma)
+```
+
+To customize the side panel, build the same figure step by step:
 
 ```julia
 fig, ax, side = wafer_figure()
-p = waferheatmap!(ax, data)
-add_colorbar!(side, p; label="Overlay (a.u.)")
-add_kpi_panel!(side, data)
-display(fig)
+p = waferheatmap!(ax, data; colormap = :plasma)
+add_colorbar!(side, p; label = "Overlay (a.u.)")
+add_kpi_panel!(side, data; sigdigits = 3)
 ```
 
 Any Makie attribute the underlying primitive supports (`marker`, `strokewidth`, `alpha`,
