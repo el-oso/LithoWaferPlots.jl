@@ -6,6 +6,10 @@ using inverse-distance weighting (k-nearest neighbours via NearestNeighbors.jl),
 then apply central finite differences to compute the scalar field.
 """
 
+# KDTree leaf size for every IDW interpolation (k = 4, 2-D, 3k-300k points). Leaf
+# sizes 8-10 are fastest; NearestNeighbors' default of 25 queries ~13-20% slower.
+const KDTREE_LEAFSIZE = 10
+
 """
     _idw_interpolate(tree, src_vx, src_vy, gx, gy, idxs, dists, q; k=8, power=2.0)
 
@@ -55,7 +59,7 @@ function _vector_to_grid(data::WaferVectorData; grid_n::Int = 256, k::Int = 4, a
     ys = LinRange(-r, r, grid_n)
 
     pts = permutedims(hcat(data.x, data.y))  # 2 × N matrix for KDTree
-    tree = KDTree(pts)
+    tree = KDTree(pts; leafsize = KDTREE_LEAFSIZE)
 
     VX = Matrix{Float64}(undef, grid_n, grid_n)
     VY = Matrix{Float64}(undef, grid_n, grid_n)

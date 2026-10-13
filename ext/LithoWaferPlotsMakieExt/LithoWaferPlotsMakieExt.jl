@@ -8,7 +8,7 @@ using LithoWaferPlots: WaferSpec, WaferData, WaferVectorData, WaferField,
     name, compute, format_value,
     divergence, vorticity, _vector_to_grid,
     FieldedData, AveragedField, filter_full, field_average_profiles, serpentine_numbers,
-    ArrowScale, _nice_magnitude
+    ArrowScale, _nice_magnitude, KDTREE_LEAFSIZE
 using NearestNeighbors: KDTree, knn, knn!
 using PrecompileTools: @compile_workload
 using Random: randperm

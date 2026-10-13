@@ -166,7 +166,9 @@ julia --project=benchmarks benchmarks/render_bench.jl
 | Arrows as one batched `lines!` (shaft + V head), subsampled to `max_arrows` (default 4 000) | One draw call instead of a tessellated mesh per arrow — ~10× less memory |
 | Streamlines as single `lines!` with `NaN` separators | One draw call for all lines |
 | Streamlines trace on a precomputed velocity grid (`grid_n`, bilinear sampling) | One interpolation pass instead of a `knn` search at every RK4 sub-step — ~5× faster |
-| IDW interpolation with `knn!` + reused buffers, `k = 4` neighbours | No per-point allocations in contour / divergence / vorticity / streamlines; fewer neighbours per query |
+| IDW interpolation with `knn!` + reused buffers, `k = 4` neighbours | No per-point allocations in contour / divergence / vorticity / streamlines; fewer neighbours per query (NearestNeighbors' batched `knn` is no faster and allocates two vectors per query) |
+| KDTree `leafsize = 10` instead of NearestNeighbors' default 25 | ~13–20% faster `k = 4` queries on 3k–300k points |
+| Contour interpolates onto a polar grid covering only the active disk | No `NaN` cells outside the wafer (which break Makie 0.24.15's contour tracing); about the same point count as the square grid's in-wafer cells, and contour lines end on a smooth circle |
 
 ## Tips for large datasets
 

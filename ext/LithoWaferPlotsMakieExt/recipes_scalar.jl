@@ -129,7 +129,7 @@ function _heatmap_image!(p, data, x, y, vals, vmin::Float32, vmax::Float32)
     # is alpha-feathered so the circular cutoff itself is anti-aliased rather than jagged.
     cmap = Makie.to_colormap(p[:colormap][])
     pts = permutedims(hcat(Float64.(x), Float64.(y)))
-    tree = KDTree(pts)
+    tree = KDTree(pts; leafsize = KDTREE_LEAFSIZE)
 
     k = 4
     idxs = Vector{Int}(undef, k)
@@ -204,8 +204,9 @@ function Makie.plot!(p::WaferContour)
 
     # Inverse-distance-squared weighting of the 4 nearest measurements. Per-point `knn!`
     # into reused buffers: the batched `knn` is no faster here and allocates two small
-    # vectors per grid point.
-    tree = KDTree(permutedims(hcat(data.x, data.y)))
+    # vectors per grid point. Radial-first iteration over the grid is marginally faster
+    # than ring-first.
+    tree = KDTree(permutedims(hcat(data.x, data.y)); leafsize = KDTREE_LEAFSIZE)
     k = 4
     idxs = Vector{Int}(undef, k)
     dists = Vector{Float64}(undef, k)
