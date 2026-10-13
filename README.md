@@ -68,7 +68,7 @@ centers = [((ci - 0.5) * 26.0, (ri - 5) * 33.0) for ri in 1:9, ci in -5:6]
 fields = field_grid(centers, (26.0, 33.0); wafer = WaferSpec())   # drops fields off the wafer
 
 data = WaferData(table; fields)
-p = waferheatmap!(ax, data; field_strokecolor=:black, field_strokewidth=1.5f0)
+p = waferheatmap!(ax, data)
 ```
 
 ## Custom KPIs

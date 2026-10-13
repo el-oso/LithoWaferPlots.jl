@@ -126,9 +126,7 @@ x = first.(pts); y = last.(pts)
 v = @. sin(x / 40) * cos(y / 40) + 0.08 * $(randn(length(x)))
 data = WaferData(x, y, v; fields)
 
-wafer_figure(data; label = "Thickness (nm)", colormap = :plasma,
-    field_color = (:black, 0.0),
-    field_strokecolor = :black, field_strokewidth = 1.8f0)
+wafer_figure(data; label = "Thickness (nm)", colormap = :plasma, field_color = (:black, 0.0))
 ```
 
 ---
@@ -395,8 +393,7 @@ data = WaferData((x = first.(dies), y = last.(dies),
                   value = [yieldval(d...) for d in dies]); fields)
 
 fig, ax, p = wafer_figure(data; label = "Yield", markersize = 14.0f0, colormap = :RdYlGn,
-    field_color = (:black, 0.0),
-    field_strokecolor = :gray50, field_strokewidth = 0.7f0)
+    field_color = (:black, 0.0))
 add_exclusion_ring!(ax, wafer; mm_to_edge = 2.0, label = "2 mm EE",
                     color = :black, linestyle = :dash, dim_outside = true, dim_alpha = 0.4)
 add_ring_legend!(ax; position = :lb)

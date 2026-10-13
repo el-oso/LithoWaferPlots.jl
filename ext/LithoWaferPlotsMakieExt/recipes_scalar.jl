@@ -13,8 +13,8 @@ Performance target: 300 000 points rendered in < 0.3s (GLMakie GPU path).
     boundary_color = :black
     boundary_linewidth = 1.5f0
     field_color = (:steelblue, 0.15)
-    field_strokecolor = :steelblue
-    field_strokewidth = 0.8f0
+    field_strokecolor = FIELD_STROKECOLOR
+    field_strokewidth = FIELD_STROKEWIDTH
     draw_boundary = true
     draw_fields = true
 end
@@ -64,8 +64,8 @@ const IMAGE_THRESHOLD = 5_000
     boundary_color = :black
     boundary_linewidth = 1.5f0
     field_color = (:steelblue, 0.12)
-    field_strokecolor = :steelblue
-    field_strokewidth = 0.8f0
+    field_strokecolor = FIELD_STROKECOLOR
+    field_strokewidth = FIELD_STROKEWIDTH
     percentile_clip = 0.0
     imagemode = :auto
     grid_n = 256
@@ -181,8 +181,8 @@ end
     boundary_color = :black
     boundary_linewidth = 1.5f0
     field_color = (:steelblue, 0.12)
-    field_strokecolor = :steelblue
-    field_strokewidth = 0.8f0
+    field_strokecolor = FIELD_STROKECOLOR
+    field_strokewidth = FIELD_STROKEWIDTH
     draw_boundary = true
     draw_fields = true
 end

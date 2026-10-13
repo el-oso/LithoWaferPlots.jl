@@ -21,8 +21,8 @@ WaferDivergence, WaferVorticity.
     boundary_color = :black
     boundary_linewidth = 1.5f0
     field_color = (:steelblue, 0.12)
-    field_strokecolor = :steelblue
-    field_strokewidth = 0.8f0
+    field_strokecolor = FIELD_STROKECOLOR
+    field_strokewidth = FIELD_STROKEWIDTH
     draw_boundary = true
     draw_fields = true
 end
@@ -174,8 +174,8 @@ end
     boundary_color = :black
     boundary_linewidth = 1.5f0
     field_color = (:steelblue, 0.12)
-    field_strokecolor = :steelblue
-    field_strokewidth = 0.8f0
+    field_strokecolor = FIELD_STROKECOLOR
+    field_strokewidth = FIELD_STROKEWIDTH
     draw_boundary = true
     draw_fields = true
 end
@@ -240,8 +240,8 @@ _resolved_colorrange(cr, cs::ColorScale) = cr === Makie.automatic ? _symmetric_c
     boundary_color = :black
     boundary_linewidth = 1.5f0
     field_color = (:steelblue, 0.12)
-    field_strokecolor = :steelblue
-    field_strokewidth = 0.8f0
+    field_strokecolor = FIELD_STROKECOLOR
+    field_strokewidth = FIELD_STROKEWIDTH
     draw_boundary = true
     draw_fields = true
 end
@@ -293,8 +293,8 @@ end
     boundary_color = :black
     boundary_linewidth = 1.5f0
     field_color = (:steelblue, 0.12)
-    field_strokecolor = :steelblue
-    field_strokewidth = 0.8f0
+    field_strokecolor = FIELD_STROKECOLOR
+    field_strokewidth = FIELD_STROKEWIDTH
     draw_boundary = true
     draw_fields = true
 end

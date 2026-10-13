@@ -69,8 +69,7 @@ let
     fig, ax, side = wafer_figure(; resolution = RESOLUTION)
     p = waferheatmap!(
         ax, sdata_with_fields; markersize = 6.0f0, colormap = :plasma,
-        field_color = (:black, 0.0),
-        field_strokecolor = :black, field_strokewidth = 1.8f0
+        field_color = (:black, 0.0)
     )
     add_colorbar!(side, p; label = "Thickness (nm)")
     add_kpi_panel!(side, sdata_with_fields)
