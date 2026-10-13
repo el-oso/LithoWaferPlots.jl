@@ -34,10 +34,9 @@ Pkg.add("CairoMakie")   # or GLMakie / WGLMakie
 using LithoWaferPlots
 using CairoMakie          # any Makie backend
 
-wafer = WaferSpec(300.0)  # 300 mm wafer, notch at bottom (270°)
-
-# accepts any Tables.jl source: DataFrame, NamedTuple, CSV.File, …
-data = WaferData((x=meas_x, y=meas_y, value=meas_v), wafer)
+# 300 mm wafer, notch at bottom by default; pass `wafer = WaferSpec(...)` for others.
+# A Tables.jl source (DataFrame, CSV.File, …) works too: WaferData(df)
+data = WaferData(meas_x, meas_y, meas_v)
 
 fig, ax, side = wafer_figure()
 p = waferheatmap!(ax, data; colormap=:plasma)
@@ -60,7 +59,7 @@ save("wafer.png", fig)
 
 ```julia
 grid = DieGrid(-75.0, -75.0, 5.0, 5.0)   # origin (mm from centre), die pitch (mm)
-data = WaferData(df, grid, wafer)          # df has :col, :row, :value columns
+data = WaferData(df, grid)                 # df has :col, :row, :value columns
 ```
 
 ## Field overlays
@@ -68,17 +67,10 @@ data = WaferData(df, grid, wafer)          # df has :col, :row, :value columns
 Pass a `fields` vector to draw exposure-field or die-boundary rectangles on any plot:
 
 ```julia
-fw, fh, r = 26.0, 33.0, wafer.diameter_mm / 2.0
-all_fields = vec([WaferField((ci - 0.5)*fw, (ri - 5)*fh, fw, fh, ci, ri)
-                  for ri in 1:9, ci in -5:6])
-# drop fields that lie entirely outside the wafer disk
-fields = filter(all_fields) do f
-    nx = clamp(0.0, f.x_center_mm - fw/2, f.x_center_mm + fw/2)
-    ny = clamp(0.0, f.y_center_mm - fh/2, f.y_center_mm + fh/2)
-    nx^2 + ny^2 <= r^2
-end
+centers = [((ci - 0.5) * 26.0, (ri - 5) * 33.0) for ri in 1:9, ci in -5:6]
+fields = field_grid(centers, (26.0, 33.0); wafer = WaferSpec())   # drops fields off the wafer
 
-data = WaferData(table, wafer; fields=fields)
+data = WaferData(table; fields)
 p = waferheatmap!(ax, data; field_strokecolor=:black, field_strokewidth=1.5f0)
 ```
 
@@ -95,7 +87,7 @@ add_kpi_panel!(side, data; kpis=[KPIMean(), KPISigma(), MyRange()])
 ## Vector fields
 
 ```julia
-vdata = WaferVectorData((x=xs, y=ys, vx=vxs, vy=vys), wafer)
+vdata = WaferVectorData(xs, ys, vxs, vys)
 
 waferarrows!(ax, vdata; lengthscale=2.0)
 waferstreamlines!(ax, vdata; n_seeds=12, max_steps=80)

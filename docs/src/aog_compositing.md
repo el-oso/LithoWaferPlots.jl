@@ -16,7 +16,7 @@ above it.
 ```@example aog
 using LithoWaferPlots, CairoMakie, AlgebraOfGraphics, DataFrames
 CairoMakie.activate!(type = "png")
-wafer = WaferSpec(300.0)
+wafer = WaferSpec()
 
 function synth_lot(seed_offset, amp)
     θ = rand(2000) .* 2π
@@ -75,8 +75,8 @@ than creating its own `Figure`.
 fig = Figure(size = (760, 380))
 
 lotname1, lot1 = lots[1]
-sdata = WaferData((x = lot1.x, y = lot1.y, value = lot1.v), wafer)
-vdata = WaferVectorData((x = lot1.x, y = lot1.y, vx = lot1.vx, vy = lot1.vy), wafer)
+sdata = WaferData(lot1.x, lot1.y, lot1.v)
+vdata = WaferVectorData(lot1.x, lot1.y, lot1.vx, lot1.vy)
 ax = Axis(fig[1, 1]; aspect = DataAspect(), title = "$lotname1: thickness + flow")
 waferheatmap!(ax, sdata; colormap = :plasma)
 waferarrows!(ax, vdata; lengthscale = 10.0, arrowcolor = :black, draw_boundary = false, draw_fields = false)
@@ -170,7 +170,7 @@ function Makie.convert_arguments(
         ::Type{<:WHeatmap}, x::AbstractVector{<:Real}, y::AbstractVector{<:Real}, v::AbstractVector{<:Real};
         wafer = WaferSpec(), fields = WaferField[]
     )
-    return (WaferData((x = collect(Float64, x), y = collect(Float64, y), value = collect(Float64, v)), wafer; fields = Vector{WaferField}(fields)),)
+    return (WaferData(x, y, v; wafer, fields = Vector{WaferField}(fields)),)
 end
 
 Makie.used_attributes(::Type{<:WArrows}, ::AbstractVector, ::AbstractVector, ::AbstractVector, ::AbstractVector) = (:wafer, :fields)
@@ -179,7 +179,7 @@ function Makie.convert_arguments(
         vx::AbstractVector{<:Real}, vy::AbstractVector{<:Real};
         wafer = WaferSpec(), fields = WaferField[]
     )
-    return (WaferVectorData(collect(Float64, x), collect(Float64, y), collect(Float64, vx), collect(Float64, vy), wafer, Vector{WaferField}(fields)),)
+    return (WaferVectorData(x, y, vx, vy; wafer, fields = Vector{WaferField}(fields)),)
 end
 
 function AoG.aesthetic_mapping(::Type{<:WHeatmap}, ::AoG.Normal, ::AoG.Normal, ::AoG.Normal)
@@ -219,7 +219,7 @@ what a per-panel colour scale would have hidden.
 ```@example aog
 fw, fh = 26.0, 33.0
 centers = [((c - 0.5) * fw, (rw - 5) * fh) for rw in 1:9, c in -5:6]
-fields = field_grid(centers, (fw, fh); wafer = wafer)
+fields = field_grid(centers, (fw, fh); wafer)
 
 function synth_wafer(wid; outlier = false)
     n = 50_000
@@ -259,16 +259,16 @@ so its drawn length is guaranteed to be an honest 3 nm yardstick.
 
 ```@example aog
 heat = data(df) * mapping(:x, :y, :value => "Overlay (nm)"; layout = :wafer_id) *
-    visual(WHeatmap; wafer = wafer, fields = fields)
+    visual(WHeatmap; wafer, fields = fields)
 arrows = data(df) * mapping(:x, :y, :vx, :vy; layout = :wafer_id) *
     visual(
-    WArrows; wafer = wafer, lengthscale = 6.0, max_arrows = 700,
+    WArrows; wafer, lengthscale = 6.0, max_arrows = 700,
     arrow_sample = :random, linewidth = 0.5, arrowcolor = :magnitude, colormap = :RdBu,
     draw_boundary = false, draw_fields = false
 )
 refarrow = data(refdf) * mapping(:x, :y, :vx, :vy; layout = :wafer_id) *
     visual(
-    WArrows; wafer = wafer, lengthscale = 6.0, linewidth = 1.0,
+    WArrows; wafer, lengthscale = 6.0, linewidth = 1.0,
     arrowcolor = :firebrick, draw_boundary = false, draw_fields = false
 )
 reflabel = data(refdf) * mapping(:x, :y; text = :lbl => verbatim, layout = :wafer_id) *

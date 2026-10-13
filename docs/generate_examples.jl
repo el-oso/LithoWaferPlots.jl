@@ -17,7 +17,7 @@ seed!(42)
 const OUT = joinpath(@__DIR__, "src", "assets")
 mkpath(OUT)
 
-const WAFER = WaferSpec(300.0)
+const WAFER = WaferSpec()
 const RESOLUTION = (800, 580)
 
 # ── shared data ────────────────────────────────────────────────────────────────

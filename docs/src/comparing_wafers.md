@@ -27,7 +27,7 @@ R = wafer.diameter_mm / 2
 # One sample per exposure field → the interfield fingerprint.
 fw, fh = 26.0, 33.0
 centers = [((ci - 0.5) * fw, (ri - 5) * fh) for ri in 1:9, ci in -5:6]
-fields = field_grid(centers, (fw, fh); wafer = wafer)
+fields = field_grid(centers, (fw, fh); wafer)
 fx = [f.x_center_mm for f in fields]
 fy = [f.y_center_mm for f in fields]
 
@@ -60,7 +60,7 @@ function fingerprint_gradient(c)
         vx[i] = sum(c[k] * g[k][1] for k in 1:5)
         vy[i] = sum(c[k] * g[k][2] for k in 1:5)
     end
-    WaferVectorData((x = fx, y = fy, vx = vx, vy = vy), wafer)
+    WaferVectorData(fx, fy, vx, vy)
 end
 
 # B — named overlay terms read straight off the coefficients (nm):
@@ -72,7 +72,7 @@ function fingerprint_overlay(c)
         vx[i] = c[2] + c[4] * u + c[5] * u
         vy[i] = c[3] + c[4] * v - c[5] * v
     end
-    WaferVectorData((x = fx, y = fy, vx = vx, vy = vy), wafer)
+    WaferVectorData(fx, fy, vx, vy)
 end
 nothing # hide
 ```

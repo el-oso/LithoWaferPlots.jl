@@ -10,7 +10,7 @@ using LithoWaferPlots, CairoMakie
 CairoMakie.activate!(type = "png")
 
 wafer = WaferSpec()
-fields = field_grid([((c - 0.5) * 26.0, (r - 5) * 33.0) for r in 1:9, c in -5:6], (26.0, 33.0); wafer = wafer)
+fields = field_grid([((c - 0.5) * 26.0, (r - 5) * 33.0) for r in 1:9, c in -5:6], (26.0, 33.0); wafer)
 length(fields)
 ```
 
@@ -32,7 +32,7 @@ for f in fields, ix in -10.0:5.0:10.0, iy in -13.0:6.5:13.0
     push!(val, 0.02 * ix^2 + 0.1 * iy + 0.4 * randn())
 end
 
-fd = fielded((fx = fx, fy = fy, dx = dx, dy = dy, value = val), fields; wafer = wafer)
+fd = fielded((fx = fx, fy = fy, dx = dx, dy = dy, value = val), fields; wafer)
 (npoints = length(fd.field_id), first_field = fd.field_id[1], first_offset = (fd.ifx[1], fd.ify[1]))
 ```
 
@@ -69,7 +69,7 @@ reversing each row up — via [`serpentine_numbers`](@ref). Pass `numbers = ...`
 order.
 
 ```@example fa
-d = WaferData((x = fd.data.x, y = fd.data.y, value = fd.data.values), wafer; fields = fields)
+d = WaferData(fd.data.x, fd.data.y, fd.data.values; fields)
 
 fig, ax, side = wafer_figure()
 p = waferheatmap!(ax, d)
@@ -124,7 +124,7 @@ the plots and KPI panel.
 ```@example fa
 # three wafers sharing a layout, each with a different offset + noise
 base = (x = fd.data.x, y = fd.data.y)
-wafers = [WaferData((; base..., value = fd.data.values .+ k .+ 0.2 .* randn(length(val))), wafer)
+wafers = [WaferData((; base..., value = fd.data.values .+ k .+ 0.2 .* randn(length(val))))
           for k in 0:2]
 avg = average_wafers(wafers)
 
@@ -148,8 +148,8 @@ every plot guarantees identical arrow scaling and an identical reference arrow.
 ```@example fa
 θ = rand(180) .* 2π; rr = sqrt.(rand(180)) .* 140
 x = @. rr * cos(θ); y = @. rr * sin(θ)
-lotA = WaferVectorData((x = x, y = y, vx = -y ./ 150, vy = x ./ 150), wafer)
-lotB = WaferVectorData((x = x, y = y, vx = -y ./ 75, vy = x ./ 75), wafer)   # 2× magnitude
+lotA = WaferVectorData(x, y, -y ./ 150, x ./ 150)
+lotB = WaferVectorData(x, y, -y ./ 75, x ./ 75)   # 2× magnitude
 
 scale = arrow_scale_from(lotA; ref_fraction = 0.12)   # designate once, reuse everywhere
 

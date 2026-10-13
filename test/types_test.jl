@@ -105,3 +105,18 @@ end
     @test length(d.x) == 2
     @test !any(isnan, d.vx)
 end
+
+@testitem "WaferData/WaferVectorData from plain vectors" begin
+    using LithoWaferPlots
+    x, y, v = [0.0, 10.0], [0.0, -5.0], Float32[1, 2]
+    d = WaferData(x, y, v)
+    @test d isa WaferData{Float32}
+    @test d.wafer == WaferSpec()
+    @test isempty(d.fields)
+    @test WaferData(x, y, v; wafer = WaferSpec(200.0)).wafer.diameter_mm == 200.0
+    vd = WaferVectorData(x, y, v, v)
+    @test vd.wafer == WaferSpec()
+    @test vd.vx == [1.0, 2.0]
+    @test_throws "x, y, values must have equal lengths" WaferData(x, y, [1.0])
+    @test_throws "x, y, vx, vy must have equal lengths" WaferVectorData(x, y, v, [1.0])
+end

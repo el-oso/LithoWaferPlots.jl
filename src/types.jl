@@ -102,8 +102,8 @@ end
 Scalar measurements at spatial positions on a wafer. Coordinates are in mm from
 wafer centre (SEMI M20 convention). `fields` may be empty.
 
-Construct via `WaferData(table, wafer)` (mm coords) or
-`WaferData(table, grid, wafer)` (die indices).
+Construct via `WaferData(table, wafer)` (mm coords),
+`WaferData(table, grid, wafer)` (die indices), or `WaferData(x, y, values)`.
 """
 struct WaferData{T <: Real}
     x::Vector{Float64}
@@ -116,6 +116,11 @@ struct WaferData{T <: Real}
             x::AbstractVector{<:Real}, y::AbstractVector{<:Real}, values::AbstractVector{<:Real},
             wafer::WaferSpec, fields::Vector{WaferField}
         ) where {T <: Real}
+        length(x) == length(y) == length(values) || throw(
+            DimensionMismatch(
+                "WaferData: x, y, values must have equal lengths, got $(length(x)), $(length(y)), $(length(values))"
+            )
+        )
         x, y, values = Vector{Float64}(x), Vector{Float64}(y), Vector{T}(values)
         valid = isfinite.(x) .& isfinite.(y) .& isfinite.(values)
         if !all(valid)
@@ -131,12 +136,23 @@ WaferData(
 ) where {T <: Real} = WaferData{T}(x, y, values, wafer, fields)
 
 """
+    WaferData(x, y, values; wafer=WaferSpec(), fields=WaferField[])
+
+Build from plain coordinate (mm) and value vectors on a default 300 mm wafer.
+"""
+WaferData(
+    x::AbstractVector{<:Real}, y::AbstractVector{<:Real}, values::AbstractVector{<:Real};
+    wafer::WaferSpec = WaferSpec(), fields::Vector{WaferField} = WaferField[]
+) = WaferData(x, y, values, wafer, fields)
+
+"""
     WaferVectorData(x, y, vx, vy, wafer, fields)
 
 Vector-field measurements at spatial positions on a wafer. `vx`/`vy` are the
 x- and y-components of the vector at each (x, y) point.
 
-Construct via `WaferVectorData(table, wafer)` or `WaferVectorData(table, grid, wafer)`.
+Construct via `WaferVectorData(table, wafer)`, `WaferVectorData(table, grid, wafer)`,
+or `WaferVectorData(x, y, vx, vy)`.
 """
 struct WaferVectorData
     x::Vector{Float64}
@@ -151,6 +167,11 @@ struct WaferVectorData
             vx::AbstractVector{<:Real}, vy::AbstractVector{<:Real},
             wafer::WaferSpec, fields::Vector{WaferField}
         )
+        length(x) == length(y) == length(vx) == length(vy) || throw(
+            DimensionMismatch(
+                "WaferVectorData: x, y, vx, vy must have equal lengths, got $(length(x)), $(length(y)), $(length(vx)), $(length(vy))"
+            )
+        )
         x, y, vx, vy = Vector{Float64}(x), Vector{Float64}(y), Vector{Float64}(vx), Vector{Float64}(vy)
         valid = isfinite.(x) .& isfinite.(y) .& isfinite.(vx) .& isfinite.(vy)
         if !all(valid)
@@ -160,3 +181,14 @@ struct WaferVectorData
         return new(x, y, vx, vy, wafer, fields)
     end
 end
+
+"""
+    WaferVectorData(x, y, vx, vy; wafer=WaferSpec(), fields=WaferField[])
+
+Build from plain coordinate (mm) and vector-component vectors on a default 300 mm wafer.
+"""
+WaferVectorData(
+    x::AbstractVector{<:Real}, y::AbstractVector{<:Real},
+    vx::AbstractVector{<:Real}, vy::AbstractVector{<:Real};
+    wafer::WaferSpec = WaferSpec(), fields::Vector{WaferField} = WaferField[]
+) = WaferVectorData(x, y, vx, vy, wafer, fields)

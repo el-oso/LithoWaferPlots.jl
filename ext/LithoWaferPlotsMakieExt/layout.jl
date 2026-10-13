@@ -10,6 +10,18 @@ Layout:
               └── [2,1] KPI text panel (Box + labels)
 """
 
+const WAFER_AXIS_ATTRIBUTES = (
+    aspect = DataAspect(),
+    xgridvisible = false, ygridvisible = false,
+    topspinevisible = false, rightspinevisible = false,
+    xlabel = "x (mm)", ylabel = "y (mm)",
+)
+
+# Axis created by the non-mutating recipe forms (`waferscatter(data)`, ...) gets the
+# same look as `wafer_figure`'s, so a one-line plot shows an undistorted wafer.
+Makie.preferred_axis_attributes(::Type{Axis}, ::Union{WaferData, WaferVectorData}) =
+    WAFER_AXIS_ATTRIBUTES
+
 """
     wafer_figure(; figure_kwargs...) -> (fig, ax, side_layout)
 
@@ -20,13 +32,7 @@ function wafer_figure(; resolution = (900, 650), figure_kwargs...)
     fig = Figure(; size = resolution, figure_kwargs...)
     gl = fig[1, 1] = GridLayout()
 
-    ax = Axis(
-        gl[1, 1];
-        aspect = DataAspect(),
-        xgridvisible = false, ygridvisible = false,
-        topspinevisible = false, rightspinevisible = false,
-        xlabel = "x (mm)", ylabel = "y (mm)"
-    )
+    ax = Axis(gl[1, 1]; WAFER_AXIS_ATTRIBUTES...)
 
     side = gl[1, 2] = GridLayout(; tellwidth = true)
     colsize!(gl, 2, Relative(0.32))

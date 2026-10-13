@@ -700,3 +700,13 @@ end
         ax5, d; mm_to_edge = 50.0, inner_position = :cb, ring_position = :ct, ring_color = :blue
     ) === nothing
 end
+
+@testitem "Non-mutating recipes create an undistorted wafer axis" tags = [:rendering] begin
+    using CairoMakie
+    x, y = randn(200) .* 100, randn(200) .* 100
+    for fap in (waferscatter(WaferData(x, y, x)), waferarrows(WaferVectorData(x, y, -y, x)))
+        @test fap.axis.aspect[] == DataAspect()
+        @test !fap.axis.xgridvisible[]
+        @test fap.axis.xlabel[] == "x (mm)"
+    end
+end
