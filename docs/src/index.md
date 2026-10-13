@@ -56,7 +56,7 @@ add_kpi_panel!(side, data)
 fig
 ```
 
-![Wafer heatmap with exposure-field overlay](assets/example_heatmap_fields.png)
+![Wafer heatmap with exposure-field overlay](assets/example_heatmap.png)
 
 ## Install
 

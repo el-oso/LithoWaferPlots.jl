@@ -102,7 +102,7 @@ fields = field_grid(centers, (26.0, 33.0); wafer = WaferSpec())
 data = WaferData(df; fields)
 ```
 
-![Heatmap with field overlay](assets/example_heatmap_fields.png)
+![Heatmap with field overlay](assets/example_heatmap.png)
 
 ## Step 5 — Vector field plots
 

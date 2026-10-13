@@ -8,7 +8,7 @@
 
 Open-source semiconductor wafer map visualization for Julia.
 
-![Heatmap with field overlay](docs/src/assets/example_heatmap_fields.png)
+![Heatmap with field overlay](docs/src/assets/example_heatmap.png)
 
 ## Features
 

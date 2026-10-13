@@ -35,13 +35,15 @@ function draw_wafer_boundary!(ax, spec::WaferSpec; color = :black, linewidth = 1
     return nothing
 end
 
-# Field outlines: thin and semi-transparent so they frame the data without competing with it.
+# Fields: no fill and thin, semi-transparent outlines, so they frame the data without
+# tinting or competing with it.
+const FIELD_COLOR = :transparent
 const FIELD_STROKECOLOR = (:gray30, 0.5)
 const FIELD_STROKEWIDTH = 0.6f0
 
 function draw_fields!(
         ax, fields::AbstractVector{WaferField};
-        color = (:steelblue, 0.15), strokecolor = FIELD_STROKECOLOR, strokewidth = FIELD_STROKEWIDTH,
+        color = FIELD_COLOR, strokecolor = FIELD_STROKECOLOR, strokewidth = FIELD_STROKEWIDTH,
         show_numbers::Bool = false
     )
     isempty(fields) && return nothing

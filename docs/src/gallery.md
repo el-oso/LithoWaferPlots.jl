@@ -9,6 +9,8 @@ windows or `WGLMakie` for Jupyter/Pluto notebooks.
 using LithoWaferPlots, CairoMakie
 CairoMakie.activate!(type = "png")
 wafer = WaferSpec()
+# 26 × 33 mm exposure fields covering the wafer, drawn on every plot below
+fields = field_grid([((c - 0.5) * 26.0, (r - 5) * 33.0) for r in 1:9, c in -5:6], (26.0, 33.0); wafer)
 nothing # hide
 ```
 
@@ -41,7 +43,7 @@ Sparse measurement points coloured by value. Good for raw probe data where point
 r = sqrt.(rand(8000)) .* 148.0
 x = @. r * cos(θ); y = @. r * sin(θ)
 v = @. 2.5 * exp(-((x - 60)^2 + (y + 40)^2) / 4000) + 0.15 * $(randn(8000))
-data = WaferData(x, y, v)
+data = WaferData(x, y, v; fields)
 
 wafer_figure(data; plot_type = :scatter, label = "Overlay (a.u.)", markersize = 4.0f0)
 ```
@@ -81,7 +83,7 @@ without a plot.
 r = sqrt.(rand(6000)) .* 148.0
 x = @. r * cos(θ); y = @. r * sin(θ)
 v = @. 100.0 - 8.0 * exp((r - 148.0) / 6.0) + 0.3 * $(randn(6000))  # edge roll-off
-data = WaferData(x, y, v)
+data = WaferData(x, y, v; fields)
 
 fig, ax, side = wafer_figure()
 p = waferheatmap!(ax, data; colormap = :viridis)
@@ -103,7 +105,7 @@ xs = range(-148.0, 148.0; step = 3.0); ys = range(-148.0, 148.0; step = 3.0)
 pts = [(x, y) for x in xs, y in ys if x^2 + y^2 <= 148.0^2]
 x = first.(pts); y = last.(pts)
 v = @. sin(x / 40) * cos(y / 40) + 0.5 * exp(-(x^2 + y^2) / 8000) + 0.08 * $(randn(length(x)))
-data = WaferData(x, y, v)
+data = WaferData(x, y, v; fields)
 
 wafer_figure(data; label = "Thickness (nm)", colormap = :plasma)
 ```
@@ -126,7 +128,7 @@ x = first.(pts); y = last.(pts)
 v = @. sin(x / 40) * cos(y / 40) + 0.08 * $(randn(length(x)))
 data = WaferData(x, y, v; fields)
 
-wafer_figure(data; label = "Thickness (nm)", colormap = :plasma, field_color = (:black, 0.0))
+wafer_figure(data; label = "Thickness (nm)", colormap = :plasma)
 ```
 
 ---
@@ -141,7 +143,7 @@ xs = range(-148.0, 148.0; step = 5.0); ys = range(-148.0, 148.0; step = 5.0)
 pts = [(x, y) for x in xs, y in ys if x^2 + y^2 <= 148.0^2]
 x = first.(pts); y = last.(pts)
 v = @. sin(x / 40) * cos(y / 40) + 0.5 * exp(-(x^2 + y^2) / 8000) + 0.08 * $(randn(length(x)))
-data = WaferData(x, y, v)
+data = WaferData(x, y, v; fields)
 
 fig, ax, side = wafer_figure()
 p = wafercontour!(ax, data; levels = 12, colormap = :viridis)
@@ -168,7 +170,7 @@ recompute `ref * lengthscale` by hand).
 θ = rand(600) .* 2π
 r = sqrt.(rand(600)) .* 130.0
 x = @. r * cos(θ); y = @. r * sin(θ)
-vdata = WaferVectorData(x, y, -y ./ 80 .+ x ./ 300, x ./ 80 .+ y ./ 300)
+vdata = WaferVectorData(x, y, -y ./ 80 .+ x ./ 300, x ./ 80 .+ y ./ 300; fields)
 
 fig, ax, side = wafer_figure()
 p = waferarrows!(ax, vdata; lengthscale = 8.0, arrowcolor = :magnitude, colormap = :viridis)
@@ -188,7 +190,7 @@ large datasets. Controls: `n_seeds`, `max_steps`, `step_size`, and `grid_n`.
 θ = rand(15_000) .* 2π
 r = sqrt.(rand(15_000)) .* 130.0
 x = @. r * cos(θ); y = @. r * sin(θ)
-vdata = WaferVectorData(x, y, -y ./ 80 .+ x ./ 300, x ./ 80 .+ y ./ 300)
+vdata = WaferVectorData(x, y, -y ./ 80 .+ x ./ 300, x ./ 80 .+ y ./ 300; fields)
 
 fig, ax, side = wafer_figure()
 waferstreamlines!(ax, vdata; n_seeds = 12, max_steps = 80, color = :navy, linewidth = 1.2f0)
@@ -208,7 +210,7 @@ src(cx, cy, a) = (w = @.(a * exp(-((x - cx)^2 + (y - cy)^2) / 2500));
                   (@.(w * (x - cx)), @.(w * (y - cy))))
 vx1, vy1 = src(60.0, 40.0, 1.0)
 vx2, vy2 = src(-50.0, -50.0, -1.0)
-vdata = WaferVectorData(x, y, vx1 .+ vx2, vy1 .+ vy2)
+vdata = WaferVectorData(x, y, vx1 .+ vx2, vy1 .+ vy2; fields)
 
 fig, ax, side = wafer_figure()
 p = waferdivergence!(ax, vdata; colormap = :RdBu)
@@ -222,7 +224,7 @@ fig
 r = sqrt.(rand(30_000)) .* 140.0
 x = @. r * cos(θ); y = @. r * sin(θ)
 speed = @. exp(-(x^2 + y^2) / 5000.0)
-vdata = WaferVectorData(x, y, -y .* speed ./ 40, x .* speed ./ 40)
+vdata = WaferVectorData(x, y, -y .* speed ./ 40, x .* speed ./ 40; fields)
 
 fig, ax, side = wafer_figure()
 p = wafervorticity!(ax, vdata)
@@ -254,7 +256,7 @@ src(cx, cy, a) = (w = @.(a * exp(-((x - cx)^2 + (y - cy)^2) / 2500));
                   (@.(w * (x - cx)), @.(w * (y - cy))))
 vx1, vy1 = src(60.0, 40.0, 1.0)
 vx2, vy2 = src(-50.0, -50.0, -1.0)
-vdata = WaferVectorData(x, y, vx1 .+ vx2, vy1 .+ vy2)
+vdata = WaferVectorData(x, y, vx1 .+ vx2, vy1 .+ vy2; fields)
 
 fig, ax, side = wafer_figure()
 p = waferdivergence!(ax, vdata; colormap = :RdBu)
@@ -303,8 +305,9 @@ for j in 1:grid_n, i in 1:grid_n
         (VY[i, j + 1] - VY[i, j - 1]) / (2dyg)
     D[i, j] = dvx_dx + dvy_dy
 end
-gx = [xv for xv in xs for _ in ys]
-gy = [yv for _ in xs for yv in ys]
+cells = vec(CartesianIndices(D))   # same order as vec(D): x index varies fastest
+gx = [xs[I[1]] for I in cells]
+gy = [ys[I[2]] for I in cells]
 gvx = vec(VX); gvy = vec(VY); gdiv = vec(D)
 active = .!isnan.(gvx) .& .!isnan.(gdiv)
 grid_vdata = WaferVectorData(gx[active], gy[active], gvx[active], gvy[active])
@@ -339,7 +342,7 @@ same dense-data `image!` path as `waferheatmap!` by default (`imagemode = :auto`
 r = sqrt.(rand(30_000)) .* 140.0
 x = @. r * cos(θ); y = @. r * sin(θ)
 speed = @. exp(-(x^2 + y^2) / 5000.0)
-vdata = WaferVectorData(x, y, -y .* speed ./ 40, x .* speed ./ 40)
+vdata = WaferVectorData(x, y, -y .* speed ./ 40, x .* speed ./ 40; fields)
 
 fig, ax, side = wafer_figure()
 p = wafervorticity!(ax, vdata)
@@ -358,7 +361,7 @@ above, though this particular flow barely has any (it decays slowly, not to a ha
 ```@example gallery
 mag = hypot.(vdata.vx, vdata.vy)
 flowing = mag .> 0.02 * maximum(mag)
-vdata_flow = WaferVectorData(vdata.x[flowing], vdata.y[flowing], vdata.vx[flowing], vdata.vy[flowing])
+vdata_flow = WaferVectorData(vdata.x[flowing], vdata.y[flowing], vdata.vx[flowing], vdata.vy[flowing]; fields)
 
 fig, ax, side = wafer_figure()
 p = wafervorticity!(ax, vdata)
@@ -392,8 +395,7 @@ yieldval(cx, cy) = clamp(clamp(1 - (cx^2 + cy^2) / (0.85 * rmax^2), 0, 1) + 0.12
 data = WaferData((x = first.(dies), y = last.(dies),
                   value = [yieldval(d...) for d in dies]); fields)
 
-fig, ax, p = wafer_figure(data; label = "Yield", markersize = 14.0f0, colormap = :RdYlGn,
-    field_color = (:black, 0.0))
+fig, ax, p = wafer_figure(data; label = "Yield", markersize = 14.0f0, colormap = :RdYlGn)
 add_exclusion_ring!(ax, wafer; mm_to_edge = 2.0, label = "2 mm EE",
                     color = :black, linestyle = :dash, dim_outside = true, dim_alpha = 0.4)
 add_ring_legend!(ax; position = :lb)
@@ -412,7 +414,7 @@ that works with every recipe type.
 xs = range(-148.0, 148.0; step = 3.0); ys = range(-148.0, 148.0; step = 3.0)
 pts = [(x, y) for x in xs, y in ys if x^2 + y^2 <= 148.0^2]
 x = first.(pts); y = last.(pts)
-data = WaferData(x, y, @.(sin(x / 40) * cos(y / 40)))
+data = WaferData(x, y, @.(sin(x / 40) * cos(y / 40)); fields)
 
 fig, ax, p = wafer_figure(data; label = "Thickness (nm)", colormap = :plasma)
 
@@ -447,7 +449,7 @@ logo = joinpath(pkgdir(LithoWaferPlots), "docs", "src", "assets", "julia-logo.pn
 xs = range(-148.0, 148.0; step = 3.0); ys = range(-148.0, 148.0; step = 3.0)
 pts = [(x, y) for x in xs, y in ys if x^2 + y^2 <= 148.0^2]
 x = first.(pts); y = last.(pts)
-data = WaferData(x, y, @.(sin(x / 40) * cos(y / 40)))
+data = WaferData(x, y, @.(sin(x / 40) * cos(y / 40)); fields)
 
 fig, ax, side = wafer_figure()
 p = waferheatmap!(ax, data; colormap = :viridis)
@@ -485,7 +487,7 @@ table = (x = reduce(vcat, c.x for c in cols),
          value = reduce(vcat, c.value for c in cols),
          lot = reduce(vcat, c.lot for c in cols))
 
-wafer_facet(table, wafer; by = :lot, plot_type = :heatmap,
+wafer_facet(table, wafer; by = :lot, fields, plot_type = :heatmap,
             colormap = :plasma, colorrange = (90.0, 112.0), ncols = 2)
 ```
 
@@ -509,7 +511,7 @@ src(cx, cy, a) = (w = @.(a * exp(-((x - cx)^2 + (y - cy)^2) / 2500));
                   (@.(w * (x - cx)), @.(w * (y - cy))))
 vx1, vy1 = src(60.0, 40.0, 1.0)
 vx2, vy2 = src(-50.0, -50.0, -1.0)
-vdata = WaferVectorData(x, y, vx1 .+ vx2, vy1 .+ vy2)
+vdata = WaferVectorData(x, y, vx1 .+ vx2, vy1 .+ vy2; fields)
 
 fig, ax, side = wafer_cfd_figure(vdata; scalar = :divergence, vector = :streamlines,
     streamline_color = :white, streamline_linewidth = 1.5f0, n_seeds = 25)
@@ -527,7 +529,7 @@ Rotation intensity as background with streamlines showing the flow direction sim
 r = sqrt.(rand(30_000)) .* 140.0
 x = @. r * cos(θ); y = @. r * sin(θ)
 speed = @. exp(-(x^2 + y^2) / 5000.0)
-vdata = WaferVectorData(x, y, -y .* speed ./ 40, x .* speed ./ 40)
+vdata = WaferVectorData(x, y, -y .* speed ./ 40, x .* speed ./ 40; fields)
 
 fig, ax, side = wafer_cfd_figure(vdata; scalar = :vorticity, vector = :streamlines,
     streamline_color = :white, streamline_linewidth = 1.5f0, n_seeds = 25)
@@ -546,7 +548,7 @@ src(cx, cy, a) = (w = @.(a * exp(-((x - cx)^2 + (y - cy)^2) / 2500));
                   (@.(w * (x - cx)), @.(w * (y - cy))))
 vx1, vy1 = src(60.0, 40.0, 1.0)
 vx2, vy2 = src(-50.0, -50.0, -1.0)
-vdata = WaferVectorData(x, y, vx1 .+ vx2, vy1 .+ vy2)
+vdata = WaferVectorData(x, y, vx1 .+ vx2, vy1 .+ vy2; fields)
 
 fig, ax, side = wafer_figure()
 p = waferdivergence!(ax, vdata; colormap = :RdBu)
@@ -621,8 +623,8 @@ identical.
 ```@example gallery
 θ = rand(180) .* 2π; r = sqrt.(rand(180)) .* 140
 x = @. r * cos(θ); y = @. r * sin(θ)
-vdA = WaferVectorData(x, y, -y ./ 150, x ./ 150)
-vdB = WaferVectorData(x, y, -y ./ 75, x ./ 75)
+vdA = WaferVectorData(x, y, -y ./ 150, x ./ 150; fields)
+vdB = WaferVectorData(x, y, -y ./ 75, x ./ 75; fields)
 scale = arrow_scale_from(vdA; ref_fraction = 0.12)
 
 fig = Figure(size = (760, 400))
